@@ -18,15 +18,6 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+class RequestRoutingException extends Exception {};
+
 ?>
-<html>
-	<head>
-		<link rel="stylesheet" href="css/jquery/jquery.css" type="text/css" />
-		<script type="text/javascript" src="js/jquery-1.4.2.min.js" />
-		<script type="text/javascript" src="js/jquery-ui-1.8.2.min.js" />
-		<script type="text/javascript" src="js/jquery.jstree.js" />
-		<script type="text/javascript" src="js/jquery.tablesorter.min.js" />
-	<body>
-		
-	</body>
-</html>

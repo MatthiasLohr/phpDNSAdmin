@@ -18,15 +18,25 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ *	Function for load files containing classes
+ *
+ * @param string $className
+ */
+function pdaAutoload($className) {
+	$className = strtolower($className);
+	if (substr($className,-9) == 'exception') {
+		@include(API_ROOT.'/lib/'.substr($className,0,-9).'.exception.php');
+	}
+	else {
+		@include(API_ROOT.'/lib/modules/'.$className.'.class.php');
+		@include(API_ROOT.'/lib/routers/'.$className.'.class.php');
+		@include(API_ROOT.'/lib/rrtypes/'.$className.'.class.php');
+		@include(API_ROOT.'/lib/simpletypes/'.$className.'.class.php');
+		@include(API_ROOT.'/lib/'.$className.'.class.php');
+	}
+}
+
+spl_autoload_register('pdaAutoload',true,true);
+
 ?>
-<html>
-	<head>
-		<link rel="stylesheet" href="css/jquery/jquery.css" type="text/css" />
-		<script type="text/javascript" src="js/jquery-1.4.2.min.js" />
-		<script type="text/javascript" src="js/jquery-ui-1.8.2.min.js" />
-		<script type="text/javascript" src="js/jquery.jstree.js" />
-		<script type="text/javascript" src="js/jquery.tablesorter.min.js" />
-	<body>
-		
-	</body>
-</html>
