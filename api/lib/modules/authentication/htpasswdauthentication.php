@@ -96,6 +96,7 @@ class HtpasswdAuthentication extends AuthenticationModule {
 		else {
 			$this->users[$user->getUsername()] = $this->encryptPassword($password);
 		}
+		$this->fileWrite();
 		return true;
 	}
 
@@ -108,6 +109,7 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	public function userDelete(User $user) {
 		if (!$this->userExists($user)) throw new NoSuchUserException('No user named '.$user->getUsername().' here!');
 		unset($this->users[$user->getUsername()]);
+		$this->fileWrite();
 		return true;
 	}
 
