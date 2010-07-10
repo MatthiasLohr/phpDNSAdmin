@@ -1,0 +1,3 @@
+#!/bin/sh
+cd `dirname $0`/..
+phpdoc -o HTML:frames:DOM/earthli -d lib -t doc/html --title "phpDNSAdmin Documentation" --parseprivate on -dn "phpDNSAdmin" -dc "Core"
