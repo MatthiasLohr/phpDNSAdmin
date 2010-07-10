@@ -19,6 +19,12 @@
  */
 
 /**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
+/**
  *	Function for load files containing classes
  *
  * @param string $className

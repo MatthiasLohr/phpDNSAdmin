@@ -24,6 +24,11 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class User {
 
 	private $username = null;

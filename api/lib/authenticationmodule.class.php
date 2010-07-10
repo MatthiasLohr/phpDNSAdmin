@@ -24,6 +24,11 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 abstract class AuthenticationModule {
 
 	/**
@@ -37,7 +42,7 @@ abstract class AuthenticationModule {
 	/**
 	 * List users handled by this module.
 	 *
-	 * @throw NotSupportedException Always because the coder was too lazy to fully remove this function from the APIs.
+	 * @throws NotSupportedException If this module doesn't support user listings (e.g. for big LDAP directories)
 	 */
 	public function listUsers() {
 		throw new NotSupportedException("Can't list users!");

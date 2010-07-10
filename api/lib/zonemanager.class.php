@@ -24,6 +24,11 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class ZoneManager {
 
 	private static $instance = null;
@@ -34,9 +39,9 @@ class ZoneManager {
 	 * Load zone modules
 	 *
 	 * @param array $moduleConfig global module configuration
-	 * @throw ModuleConfigException if no config exists
-	 * @throw ModuleConfigException if the config is not properly written
-	 * @throw ModuleConfigException if the module file dows not exist
+	 * @throws ModuleConfigException if no config exists
+	 * @throws ModuleConfigException if the config is not properly written
+	 * @throws ModuleConfigException if the module file dows not exist
 	 */
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');

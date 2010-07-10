@@ -17,6 +17,13 @@
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
+
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
 /**
  * @package phpDNSAdmin
  * @subpackage Core
@@ -32,9 +39,9 @@ class AutologinManager {
 	 * Load autologin modules
 	 *
 	 * @param array $moduleConfig global module configuration
-	 * @throw ModuleConfigException if no config exists
-	 * @throw ModuleConfigException if the config is not properly written
-	 * @throw ModuleConfigException if the module file dows not exist
+	 * @throws ModuleConfigException if no config exists
+	 * @throws ModuleConfigException if the config is not properly written
+	 * @throws ModuleConfigException if the module file dows not exist
 	 */
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');

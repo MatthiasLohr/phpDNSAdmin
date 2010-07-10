@@ -20,10 +20,15 @@
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
+ * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Exceptions
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class NoSuchUserException extends Exception {}
 
 ?>
