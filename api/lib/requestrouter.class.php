@@ -33,7 +33,7 @@ abstract class RequestRouter {
 	 *
 	 * @param string[] $path calls to be performed
 	 * @return something
-	 * @throws RequestRoutingException if a method cannot be called
+	 * @throw RequestRoutingException if a method cannot be called
 	 */
 
 	public final function track(array $path) {

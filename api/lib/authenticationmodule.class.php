@@ -37,7 +37,7 @@ abstract class AuthenticationModule {
 	/**
 	 * List users handled by this module.
 	 *
-	 * @throws NotSupportedException Always because the coder was too lazy to fully remove this function from the APIs.
+	 * @throw NotSupportedException Always because the coder was too lazy to fully remove this function from the APIs.
 	 */
 	public function listUsers() {
 		throw new NotSupportedException("Can't list users!");
