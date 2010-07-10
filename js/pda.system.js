@@ -77,8 +77,15 @@ $(document).ready(function() {
 		json_data: {
 			data: [
 				{
-					data: 'bla',
-					children: ['blubb']
+					data: 'com',
+					children: ['google']
+				},
+				{
+					data: 'net',
+					children: [{data:'matthias-lohr',children: ['home']},'sourceforge']
+				},
+				{
+					data: 'org'
 				}
 			]
 		},
