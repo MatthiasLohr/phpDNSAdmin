@@ -18,10 +18,25 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * authorization manager - handles user privileges
+ * @package phpDNSAdmin
+ */
+
 class AuthorizationManager {
-	
+
+	private static $instance = null;
+
 	private $modules = array();
 
+	/**
+	 * Load authorization modules
+	 *
+	 * @param array $moduleConfig global module configuration
+	 * @throw ModuleConfigException if no config exists
+	 * @throw ModuleConfigException if the config is not properly written
+	 * @throw ModuleConfigException if the module file dows not exist
+	 */
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
 		$moduleCount = count($moduleConfig);
@@ -38,12 +53,22 @@ class AuthorizationManager {
 		}
 	}
 
+	/**
+	 * Return the AuthorizationManager object
+	 * @return AuthorizationManager the AuthorizationManager object
+	 */
 	public static function getInstance() {
-
+		return self::$instance;
 	}
 
+	/**
+	 * Init AuthorizationManager and create the object
+	 * @param array $configuration global module configuration
+	 * @return AuthorizationManager the AuthorizationManager object
+	 */
 	public static function initialize($configuration) {
-
+		self::$instance = new AuthorizationManager($configuration);
+		return self::$instance;
 	}
 }
 

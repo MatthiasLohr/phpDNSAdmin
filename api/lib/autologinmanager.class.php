@@ -45,19 +45,43 @@ class AutologinManager {
 	}
 
 	public function getUser() {
-
+		$user = null;
+		$foundIndex = null;
+		// check for autologin
+		foreach ($this->modules as $moduleIndex => $module) {
+			$tmpUser = $module->getUser();
+			if ($tmpUser instanceof User) {
+				$user = $tmpUser;
+				$foundIndex = $moduleIndex;
+				break;
+			}
+		}
+		// notifiy all other modules
+		if ($user !== null) {
+			foreach ($this->modules as $moduleIndex => $module) {
+				if ($moduleIndex == $foundIndex) continue;
+				$module->notifyLogin($user);
+			}
+		}
+		// return
+		return $user;
 	}
 
 	public static function initialize($configuration) {
 		self::$instance = new AutologinManager($configuration);
+		return self::$instance;
 	}
 
 	public function notifyLogin(User $user) {
-
+		foreach ($this->modules as $moduleIndex => $module) {
+			$module->notifyLogin($user);
+		}
 	}
 
 	public function notifyLogout() {
-
+		foreach ($this->modules as $moduleIndex => $module) {
+			$module->notifyLogout();
+		}
 	}
 }
 

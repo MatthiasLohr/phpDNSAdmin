@@ -36,9 +36,11 @@ abstract class AuthenticationModule {
 	/**
 	 * List users handled by this module.
 	 *
-	 * @return array users who can login with this module
+	 * @throw NotSupportedException Always because the coder was too lazy to fully remove this function from the APIs.
 	 */
-	abstract public function listUsers();
+	public function listUsers() {
+		throw new NotSupportedException("Can't list users!");
+	}
 
 	/**
 	 * Add a user to the list
@@ -47,6 +49,8 @@ abstract class AuthenticationModule {
 	 * @param string $pasword unencrypted password for the new user, optional but needed if the user should be able to login
 	 * @return bool true on success, false otherwise
 	 */
+	
+	
 	abstract public function userAdd(User $user, $password = null);
 
 	/**

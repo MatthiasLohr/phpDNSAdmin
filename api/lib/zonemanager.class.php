@@ -19,7 +19,9 @@
  */
 
 class ZoneManager {
-	
+
+	private static $instance = null;
+
 	private $modules = array();
 
 	protected function __construct($moduleConfig) {
@@ -39,11 +41,12 @@ class ZoneManager {
 	}
 
 	public static function getInstance() {
-
+		return self::$instance;
 	}
 
 	public static function initialize($configuration) {
-
+		self::$instance = new ZoneManager($configuration);
+		return self::$instance;
 	}
 }
 
