@@ -21,16 +21,17 @@
 /**
  * @package phpDNSAdmin
  * @subpackage Authentication
+ * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 /**
  * @package phpDNSAdmin
  * @subpackage Authentication
+ * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 class HtpasswdAuthentication extends AuthenticationModule {
 
 	/**
-	 *
 	 * @var array Array of username => encrypted password
 	 */
 	private $users = array();

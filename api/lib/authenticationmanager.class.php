@@ -24,6 +24,11 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class AuthenticationManager {
 
 	private static $instance = null;
@@ -35,9 +40,9 @@ class AuthenticationManager {
 	 * Load authentication modules
 	 *
 	 * @param array $moduleConfig global module configuration
-	 * @throw ModuleConfigException if no config exists
-	 * @throw ModuleConfigException if the config is not properly written
-	 * @throw ModuleConfigException if the module file dows not exist
+	 * @throws ModuleConfigException if no config exists
+	 * @throws ModuleConfigException if the config is not properly written
+	 * @throws ModuleConfigException if the module file dows not exist
 	 */
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
@@ -132,7 +137,7 @@ class AuthenticationManager {
 	 * @param User $user user to check
 	 * @param string $pasword unencrypted password
 	 * @return bool true if the user can login with the given data, false otherwise
-	 * @throw NoSuchUserException if the user is not registered
+	 * @throws NoSuchUserException if the user is not registered
 	 */
 	public function userCheckPassword(User $user,$password) {
 		$moduleIndex = $this->userFind($user);
@@ -145,7 +150,7 @@ class AuthenticationManager {
 	 *
 	 * @param User $user user to delete
 	 * @return bool true on success, false otherwise
-	 * @throw NoSuchUserException if the user is not registered
+	 * @throws NoSuchUserException if the user is not registered
 	 */
 	public function userDelete(User $user) {
 		$moduleIndex = $this->userFind($user);

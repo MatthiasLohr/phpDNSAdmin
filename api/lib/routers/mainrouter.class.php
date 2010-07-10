@@ -18,6 +18,17 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Routers
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
+/**
+ * @package phpDNSAdmin
+ * @subpackage Routers
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class MainRouter extends RequestRouter {
 
 	public function login() {

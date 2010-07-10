@@ -24,6 +24,11 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 abstract class RequestRouter {
 
 	protected $routingPath = array();
@@ -33,7 +38,7 @@ abstract class RequestRouter {
 	 *
 	 * @param string[] $path calls to be performed
 	 * @return something
-	 * @throw RequestRoutingException if a method cannot be called
+	 * @throws RequestRoutingException if a method cannot be called
 	 */
 
 	public final function track(array $path) {

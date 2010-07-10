@@ -18,6 +18,17 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Autologin
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
+/**
+ * @package phpDNSAdmin
+ * @subpackage Autologin
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class LdapAuthentication extends AuthenticationModule {
 
 	protected function __construct($config) {
