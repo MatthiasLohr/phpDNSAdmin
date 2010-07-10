@@ -20,12 +20,39 @@
 
 class SessionAutologin extends AutologinModule {
 
-	protected function __construct($config) {
+	private $fieldname = 'username';
 
+	protected function __construct($config) {
+		if (isset($config['fieldname'])) {
+			$this->fieldname = $config['fieldname'];
+		}
+		if (isset($config['sessionname'])) {
+			session_name($config['sessionname']);
+		}
+		session_start();
+	}
+
+	public function getUser() {
+		if (isset($_SESSION[$this->fieldname])) {
+			return new User($_SESSION[$this->fieldname]);
+		}
+		else {
+			return null;
+		}
 	}
 
 	public static function getInstance($config) {
 		return new SessionAutologin($config);
+	}
+
+	public function notifyLogin(User $user) {
+		$_SESSION[$this->fieldname] = $user->getUsername();
+		return true;
+	}
+
+	public function notifyLogout() {
+		unset($_SESSION[$this->fieldname]);
+		return true;
 	}
 
 }

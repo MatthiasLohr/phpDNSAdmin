@@ -80,6 +80,7 @@ class AuthenticationManager {
 	 */
 	public function listUsers() {
 		$userList = array();
+		$this->usermap = array();
 		foreach ($this->modules as $moduleIndex => $module) {
 			try {
 				$tmpList = $module->listUsers();
