@@ -17,13 +17,25 @@
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
-
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class AutologinManager {
 
 	private static $instance = null;
 
 	private $modules = array();
 
+	/**
+	 * Load autologin modules
+	 *
+	 * @param array $moduleConfig global module configuration
+	 * @throw ModuleConfigException if no config exists
+	 * @throw ModuleConfigException if the config is not properly written
+	 * @throw ModuleConfigException if the module file dows not exist
+	 */
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
 		$moduleCount = count($moduleConfig);
@@ -40,9 +52,20 @@ class AutologinManager {
 		}
 	}
 
+	/**
+	 * Return the AutologinManager object
+	 *
+	 * @return AutologinManager the AutologinManager object
+	 */
 	public static function getInstance() {
 		return self::$instance;
 	}
+
+	/**
+	 * Get user who is logged in from this session
+	 *
+	 * @return User the user
+	 */
 
 	public function getUser() {
 		$user = null;
@@ -67,17 +90,33 @@ class AutologinManager {
 		return $user;
 	}
 
+	/**
+	 * Init AuthorizationManager and create the object
+	 *
+	 * @param array $configuration global module configuration
+	 * @return AuthorizationManager the AuthorizationManager object
+	 */
 	public static function initialize($configuration) {
 		self::$instance = new AutologinManager($configuration);
 		return self::$instance;
 	}
 
+	/**
+	 * Tell the modules that a user has been logged in
+	 *
+	 * @param User $user the user who is logged in
+	 */
 	public function notifyLogin(User $user) {
 		foreach ($this->modules as $moduleIndex => $module) {
 			$module->notifyLogin($user);
 		}
 	}
 
+	/**
+	 * Tell the modules that a user has been logged out
+	 *
+	 * @param User $user the user who is loggedout
+	 */
 	public function notifyLogout() {
 		foreach ($this->modules as $moduleIndex => $module) {
 			$module->notifyLogout();

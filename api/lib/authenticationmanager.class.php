@@ -18,6 +18,12 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
 class AuthenticationManager {
 
 	private static $instance = null;
@@ -25,6 +31,14 @@ class AuthenticationManager {
 	private $modules = array();
 	private $usermap = array();
 
+	/**
+	 * Load authentication modules
+	 *
+	 * @param array $moduleConfig global module configuration
+	 * @throw ModuleConfigException if no config exists
+	 * @throw ModuleConfigException if the config is not properly written
+	 * @throw ModuleConfigException if the module file dows not exist
+	 */
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
 		$moduleCount = count($moduleConfig);
@@ -42,15 +56,32 @@ class AuthenticationManager {
 		$this->listUsers();
 	}
 
+
+	/**
+	 * Return the AuthenticationManager object
+	 *
+	 * @return AuthenticationManager the AuthenticationManager object
+	 */
 	public static function getInstance() {
 		return self::$instance;
 	}
 
+	/**
+	 * Init AuthenticationManager and create the object
+	 *
+	 * @param array $configuration global module configuration
+	 * @return AuthenticationManager the AuthenticationManager object
+	 */
 	public static function initialize($configuration) {
 		self::$instance = new AuthenticationManager($configuration);
 		return self::$instance;
 	}
 
+	/**
+	 * List all registered users
+	 *
+	 * @return User[]
+	 */
 	public function listUsers() {
 		$userList = array();
 		$this->usermap = array();
@@ -68,6 +99,14 @@ class AuthenticationManager {
 		}
 		return $userList;
 	}
+
+	/**
+	 * Add a user to the first module that accepts him
+	 *
+	 * @param User $user user to add
+	 * @param string $pasword unencrypted password for the new user, optional but needed if the user should be able to login
+	 * @return bool true on success, false otherwise
+	 */
 
 	public function userAdd(User $user, $password = null) {
 		$moduleIndex = $this->userFind($user);
@@ -87,12 +126,27 @@ class AuthenticationManager {
 		return false;
 	}
 
+	/**
+	 * Check a user's login data
+	 *
+	 * @param User $user user to check
+	 * @param string $pasword unencrypted password
+	 * @return bool true if the user can login with the given data, false otherwise
+	 * @throw NoSuchUserException if the user is not registered
+	 */
 	public function userCheckPassword(User $user,$password) {
 		$moduleIndex = $this->userFind($user);
 		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
 		return $this->modules[$moduleIndex]->userCheckPassword($user,$password);
 	}
 
+	/**
+	 * Remove a user
+	 *
+	 * @param User $user user to delete
+	 * @return bool true on success, false otherwise
+	 * @throw NoSuchUserException if the user is not registered
+	 */
 	public function userDelete(User $user) {
 		$moduleIndex = $this->userFind($user);
 		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
@@ -105,11 +159,23 @@ class AuthenticationManager {
 		}
 	}
 
+	/**
+	 * Check if a user exists
+	 *
+	 * @param User $user user to delete
+	 * @return bool true if user exists, false otherwise
+	 */
 	public function userExists(User $user) {
 		$result = $this->userFind($user);
 		return ($result !== null);
 	}
 
+	/**
+	 * Find a user
+	 *
+	 * @param User $user the user to look for
+	 * @return integer the ID of the module that stores the user's data or null if the user does not exist
+	 */
 	private function userFind(User $user) {
 		if (isset($this->usermap[$user->getUsername()])) {
 			return $this->usermap[$user->getUsername()];
@@ -123,6 +189,13 @@ class AuthenticationManager {
 		return null;
 	}
 
+	/**
+	 * Add a user to the list
+	 *
+	 * @param User $user user to modify
+	 * @param string $pasword new unencrypted password for the user, not null
+	 * @return bool true on success, false otherwise
+	 */
 	public function userSetPassword(User $user, $password) {
 		$moduleIndex = $this->userFind($user);
 		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');

@@ -18,10 +18,27 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
 abstract class AuthorizationModule {
 
+	/**
+	 * List users handled by this module
+	 *
+	 * @return User[] users
+	 */
 	abstract public function listUsers();
 
+	/**
+	 * Check if user has full administrative privileges
+	 *
+	 * @param User $user to check
+	 * @return boolean true if he has, false if not
+	 */
 	abstract public function userIsAdmin(User $user);
 	
 }
