@@ -18,23 +18,58 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-class User {
+/**
+ * @package phpDNSAdmin
+ * @subpackage Authentication
+ */
 
-	private $username = null;
+/**
+ * @package phpDNSAdmin
+ * @subpackage Authentication
+ */
+class HtpasswdAuthentication extends AuthenticationModule {
 
-	public function __construct($username) {
-		$this->username = $username;
+	private $filename = null;
+
+	protected function __construct($config) {
+
 	}
 
-	public function getUsername() {
-		return $this->username;
+	private function fileRead() {
+
 	}
 
-	public function isAdmin() {
-		$authorization = AuthorizationManager::getInstance();
-		
+	private function fileWrite() {
+
 	}
 
+	public static function getInstance($config) {
+		return new HtpasswdAuthentication($config);
+	}
+
+	public function listUsers() {
+
+	}
+
+	public function userAdd(User $user, $password = null) {
+
+	}
+
+	public function userCheckPassword(User $user,$password) {
+
+	}
+
+	public function userDelete(User $user) {
+
+	}
+
+	public function userExists(User $user) {
+
+	}
+
+	public function userSetPassword(User $user, $password) {
+
+	}
 }
 
 ?>

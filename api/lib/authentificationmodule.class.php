@@ -20,6 +20,14 @@
 
 abstract class AuthentificationModule {
 
+	abstract public static function getInstance($config);
+	abstract public function listUsers();
+	abstract public function userAdd(User $user, $password = null);
+	abstract public function userCheckPassword(User $user,$password);
+	abstract public function userDelete(User $user);
+	abstract public function userExists(User $user);
+	abstract public function userSetPassword(User $user, $password);
+
 }
 
 ?>

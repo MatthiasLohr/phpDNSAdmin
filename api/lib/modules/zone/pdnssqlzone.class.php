@@ -20,13 +20,13 @@
 
 /**
  * @package phpDNSAdmin
- * @subpackage ZoneModules
+ * @subpackage Zone
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 /**
  * @package phpDNSAdmin
- * @subpackage ZoneModules
+ * @subpackage Zone
  */
 class PdnsSqlZone extends ZoneModule {
 

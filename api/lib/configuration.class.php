@@ -18,7 +18,41 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-interface ModuleManager {
+class Configuration {
+
+	private static $instance = null;
+
+	private $config = array();
+
+	protected function __construct($configuration) {
+		$this->config = $configuration;
+	}
+
+	public function getAuthenticationConfig() {
+
+	}
+
+	public function getAuthorizationConfig() {
+
+	}
+
+	public function getAutologinConfig() {
+
+	}
+
+	public static function getInstance() {
+		return self::$instance;
+	}
+
+	public function getZoneConfig() {
+
+	}
+
+	public static function load($filename) {
+		require($filename);
+		self::$instance = new Configuration($config);
+		return self::$instance;
+	}
 
 }
 

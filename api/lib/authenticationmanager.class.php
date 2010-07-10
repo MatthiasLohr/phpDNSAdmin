@@ -18,8 +18,19 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-class AuthenticationManager implements ModuleManager {
+class AuthenticationManager {
 
+	protected function __construct($configuration) {
+
+	}
+
+	public static function getInstance() {
+
+	}
+
+	public static function initialize($configuration) {
+
+	}
 }
 
 ?>

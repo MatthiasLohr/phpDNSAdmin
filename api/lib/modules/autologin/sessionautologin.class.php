@@ -18,22 +18,7 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-class User {
-
-	private $username = null;
-
-	public function __construct($username) {
-		$this->username = $username;
-	}
-
-	public function getUsername() {
-		return $this->username;
-	}
-
-	public function isAdmin() {
-		$authorization = AuthorizationManager::getInstance();
-		
-	}
+class SessionAutologin extends AutologinModule {
 
 }
 

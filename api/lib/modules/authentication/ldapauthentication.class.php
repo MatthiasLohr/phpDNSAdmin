@@ -18,23 +18,27 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-class User {
+class LdapAuthentication extends AuthenticationModule {
+	
+	public function listUsers() {
 
-	private $username = null;
+	}
+	public function userAdd(User $user, $password = null) {
 
-	public function __construct($username) {
-		$this->username = $username;
+	}
+	public function userCheckPassword(User $user,$password) {
+
+	}
+	public function userDelete(User $user) {
+
+	}
+	public function userExists(User $user) {
+
 	}
 
-	public function getUsername() {
-		return $this->username;
-	}
+	public function userSetPassword(User $user, $password) {
 
-	public function isAdmin() {
-		$authorization = AuthorizationManager::getInstance();
-		
 	}
-
 }
 
 ?>

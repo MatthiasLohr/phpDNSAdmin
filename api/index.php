@@ -20,15 +20,37 @@
 
 define('API_ROOT',dirname(__FILE__));
 require_once(API_ROOT.'/lib/autoload.inc.php');
+error_reporting(E_ALL | E_NOTICE);
 
+// load config
+if (file_exists(API_ROOT.'/config.inc.php')) {
+	Configuration::load(API_ROOT.'/config.inc.php');
+}
+else {
+	die('config.inc.php not found!');
+}
+
+$configuration = Configuration::getInstance();
+
+// initialize module managers
+AuthenticationManager::initialize($configuration);
+AuthorizationManager::initialize($configuration);
+AutologinManager::initialize($configuration);
+ZoneManager::initialize($configuration);
+
+// prepare path and start script execution
 if (isset($_GET['pda_request_path']) && strlen($_GET['pda_request_path']) > 0) {
 	$pdaPath = explode('/',$_GET['pda_request_path']);
 }
 else {
 	$pdaPath = array();
+	header('Location: status');
+	exit;
 }
 
 $router = new MainRouter();
-$router->track($pdaPath);
+$result = $router->track($pdaPath);
+header('Content-type: text/plain');
+echo(json_encode($result));
 
 ?>

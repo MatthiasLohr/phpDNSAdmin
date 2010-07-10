@@ -18,7 +18,7 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-class AuthorizationManager implements ModuleManager {
+class AuthorizationManager {
 	
 	protected function __construct($configuration) {
 

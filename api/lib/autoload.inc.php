@@ -26,16 +26,25 @@
 function pdaAutoload($className) {
 	$className = strtolower($className);
 	if (substr($className,-9) == 'exception') {
-		@include(API_ROOT.'/lib/'.substr($className,0,-9).'.exception.php');
+		includeIfExists(API_ROOT.'/lib/'.substr($className,0,-9).'.exception.php');
 	}
 	else {
-		@include(API_ROOT.'/lib/modules/'.$className.'.class.php');
-		@include(API_ROOT.'/lib/routers/'.$className.'.class.php');
-		@include(API_ROOT.'/lib/rrtypes/'.$className.'.class.php');
-		@include(API_ROOT.'/lib/simpletypes/'.$className.'.class.php');
-		@include(API_ROOT.'/lib/'.$className.'.class.php');
+		includeIfExists(API_ROOT.'/lib/modules/'.$className.'.class.php');
+		includeIfExists(API_ROOT.'/lib/routers/'.$className.'.class.php');
+		includeIfExists(API_ROOT.'/lib/rrtypes/'.$className.'.class.php');
+		includeIfExists(API_ROOT.'/lib/simpletypes/'.$className.'.class.php');
+		includeIfExists(API_ROOT.'/lib/'.$className.'.class.php');
 	}
 }
+
+function includeIfExists($filename) {
+		if (file_exists($filename)) {
+			return include($filename);
+		}
+		else {
+			return false;
+		}
+	}
 
 spl_autoload_register('pdaAutoload',true,true);
 

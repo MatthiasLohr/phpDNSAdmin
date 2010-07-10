@@ -31,25 +31,25 @@
 abstract class AutologinModule {
 
 	/**
-	 * @var string name of the currently logged in user
+	 * @var User currently logged in user
 	 */
-	protected $username = null;
+	protected $user = null;
 
 	/**
 	 *
-	 * @return string username of the user currently logged or null if nobody is logged in
+	 * @return User user who is currently logged in or null if nobody is logged in
 	 */
-	public function getUsername() {
-		return $this->username;
+	public function getUser() {
+		return $this->user;
 	}
 
-	public function notifyLogin($username) {
-		$this->username = $username;
+	public function notifyLogin(User $user) {
+		$this->user = $user;
 		return true;
 	}
 
 	public function notifyLogout() {
-		$this->username = null;
+		$this->user = null;
 		return true;
 	}
 

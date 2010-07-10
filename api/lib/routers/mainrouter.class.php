@@ -20,6 +20,15 @@
 
 class MainRouter extends RequestRouter {
 
+	public function login() {
+
+	}
+
+	public function logout() {
+		$autologin = AutologinManager::getInstance();
+		$autologin->notifyLogout();
+	}
+
 	public function rrtypes() {
 
 	}
@@ -31,6 +40,20 @@ class MainRouter extends RequestRouter {
 		else {
 
 		}
+	}
+
+	public function status() {
+		$result = new stdClass();
+		$autologin = AutologinManager::getInstance();
+		$user = $autologin->getUser();
+		if ($user === null) {
+			$result->loggedIn = false;
+		}
+		else {
+			$result->loggedIn = true;
+			$result->username = $user->getUsername();
+		}
+		return $result;
 	}
 
 }

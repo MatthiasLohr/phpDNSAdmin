@@ -18,8 +18,6 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-class LoginManager implements ModuleManager {
-
-}
+class ModuleConfigException extends Exception {}
 
 ?>

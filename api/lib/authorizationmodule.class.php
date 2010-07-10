@@ -20,6 +20,10 @@
 
 abstract class AuthorizationModule {
 
+	abstract public function listUsers();
+
+	abstract public function userIsAdmin(User $user);
+	
 }
 
 ?>

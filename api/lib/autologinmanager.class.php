@@ -18,7 +18,21 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-class AutologinManager {
+class AutologinManager extends AutologinModule {
+
+	private static $instance = null;
+
+	protected function __construct($configuration) {
+
+	}
+
+	public static function getInstance() {
+		return self::$instance;
+	}
+
+	public static function initialize($configuration) {
+		self::$instance = new AutologinManager($configuration);
+	}
 
 }
 

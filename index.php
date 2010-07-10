@@ -21,12 +21,47 @@
 ?>
 <html>
 	<head>
+		<title>phpDNSAdmin</title>
 		<link rel="stylesheet" href="css/jquery/jquery.css" type="text/css" />
-		<script type="text/javascript" src="js/jquery-1.4.2.min.js" />
-		<script type="text/javascript" src="js/jquery-ui-1.8.2.min.js" />
-		<script type="text/javascript" src="js/jquery.jstree.js" />
-		<script type="text/javascript" src="js/jquery.tablesorter.min.js" />
+		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+		<script type="text/javascript" src="js/jquery-ui-1.8.2.min.js"></script>
+		<script type="text/javascript" src="js/jquery.cookie.js"></script>
+		<script type="text/javascript" src="js/jquery.jstree.js"></script>
+		<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+		<script type="text/javascript" src="js/pda.system.js"></script>
+
+	</head>
 	<body>
-		
+		<div id="loadingDialog" title="Loading...">
+			<div class="ui-autocomplete-loading">Loading, please wait...</div>
+		</div>
+
+		<div id="mainPanel">
+			<ul>
+				<li><a href="#zoneAdminPanel">zone</a></li>
+				<li><a href="#userAdminPanel">user administration</a></li>
+			</ul>
+
+			<div id="zoneAdminPanel">
+				<div id="zoneSelector" style="padding: 3px;">
+					
+				</div>
+			</div>
+			<div id="userAdminPanel">
+
+			</div>
+		</div>
+
+		<div id="loginDialog" title="Login" style="display: none;">
+			<div id="loginErrorText" style="padding: 0pt 0.7em; visibility: hidden;" class="ui-state-error ui-corner-all">
+				<p><span style="float: left; margin-right: 0.3em;" class="ui-icon ui-icon-alert"></span>
+				<strong>Error:</strong> Invalid login credentials!</p>
+			</div>
+			<p>Please enter your username/password combination to log in:</p>
+			<p>
+				username: <input type="text" name="username" /><br />
+				password: <input type="password" name="password" />
+			</p>
+		</div>
 	</body>
 </html>

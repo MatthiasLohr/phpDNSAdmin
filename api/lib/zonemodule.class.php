@@ -20,6 +20,19 @@
 
 abstract class ZoneModule {
 
+	abstract public function getRecordById($recordid);
+	abstract public function getZoneByName($zonename);
+
+	abstract public function listRecords();
+	abstract public function listRecordsByType($type);
+	abstract public function listZones();
+
+	abstract public function recordAdd(Zone $zone,ResourceRecord $record);
+	abstract public function recordDelete(Zone $zone, $recordid);
+	abstract public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record);
+
+	abstract public function zoneAdd(Zone $zone);
+	abstract public function zoneDelete(Zone $zone);
 }
 
 ?>

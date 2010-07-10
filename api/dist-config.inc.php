@@ -18,6 +18,8 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('API_ROOT',dirname(__FILE__));
+$config = array(
+	
+);
 
 ?>
