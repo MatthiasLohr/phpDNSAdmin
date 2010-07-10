@@ -20,6 +20,8 @@
 
 class AuthenticationManager {
 
+	private static $instance = null;
+
 	private $modules = array();
 	private $usermap = array();
 
@@ -40,11 +42,12 @@ class AuthenticationManager {
 	}
 
 	public static function getInstance() {
-
+		return self::$instance;
 	}
 
 	public static function initialize($configuration) {
-
+		self::$instance = new AuthenticationManager($configuration);
+		return self::$instance;
 	}
 
 	public function listUsers() {

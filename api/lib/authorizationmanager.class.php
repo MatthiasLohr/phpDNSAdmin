@@ -19,7 +19,9 @@
  */
 
 class AuthorizationManager {
-	
+
+	private static $instance = null;
+
 	private $modules = array();
 
 	protected function __construct($moduleConfig) {
@@ -39,11 +41,12 @@ class AuthorizationManager {
 	}
 
 	public static function getInstance() {
-
+		return self::$instance;
 	}
 
 	public static function initialize($configuration) {
-
+		self::$instance = new AuthorizationManager($configuration);
+		return self::$instance;
 	}
 }
 
