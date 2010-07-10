@@ -18,20 +18,6 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-abstract class AuthenticationModule {
-
-	abstract public static function getInstance($config);
-	
-	public function listUsers() {
-		throw new NotSupportedException("Can't list users!");
-	}
-	
-	abstract public function userAdd(User $user, $password = null);
-	abstract public function userCheckPassword(User $user,$password);
-	abstract public function userDelete(User $user);
-	abstract public function userExists(User $user);
-	abstract public function userSetPassword(User $user, $password);
-
-}
+class NotSupportedException extends Exception {}
 
 ?>

@@ -39,6 +39,7 @@ class AuthenticationManager {
 			$this->modules[$moduleIndex] = call_user_func(array($moduleName,'getInstance'),$localConfig);
 			if ($this->modules[$moduleIndex] === null) unset($this->modules[$moduleIndex]);
 		}
+		$this->listUsers();
 	}
 
 	public static function getInstance() {
@@ -51,27 +52,80 @@ class AuthenticationManager {
 	}
 
 	public function listUsers() {
-
+		$userList = array();
+		foreach ($this->modules as $moduleIndex => $module) {
+			try {
+				$tmpList = $module->listUsers();
+				foreach ($tmpList as $user) {
+					if (!isset($this->usermap[$user->getUsername()])) {
+						$this->usermap[$user->getUsername()] = $moduleIndex;
+						$userList[] = $user;
+					}
+				}
+			}
+			catch (NotSupportedException $e) {}
+		}
+		return $userList;
 	}
 
 	public function userAdd(User $user, $password = null) {
-
+		$moduleIndex = $this->userFind($user);
+		if ($moduleIndex !== null) return false;
+		foreach ($this->modules as $moduleIndex => $module) {
+			try {
+				if ($module->userAdd($user,$password)) {
+					$this->usermap[$user->getUsername()] = $moduleIndex;
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			catch (ReadOnlyException $e) {}
+		}
+		return false;
 	}
 
 	public function userCheckPassword(User $user,$password) {
-
+		$moduleIndex = $this->userFind($user);
+		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
+		return $this->modules[$moduleIndex]->userCheckPassword($user,$password);
 	}
 
 	public function userDelete(User $user) {
-
+		$moduleIndex = $this->userFind($user);
+		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
+		if ($this->modules[$moduleIndex]->userDelete($user)) {
+			unset($this->usermap[$user->getUsername()]);
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	public function userExists(User $user) {
+		$result = $this->userFind($user);
+		return ($result !== null);
+	}
 
+	private function userFind(User $user) {
+		if (isset($this->usermap[$user->getUsername()])) {
+			return $this->usermap[$user->getUsername()];
+		}
+		foreach ($this->modules as $moduleIndex => $module) {
+			if ($module->userExists($user)) {
+				$this->usermap[$user->getUsername()] = $moduleIndex;
+				return $moduleIndex;
+			}
+		}
+		return null;
 	}
 
 	public function userSetPassword(User $user, $password) {
-
+		$moduleIndex = $this->userFind($user);
+		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
+		$this->modules[$moduleIndex]->userSetPassword($user,$password);
 	}
 
 	
