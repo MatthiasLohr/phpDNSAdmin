@@ -57,6 +57,7 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	}
 
 	/**
+	 * Read userdata from .htpasswd file
 	 * @throws ModuleRuntimeException if file is not readable
 	 */
 	private function fileRead() {
@@ -67,6 +68,10 @@ class HtpasswdAuthentication extends AuthenticationModule {
 			$this->users[$username] = $password;
 		}
 	}
+
+	/**
+	 * Write all userdata to .htpasswd file
+	 */
 
 	private function fileWrite() {
 		$fp = fopen($this->filename,'w');

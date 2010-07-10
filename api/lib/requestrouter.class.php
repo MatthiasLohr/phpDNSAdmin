@@ -18,9 +18,23 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
 abstract class RequestRouter {
 
 	protected $routingPath = array();
+
+	/**
+	 * Map URL parameters to the respective router classes
+	 *
+	 * @param string[] $path calls to be performed
+	 * @return something
+	 * @throw RequestRoutingException if a method cannot be called
+	 */
 
 	public final function track(array $path) {
 		$className = get_class($this);

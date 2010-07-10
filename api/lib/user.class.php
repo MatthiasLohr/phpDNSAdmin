@@ -18,6 +18,12 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
 class User {
 
 	private $username = null;
@@ -32,7 +38,6 @@ class User {
 
 	public function isAdmin() {
 		$authorization = AuthorizationManager::getInstance();
-		
 	}
 
 }

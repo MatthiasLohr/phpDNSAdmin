@@ -19,8 +19,9 @@
  */
 
 /**
- * authorization manager - handles user privileges
  * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 class AuthorizationManager {
@@ -55,6 +56,7 @@ class AuthorizationManager {
 
 	/**
 	 * Return the AuthorizationManager object
+	 *
 	 * @return AuthorizationManager the AuthorizationManager object
 	 */
 	public static function getInstance() {
@@ -63,6 +65,7 @@ class AuthorizationManager {
 
 	/**
 	 * Init AuthorizationManager and create the object
+	 *
 	 * @param array $configuration global module configuration
 	 * @return AuthorizationManager the AuthorizationManager object
 	 */

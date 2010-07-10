@@ -19,8 +19,9 @@
  */
 
 /**
- * authentication manager - handles users
  * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 class AuthenticationManager {
@@ -58,6 +59,7 @@ class AuthenticationManager {
 
 	/**
 	 * Return the AuthenticationManager object
+	 *
 	 * @return AuthenticationManager the AuthenticationManager object
 	 */
 	public static function getInstance() {
@@ -66,6 +68,7 @@ class AuthenticationManager {
 
 	/**
 	 * Init AuthenticationManager and create the object
+	 *
 	 * @param array $configuration global module configuration
 	 * @return AuthenticationManager the AuthenticationManager object
 	 */
@@ -76,6 +79,7 @@ class AuthenticationManager {
 
 	/**
 	 * List all registered users
+	 *
 	 * @return User[]
 	 */
 	public function listUsers() {
@@ -98,6 +102,7 @@ class AuthenticationManager {
 
 	/**
 	 * Add a user to the first module that accepts him
+	 *
 	 * @param User $user user to add
 	 * @param string $pasword unencrypted password for the new user, optional but needed if the user should be able to login
 	 * @return bool true on success, false otherwise

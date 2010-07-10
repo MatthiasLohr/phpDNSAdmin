@@ -19,8 +19,9 @@
  */
 
 /**
- * Declares the functions of any AuthorizationModule
  * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 abstract class AuthorizationModule {

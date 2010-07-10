@@ -45,11 +45,23 @@ abstract class AutologinModule {
 		return $this->user;
 	}
 
+	/**
+	 * Set the user who is logged in
+	 *
+	 * @param User the user
+	 * @return true (always)
+	 */
 	public function notifyLogin(User $user) {
 		$this->user = $user;
 		return true;
 	}
 
+	/**
+	 * No user is logged in, so set the corresponding variable to null
+	 *
+	 * @param User the user
+	 * @return true (always)
+	 */
 	public function notifyLogout() {
 		$this->user = null;
 		return true;

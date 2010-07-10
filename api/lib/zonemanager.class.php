@@ -18,12 +18,26 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
 class ZoneManager {
 
 	private static $instance = null;
 
 	private $modules = array();
 
+	/**
+	 * Load zone modules
+	 *
+	 * @param array $moduleConfig global module configuration
+	 * @throw ModuleConfigException if no config exists
+	 * @throw ModuleConfigException if the config is not properly written
+	 * @throw ModuleConfigException if the module file dows not exist
+	 */
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
 		$moduleCount = count($moduleConfig);
@@ -40,10 +54,21 @@ class ZoneManager {
 		}
 	}
 
+	/**
+	 * Return the ZoneManager object
+	 *
+	 * @return ZoneManager the ZoneManager object
+	 */
 	public static function getInstance() {
 		return self::$instance;
 	}
 
+	/**
+	 * Init ZoneManager and create the object
+	 *
+	 * @param array $configuration global module configuration
+	 * @return ZoneManager the ZoneManager object
+	 */
 	public static function initialize($configuration) {
 		self::$instance = new ZoneManager($configuration);
 		return self::$instance;

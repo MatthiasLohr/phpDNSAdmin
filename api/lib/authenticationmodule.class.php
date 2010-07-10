@@ -19,8 +19,9 @@
  */
 
 /**
- * Declares the functions of any AuthenticationModule
  * @package phpDNSAdmin
+ * @subpackage Core
+ * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 abstract class AuthenticationModule {
