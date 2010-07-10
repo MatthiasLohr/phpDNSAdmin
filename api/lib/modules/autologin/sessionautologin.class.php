@@ -32,6 +32,10 @@ class SessionAutologin extends AutologinModule {
 		session_start();
 	}
 
+	public static function getInstance($config) {
+		return new SessionAutologin($config);
+	}
+
 	public function getUser() {
 		if (isset($_SESSION[$this->fieldname])) {
 			return new User($_SESSION[$this->fieldname]);
@@ -39,10 +43,6 @@ class SessionAutologin extends AutologinModule {
 		else {
 			return null;
 		}
-	}
-
-	public static function getInstance($config) {
-		return new SessionAutologin($config);
 	}
 
 	public function notifyLogin(User $user) {
