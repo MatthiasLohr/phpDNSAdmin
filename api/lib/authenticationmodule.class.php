@@ -18,14 +18,69 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Declares the functions of any AuthenticationModule
+ * @package phpDNSAdmin
+ */
+
 abstract class AuthenticationModule {
 
+	/**
+	 * Create an instance of the module
+	 *
+	 * @param array $config module configuration
+	 * @return AuthenticationModule working instance of the moodule (or null if configuration errors occured?)
+	 */
 	abstract public static function getInstance($config);
+
+	/**
+	 * List users handled by this module.
+	 *
+	 * @return array users who can login with this module
+	 */
 	abstract public function listUsers();
+
+	/**
+	 * Add a user to the list
+	 *
+	 * @param User $user user to add
+	 * @param string $pasword unencrypted password for the new user, optional but needed if the user should be able to login
+	 * @return bool true on success, false otherwise
+	 */
 	abstract public function userAdd(User $user, $password = null);
+
+	/**
+	 * Check a user's login data
+	 *
+	 * @param User $user user to check
+	 * @param string $pasword unencrypted password
+	 * @return bool true if the user can login with the given data, false otherwise
+	 */
 	abstract public function userCheckPassword(User $user,$password);
+
+	/**
+	 * Remove a user from the module's database
+	 *
+	 * @param User $user user to delete
+	 * @return bool true on success, false otherwise
+	 */
 	abstract public function userDelete(User $user);
+
+	/**
+	 * Check if a user exists
+	 *
+	 * @param User $user user to delete
+	 * @return bool true if user exists, false otherwise
+	 */
 	abstract public function userExists(User $user);
+
+	/**
+	 * Add a user to the list
+	 *
+	 * @param User $user user to modify
+	 * @param string $pasword new unencrypted password for the user, not null
+	 * @return bool true on success, false otherwise
+	 */
 	abstract public function userSetPassword(User $user, $password);
 
 }
