@@ -19,19 +19,31 @@
  */
 
 class LdapAuthentication extends AuthenticationModule {
-	
+
+	protected function __construct($config) {
+
+	}
+
+	public static function getInstance($config) {
+
+	}
+
 	public function listUsers() {
 
 	}
+
 	public function userAdd(User $user, $password = null) {
 
 	}
+
 	public function userCheckPassword(User $user,$password) {
 
 	}
+
 	public function userDelete(User $user) {
 
 	}
+
 	public function userExists(User $user) {
 
 	}

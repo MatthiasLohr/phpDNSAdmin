@@ -18,16 +18,48 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-abstract class AuthentificationModule {
+class AuthenticationManager {
 
-	abstract public static function getInstance($config);
-	abstract public function listUsers();
-	abstract public function userAdd(User $user, $password = null);
-	abstract public function userCheckPassword(User $user,$password);
-	abstract public function userDelete(User $user);
-	abstract public function userExists(User $user);
-	abstract public function userSetPassword(User $user, $password);
+	private $modules = array();
+	private $usermap = array();
 
+	protected function __construct($configuration) {
+
+	}
+
+	public static function getInstance() {
+
+	}
+
+	public static function initialize($configuration) {
+
+	}
+
+	public function listUsers() {
+
+	}
+
+	public function userAdd(User $user, $password = null) {
+
+	}
+
+	public function userCheckPassword(User $user,$password) {
+
+	}
+
+	public function userDelete(User $user) {
+
+	}
+
+	public function userExists(User $user) {
+
+	}
+
+	public function userSetPassword(User $user, $password) {
+
+	}
+
+	
 }
 
 ?>

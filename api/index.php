@@ -33,10 +33,10 @@ else {
 $configuration = Configuration::getInstance();
 
 // initialize module managers
-AuthenticationManager::initialize($configuration);
-AuthorizationManager::initialize($configuration);
-AutologinManager::initialize($configuration);
-ZoneManager::initialize($configuration);
+AuthenticationManager::initialize($configuration->getAuthenticationConfig());
+AuthorizationManager::initialize($configuration->getAuthorizationConfig());
+AutologinManager::initialize($configuration->getAutologinConfig());
+ZoneManager::initialize($configuration->getZoneConfig());
 
 // prepare path and start script execution
 if (isset($_GET['pda_request_path']) && strlen($_GET['pda_request_path']) > 0) {

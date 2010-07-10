@@ -40,6 +40,10 @@ class Configuration {
 
 	}
 
+	/**
+	 *
+	 * @return Configuration configuration class
+	 */
 	public static function getInstance() {
 		return self::$instance;
 	}
