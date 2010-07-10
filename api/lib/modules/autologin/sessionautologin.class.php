@@ -20,6 +20,14 @@
 
 class SessionAutologin extends AutologinModule {
 
+	protected function __construct($config) {
+
+	}
+
+	public static function getInstance($config) {
+		return new SessionAutologin($config);
+	}
+
 }
 
 ?>

@@ -29,18 +29,51 @@
  */
 class HtpasswdAuthentication extends AuthenticationModule {
 
+	/**
+	 *
+	 * @var array Array of username => encrypted password
+	 */
+	private $users = array();
+
+	/**
+	 * @var string filename of .htpasswd file
+	 */
 	private $filename = null;
 
 	protected function __construct($config) {
 
 	}
 
-	private function fileRead() {
+	/**
+	 * encrypt the password
+	 *
+	 * @param string $password password to encrypt
+	 * @return string encrypted password
+	 */
+	private function encryptPassword($password)
+	{
+		$salt = generateRandomKey(2,'.');
+		return crypt($password,$salt);
+	}
 
+	/**
+	 * @throws ModuleRuntimeException if file is not readable
+	 */
+	private function fileRead() {
+		if (!file_exists($this->filename)) throw new ModuleRuntimeException('File '.$this->filename.' is not readable!');
+		$lines = file($this->filename);
+		foreach ($lines as $line) {
+			list($username ,$password) = explode(':',$line,2);
+			$this->users[$username] = $password;
+		}
 	}
 
 	private function fileWrite() {
-
+		$fp = fopen($this->filename,'w');
+		foreach ($this->users as $username => $ePassword) {
+			fputs($fp,$username.':'.(($ePassword===null)?'x':$ePassword)."\n");
+		}
+		fclose($fp);
 	}
 
 	public static function getInstance($config) {
@@ -48,27 +81,52 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	}
 
 	public function listUsers() {
-
+		$result = array();
+		foreach ($this->users as $username => $ePassword) {
+			$result[] = new User($username);
+		}
+		return $result;
 	}
 
 	public function userAdd(User $user, $password = null) {
-
+		if ($this->userExists($user)) return false;
+		if ($password === null) {
+			$this->users[$user->getUsername()] = null;
+		}
+		else {
+			$this->users[$user->getUsername()] = $this->encryptPassword($password);
+		}
+		return true;
 	}
 
 	public function userCheckPassword(User $user,$password) {
-
+		if (!$this->userExists($user)) throw new NoSuchUserException('No user named '.$user->getUsername().' here!');
+		$ePassword = $this->users[$user->getUsername()];
+		return (crypt($password,$ePassword) == $ePassword);
 	}
 
 	public function userDelete(User $user) {
-
+		if (!$this->userExists($user)) throw new NoSuchUserException('No user named '.$user->getUsername().' here!');
+		unset($this->users[$user->getUsername()]);
+		return true;
 	}
 
 	public function userExists(User $user) {
-
+		return (isset($this->users[$user->getUsername()]));
 	}
 
+	/**
+	 *
+	 * @param User $user
+	 * @param string $password
+	 * @return true on success, false otherwise
+	 * @throws NoSuchUserException
+	 */
 	public function userSetPassword(User $user, $password) {
-
+		if (!$this->userExists($user)) throw new NoSuchUserException('No user named '.$user->getUsername().' here!');
+		$this->users[$user->getUsername()] = $this->encryptPassword($password);
+		$this->fileWrite();
+		return true;
 	}
 }
 

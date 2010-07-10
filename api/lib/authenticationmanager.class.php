@@ -23,8 +23,20 @@ class AuthenticationManager {
 	private $modules = array();
 	private $usermap = array();
 
-	protected function __construct($configuration) {
-
+	protected function __construct($moduleConfig) {
+		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
+		$moduleCount = count($moduleConfig);
+		for ($moduleIndex = 0; $moduleIndex < $moduleCount; $moduleIndex++) {
+			$localConfig = $moduleConfig[$moduleIndex];
+			if (!isset($localConfig['_module'])) throw new ModuleConfigException('Found module config without _module definition!');
+			$moduleName = $localConfig['_module'];
+			unset($localConfig['_module']);
+			$moduleFile = API_ROOT.'/lib/modules/authentication/'.strtolower($moduleName).'.class.php';
+			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file '.$moduleFile.'!');
+			require_once($moduleFile);
+			$this->modules[$moduleIndex] = call_user_func(array($moduleName,'getInstance'),$localConfig);
+			if ($this->modules[$moduleIndex] === null) unset($this->modules[$moduleIndex]);
+		}
 	}
 
 	public static function getInstance() {

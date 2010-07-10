@@ -18,8 +18,52 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 $config = array(
-	
+
+	// authentication modules
+	'authentication' => array(
+		/*
+		array(
+			'_module' => 'HtpasswdAuthentication',
+			'filename' => '/var/www/phpdnsadmin/.htpasswd'
+		),
+		// */
+	),
+
+	// autologin modules
+	'autologin' => array(
+		array(
+			'_module' => 'SessionAutologin',
+
+		),
+	),
+
+	// authorization modules
+	'authorization' => array(
+
+	),
+
+	// zone modules
+	'zone' => array(
+		/*
+		array(
+			'_module' => 'PdnsPgsqlZone',
+			'host' => 'localhost',
+			'username' => 'powerdns',
+			'password' => 'powerdns'
+		),
+		// */
+		/*
+		array(
+			'_module' => 'PdnsMysqlZone',
+			'host' => 'localhost',
+			'database' => 'powerdns',
+			'username' => 'powerdns',
+			'password' => 'powerdns'
+		),
+		// */
+	)
 );
 
 ?>

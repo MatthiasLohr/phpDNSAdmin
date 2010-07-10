@@ -29,15 +29,15 @@ class Configuration {
 	}
 
 	public function getAuthenticationConfig() {
-
+		return $this->config['authentication'];
 	}
 
 	public function getAuthorizationConfig() {
-
+		return $this->config['authorization'];
 	}
 
 	public function getAutologinConfig() {
-
+		return $this->config['autologin'];
 	}
 
 	/**
@@ -49,7 +49,7 @@ class Configuration {
 	}
 
 	public function getZoneConfig() {
-
+		return $this->config['zone'];
 	}
 
 	public static function load($filename) {

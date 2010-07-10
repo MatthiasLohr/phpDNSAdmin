@@ -35,6 +35,8 @@ abstract class AutologinModule {
 	 */
 	protected $user = null;
 
+	abstract public static function getInstance($config);
+
 	/**
 	 *
 	 * @return User user who is currently logged in or null if nobody is logged in
