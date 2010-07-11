@@ -40,6 +40,9 @@ ZoneManager::initialize($configuration->getZoneConfig());
 
 // prepare path and start script execution
 if (isset($_GET['pda_request_path']) && strlen($_GET['pda_request_path']) > 0) {
+	if (substr($_GET['pda_request_path'],-1) == '/') {
+		$_GET['pda_request_path'] = substr($_GET['pda_request_path'],0,-1);
+	}
 	$pdaPath = explode('/',$_GET['pda_request_path']);
 }
 else {
