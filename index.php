@@ -40,6 +40,7 @@
 			<ul>
 				<li><a href="#zoneAdminPanel">zone</a></li>
 				<li><a href="#userAdminPanel">user administration</a></li>
+				<li><a onclick="javascript:logout();" href="#">logout</a></li>
 			</ul>
 
 			<div id="zoneAdminPanel">

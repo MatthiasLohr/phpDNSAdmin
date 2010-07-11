@@ -16,8 +16,54 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
+function login(username,password) {
+	$.ajax({
+		url: 'api/status',
+		data: {
+			username: username,
+			password: password
+		},
+		type: 'POST',
+		success: function(data) {
+			if (data.loggedIn == true) {
+				performLogin();
+			}
+			else {
+				performLogout();
+			}
+		},
+		error: function(request,errorType,exception) {
+
+		}
+	});
+}
+
+function logout() {
+	$.ajax({
+		url: 'api/status',
+		type: 'POST',
+		data: {
+			username: ''
+		},
+		dataType: 'json',
+		success: function(data) {
+			$("#loadingDialog").dialog("option","beforeclose","");
+			$("#loadingDialog").dialog("close");
+			if (data.loggedIn == true) {
+				performLogin();
+			}
+			else {
+				performLogout();
+			}
+		},
+		error: function(request,errorType,exception) {
+
+		}
+	});
+}
+
 function performLogin() {
-	
+	$("#loginDialog").dialog("close");
 }
 
 function performLogout() {
@@ -28,7 +74,7 @@ function performLogout() {
 function updateStatus() {
 	$.ajax({
 		url: 'api/status',
-		//dataType: 'json',
+		type: 'GET',
 		success: function(data) {
 			$("#loadingDialog").dialog("option","beforeclose","");
 			$("#loadingDialog").dialog("close");
@@ -47,6 +93,12 @@ function updateStatus() {
 
 // immediate execution
 $(document).ready(function() {
+	// set ajax default options
+	$.ajaxSetup({
+		type: 'GET',
+		dataType: 'json'
+	});
+	//
 	$("#loadingDialog").dialog({
 		beforeclose: function() {return false},
 		closeOnEscape: false,
@@ -62,14 +114,8 @@ $(document).ready(function() {
 			"Login": function() {
 				username = $('#usernameInput').attr('value');
 				password = $('#passwordInput').attr('value');
-				$.ajax({
-					url: 'api/status',
-					data: {
-						username: username,
-						password: password
-					},
-					type: 'POST'
-				});
+				$('#passwordInput').attr('value','')
+				login(username,password);
 			}
 		},
 		closeOnEscape: false,
