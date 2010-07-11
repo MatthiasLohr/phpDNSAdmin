@@ -487,3 +487,27 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 ----------------------------------*/
 .ui-progressbar { height:2em; text-align: left; }
 .ui-progressbar .ui-progressbar-value {margin: -1px; height:100%; }
+
+
+/* PDA additions */
+
+.jstree {
+	background: #dddddd;
+	background: -webkit-gradient(
+		linear,
+		left bottom,
+		left top,
+		color-stop(0.2, rgb(204,204,204)),
+		color-stop(0.6, rgb(226,226,226))
+	);
+	background: -moz-linear-gradient(
+		center bottom,
+		rgb(204,204,204) 20%,
+		rgb(226,226,226) 60%
+	);
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	-khtml-border-radius: 4px;
+	border-radius: 4px;
+	border: 1px solid #aaaaaa;
+}

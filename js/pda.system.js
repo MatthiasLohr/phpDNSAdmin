@@ -130,20 +130,24 @@ $(document).ready(function() {
 			animation: 100
 		},
 		json_data: {
-			data: [
-				{
-					data: 'com',
-					children: ['google']
-				},
-				{
-					data: 'net',
-					children: [{data:'matthias-lohr',children: ['home']},'sourceforge']
-				},
-				{
-					data: 'org'
-				}
-			]
+			data: []
 		},
 		plugins: ['json_data','ui','themeroller']
+	});
+	$.getJSON('api/servers', '', function(servers) {
+		for (i = 0; i < servers.length; i++) {
+			$.getJSON('api/servers/' + servers[i].sysname + '/zones', '', function(zones) {
+				for (i = 0; i < zones.length; i++) {
+					zoneparts = zones[i].name.split(".");
+					prevID = "zoneSelector";
+					for (j = zoneparts.length - 1; j >= 0; j--) {
+						if (!document.getElementById(prevID + "_" + zoneparts[j]))
+							$("#zoneSelector").jstree("create_node",$("#" + prevID),'inside',{attr:{id:prevID + "_" + zoneparts[j]},data:zoneparts[j]});
+						prevID = prevID + "_" + zoneparts[j];
+					}
+					$("#" + prevID + " > a").css("background", "#bbccff");
+				}
+			});
+		}
 	});
 });
