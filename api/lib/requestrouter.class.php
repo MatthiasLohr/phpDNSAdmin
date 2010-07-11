@@ -61,10 +61,10 @@ abstract class RequestRouter {
 		if ($routerReflector->hasMethod($path[0])) {
 			$method = $routerReflector->getMethod($path[0]);
 			if (!$method->isAbstract() && !$method->isConstructor() && !$method->isDestructor() && $method->isPublic() && !$method->isStatic()) {
-				$paramCount = count($method->getParameters());
+				$paramCount = $method->getNumberOfParameters();
 				if ($paramCount > 0) {
 					$params = array_slice($path,1,$paramCount);
-					if (count($params) < $paramCount) throw new RequestRoutingException(
+					if (count($params) < $method->getNumberOfRequiredParameters()) throw new RequestRoutingException(
 						'Not enough parameters for '.$className.'->'.$method->getName().'()!'
 					);
 				}

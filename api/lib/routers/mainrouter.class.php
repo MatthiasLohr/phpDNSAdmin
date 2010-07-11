@@ -48,7 +48,7 @@ class MainRouter extends RequestRouter {
 		}
 	}
 
-	public function servers($serverId = null) {
+	public function servers($sysname = null) {
 		// check for login
 		$result = new stdClass();
 		$autologin = AutologinManager::getInstance();
@@ -57,8 +57,10 @@ class MainRouter extends RequestRouter {
 			return $result;
 		}
 		// work request
-		if ($serverId === null) {
-
+		$zonemanager = ZoneManager::getInstance();
+		if ($sysname === null) {
+			// list all servers
+			return $zonemanager->listModules();
 		}
 		else {
 

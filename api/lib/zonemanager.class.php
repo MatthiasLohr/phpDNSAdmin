@@ -34,6 +34,7 @@ class ZoneManager {
 	private static $instance = null;
 
 	private $modules = array();
+	private $moduleInfo = array();
 
 	/**
 	 * Load zone modules
@@ -54,8 +55,20 @@ class ZoneManager {
 			$moduleFile = API_ROOT.'/lib/modules/zone/'.strtolower($moduleName).'.class.php';
 			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file '.$moduleFile.'!');
 			require_once($moduleFile);
-			$this->modules[$moduleIndex] = call_user_func(array($moduleName,'getInstance'),$localConfig);
-			if ($this->modules[$moduleIndex] === null) unset($this->modules[$moduleIndex]);
+			$this->modules[$moduleIndex] = new stdClass();
+			$this->modules[$moduleIndex]->module = call_user_func(array($moduleName,'getInstance'),$localConfig);
+			if ($this->modules[$moduleIndex]->module === null) {
+				unset($this->modules[$moduleIndex]);
+			}
+			else {
+				if (preg_match('/^([a-zA-Z0-9]+)$/',$localConfig['_sysname'])) {
+					$this->modules[$moduleIndex]->sysname = $localConfig['_sysname'];
+				}
+				else {
+					$this->modules[$moduleIndex]->sysname = $moduleIndex;
+				}
+				$this->modules[$moduleIndex]->name = (isset($localConfig['_name'])?$localConfig['_name']:'Server '.$moduleIndex);
+			}
 		}
 	}
 
@@ -68,6 +81,15 @@ class ZoneManager {
 		return self::$instance;
 	}
 
+	public function getModuleBySysname($sysname) {
+		foreach ($this->modules as $moduleIndex => $module) {
+			if ($module->sysname == $sysname) {
+				return $module->module;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Init ZoneManager and create the object
 	 *
@@ -77,6 +99,17 @@ class ZoneManager {
 	public static function initialize($configuration) {
 		self::$instance = new ZoneManager($configuration);
 		return self::$instance;
+	}
+
+	public function listModules() {
+		$result = array();
+		foreach ($this->modules as $moduleIndex => $module) {
+			$tmp = new stdClass();
+			$tmp->sysname = $module->sysname;
+			$tmp->name = $module->name;
+			$result[] = $tmp;
+		}
+		return $result;
 	}
 }
 
