@@ -28,35 +28,62 @@
  * @package phpDNSAdmin
  * @subpackage Zone
  */
-class PdnsSqlZone extends ZoneModule {
+class PdnsPdoZone extends ZoneModule {
+
+	private $db = null;
 
 	protected function __construct($config) {
-
+		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
 	}
 
 	public static function getInstance($config) {
-		return new PdnsSqlZone($config);
+		return new PdnsPdoZone($config);
 	}
 
 	public function getRecordById($recordid) {
+
 	}
+
 	public function getZoneByName($zonename) {
+
 	}
+
 	public function listRecords() {
+
 	}
+
 	public function listRecordsByType($type) {
+
 	}
+
 	public function listZones() {
+		$result = array();
+		$stm = $this->db->query('SELECT name FROM domains WHERE type = \'MASTER\'');
+		while ($row = $stm->fetch()) {
+			$zone = new Zone($row['name'],$this);
+			$result[] = $zone;
+		}
+		return $result;
 	}
+
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
+
 	}
+
 	public function recordDelete(Zone $zone, $recordid) {
+
 	}
+
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
+
 	}
+
 	public function zoneAdd(Zone $zone) {
+
 	}
+
 	public function zoneDelete(Zone $zone) {
+
 	}
 }
 

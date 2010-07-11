@@ -20,30 +20,33 @@
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
+ * @subpackage Routers
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
+ * @subpackage Routers
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class Zone {
+class ServerRouter extends RequestRouter {
 
-	private $name;
+	private $zoneModule = null;
 
-	private $module;
-
-	public function  __construct($zoneName,ZoneModule $zoneModule) {
-		$this->name = $zoneName;
-		$this->module = $zoneModule;
+	public function __construct(ZoneModule $zoneModule) {
+		$this->zoneModule = $zoneModule;
 	}
 
-	public function getName() {
-		return $this->name;
+	public function zones() {
+		$result = array();
+		$zones = $this->zoneModule->listZones();
+		foreach ($zones as $zone) {
+			$tmp = new stdClass();
+			$tmp->name = $zone->getName();
+			$result[] = $tmp;
+		}
+		return $result;
 	}
-
 }
 
 ?>

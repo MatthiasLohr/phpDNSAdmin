@@ -63,7 +63,14 @@ class MainRouter extends RequestRouter {
 			return $zonemanager->listModules();
 		}
 		else {
-
+			$zoneModule = $zonemanager->getModuleBySysname($sysname);
+			if ($zoneModule === null) {
+				$result->error = 'No server with this sysname found!';
+			}
+			else {
+				$serverRouter = new ServerRouter($zoneModule);
+				return $serverRouter->track($this->routingPath);
+			}
 		}
 		return $result;
 	}

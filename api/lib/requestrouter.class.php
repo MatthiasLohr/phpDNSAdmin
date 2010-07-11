@@ -56,6 +56,7 @@ abstract class RequestRouter {
 	 * @throws RequestRoutingException if a method cannot be called
 	 */
 	public final function track(array $path) {
+		if (count($path) == 0) throw new RequestRoutingException('Can\'t track empty path!');
 		$className = get_class($this);
 		$routerReflector = new ReflectionClass($className);
 		if ($routerReflector->hasMethod($path[0])) {
