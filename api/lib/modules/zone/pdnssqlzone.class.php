@@ -30,6 +30,34 @@
  */
 class PdnsSqlZone extends ZoneModule {
 
+	protected function __construct($config) {
+
+	}
+
+	public static function getInstance($config) {
+		return new PdnsSqlZone($config);
+	}
+
+	public function getRecordById($recordid) {
+	}
+	public function getZoneByName($zonename) {
+	}
+	public function listRecords() {
+	}
+	public function listRecordsByType($type) {
+	}
+	public function listZones() {
+	}
+	public function recordAdd(Zone $zone, ResourceRecord $record) {
+	}
+	public function recordDelete(Zone $zone, $recordid) {
+	}
+	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
+	}
+	public function zoneAdd(Zone $zone) {
+	}
+	public function zoneDelete(Zone $zone) {
+	}
 }
 
 ?>
