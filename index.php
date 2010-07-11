@@ -59,8 +59,8 @@
 			</div>
 			<p>Please enter your username/password combination to log in:</p>
 			<p>
-				username: <input type="text" name="username" /><br />
-				password: <input type="password" name="password" />
+				username: <input type="text" id="usernameInput" name="username" /><br />
+				password: <input type="password" id="passwordInput" name="password" />
 			</p>
 		</div>
 	</body>

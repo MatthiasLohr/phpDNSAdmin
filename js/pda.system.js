@@ -60,7 +60,16 @@ $(document).ready(function() {
 		//beforeclose: function() {return false},
 		buttons: {
 			"Login": function() {
-				
+				username = $('#usernameInput').attr('value');
+				password = $('#passwordInput').attr('value');
+				$.ajax({
+					url: 'api/status',
+					data: {
+						username: username,
+						password: password
+					},
+					type: 'POST'
+				});
 			}
 		},
 		closeOnEscape: false,

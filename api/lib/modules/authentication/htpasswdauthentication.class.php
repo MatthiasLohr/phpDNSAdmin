@@ -42,7 +42,8 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	private $filename = null;
 
 	protected function __construct($config) {
-
+		$this->filename = $config['filename'];
+		$this->fileRead();
 	}
 
 	/**
@@ -62,18 +63,17 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	 * @throws ModuleRuntimeException if file is not readable
 	 */
 	private function fileRead() {
-		if (!file_exists($this->filename)) throw new ModuleRuntimeException('File '.$this->filename.' is not readable!');
+		if (!file_exists($this->filename)) throw new ModuleRuntimeException('File '.$this->filename.' does not exist!');
 		$lines = file($this->filename);
 		foreach ($lines as $line) {
 			list($username ,$password) = explode(':',$line,2);
-			$this->users[$username] = $password;
+			$this->users[$username] = trim($password);
 		}
 	}
 
 	/**
 	 * Write all userdata to .htpasswd file
 	 */
-
 	private function fileWrite() {
 		$fp = fopen($this->filename,'w');
 		foreach ($this->users as $username => $ePassword) {
