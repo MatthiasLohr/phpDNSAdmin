@@ -50,10 +50,9 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	 * Generate random chars
 	 *
 	 * @param integer $length number of chars
-	 * @param char $something smething unknown
 	 * @return string random string
 	 */
-	private function generateRandomKey($length, $something) {
+	private function generateRandomKey($length) {
 	  $result = '';
 		while ($length--)
 			$result .= chr(rand(32, 127));
@@ -68,7 +67,7 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	 */
 	private function encryptPassword($password)
 	{
-		$salt = $this->generateRandomKey(2,'.');
+		$salt = $this->generateRandomKey(2);
 		return crypt($password,$salt);
 	}
 
