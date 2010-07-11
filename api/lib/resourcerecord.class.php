@@ -150,6 +150,12 @@ abstract class ResourceRecord {
 	 */
 	abstract public static function getTypeString();
 
+	
+	public static function instantiate($type,$name,$content,$ttl,$priority = null) {
+		$className = self::getTypeClassName($type);
+		return new $className($name,$content,$ttl,$priority);
+	}
+
 	/**
 	 * return a list of fields contained in the specific record type
 	 *

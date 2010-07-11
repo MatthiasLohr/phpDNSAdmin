@@ -37,15 +37,37 @@ class ServerRouter extends RequestRouter {
 		$this->zoneModule = $zoneModule;
 	}
 
-	public function zones() {
-		$result = array();
-		$zones = $this->zoneModule->listZones();
-		foreach ($zones as $zone) {
-			$tmp = new stdClass();
-			$tmp->name = $zone->getName();
-			$result[] = $tmp;
+	public function zones($zonename = null) {
+		if ($zonename === null) {
+			$result = array();
+			$zones = $this->zoneModule->listZones();
+			foreach ($zones as $zone) {
+				$tmp = new stdClass();
+				$tmp->name = $zone->getName();
+				$result[] = $tmp;
+			}
+			return $result;
 		}
-		return $result;
+		else {
+			$zone = new Zone($zonename,$this->zoneModule);
+			try {
+				switch (RequestRouter::getRequestType()) {
+					case 'DELETE':
+						$this->zoneModule->zoneDelete($zone);
+						break;
+					case 'PUT':
+						$this->zoneModule->zoneCreate($zonename);
+						break;
+					case 'GET':
+						break;
+				}
+			}
+			catch(NoSuchZoneException $e) {
+				$result = new stdClass();
+				$result->error = 'Zone not found!';
+				return $result;
+			}
+		}
 	}
 }
 
