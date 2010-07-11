@@ -35,6 +35,8 @@ class AutologinManager {
 
 	private $modules = array();
 
+	private $user = null;
+
 	/**
 	 * Load autologin modules
 	 *
@@ -75,6 +77,7 @@ class AutologinManager {
 	 */
 
 	public function getUser() {
+		if ($this->user !== null) return $this->user;
 		$user = null;
 		$foundIndex = null;
 		// check for autologin
@@ -94,6 +97,7 @@ class AutologinManager {
 			}
 		}
 		// return
+		$this->user = $user;
 		return $user;
 	}
 
@@ -114,6 +118,7 @@ class AutologinManager {
 	 * @param User $user the user who is logged in
 	 */
 	public function notifyLogin(User $user) {
+		$this->user = $user;
 		foreach ($this->modules as $moduleIndex => $module) {
 			$module->notifyLogin($user);
 		}
@@ -125,6 +130,7 @@ class AutologinManager {
 	 * @param User $user the user who is loggedout
 	 */
 	public function notifyLogout() {
+		$this->user = null;
 		foreach ($this->modules as $moduleIndex => $module) {
 			$module->notifyLogout();
 		}

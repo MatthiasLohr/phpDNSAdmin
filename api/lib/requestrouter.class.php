@@ -33,6 +33,21 @@ abstract class RequestRouter {
 
 	protected $routingPath = array();
 
+	public static function getJsonData() {
+		switch ($_SERVER['REQUEST_METHOD']) {
+			case 'POST':
+			case 'PUT':
+				return json_decode(file_get_contents('php://input'));
+				break;
+			default:
+				return null;
+		}
+	}
+
+	public static function getRequestType() {
+		return $_SERVER['REQUEST_METHOD'];
+	}
+
 	/**
 	 * Map URL parameters to the respective router classes
 	 *
@@ -40,7 +55,6 @@ abstract class RequestRouter {
 	 * @return something
 	 * @throws RequestRoutingException if a method cannot be called
 	 */
-
 	public final function track(array $path) {
 		$className = get_class($this);
 		$routerReflector = new ReflectionClass($className);

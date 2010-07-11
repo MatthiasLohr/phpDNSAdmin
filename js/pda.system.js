@@ -22,7 +22,7 @@ function performLogin() {
 
 function performLogout() {
 	$("#loginDialog").dialog("open");
-	$("#zoneSelector").jstree("create",'bla');
+	//$("#zoneSelector").jstree("create_node",$("#zoneSelector"),'inside',{data:'test234'});
 }
 
 function updateStatus() {
