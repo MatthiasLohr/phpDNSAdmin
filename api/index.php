@@ -48,9 +48,16 @@ else {
 	exit;
 }
 
-$router = new MainRouter();
-$result = $router->track($pdaPath);
-header('Content-type: text/plain');
-echo(json_encode($result));
+try {
+	$router = new MainRouter();
+	$result = $router->track($pdaPath);
+	header('Content-type: text/plain');
+	echo(json_encode($result));
+}
+catch (RequestRoutingException $e) {
+	$result = new stdClass();
+	$result->error = 'Routing error! '.$e->getMessage();
+	echo(json_encode($result));
+}
 
 ?>

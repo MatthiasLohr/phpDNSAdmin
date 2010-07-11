@@ -64,6 +64,9 @@ abstract class RequestRouter {
 				$paramCount = count($method->getParameters());
 				if ($paramCount > 0) {
 					$params = array_slice($path,1,$paramCount);
+					if (count($params) < $paramCount) throw new RequestRoutingException(
+						'Not enough parameters for '.$className.'->'.$method->getName().'()!'
+					);
 				}
 				else {
 					$params = array();
