@@ -66,20 +66,31 @@ class MainRouter extends RequestRouter {
 		return $result;
 	}
 
+	public function simpletypes($type) {
+		$result = new stdClass();
+		if (RequestRouter::getRequestType() == 'POST') {
+
+		}
+		return $result;
+	}
+
 	public function status() {
 		$result = new stdClass();
 		$autologin = AutologinManager::getInstance();
 		$authentication = AuthenticationManager::getInstance();
 		switch (RequestRouter::getRequestType()) {
 			case 'POST':
-				$data = RequestRouter::getJsonData();
-				if ($data !== null) {
-					if (isset($data->username) && isset($data->password)) {
-						$user = new User($data->username);
-						if ($authentication->userCheckPassword($user, $data->password)) {
+				if (isset($_POST['username']) && strlen($_POST['username']) == 0) {
+					$autologin->notifyLogout();
+				}
+				elseif (isset($_POST['username']) && isset($_POST['password'])) {
+					$user = new User($_POST['username']);
+					try {
+						if ($authentication->userCheckPassword($user,$_POST['password'])) {
 							$autologin->notifyLogin($user);
 						}
 					}
+					catch (NoSuchUserException $e) {}
 				}
 			case 'GET':
 				$user = $autologin->getUser();
@@ -94,7 +105,6 @@ class MainRouter extends RequestRouter {
 		}
 		return $result;
 	}
-
 }
 
 ?>

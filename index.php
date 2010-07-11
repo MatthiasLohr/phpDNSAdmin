@@ -40,6 +40,7 @@
 			<ul>
 				<li><a href="#zoneAdminPanel">zone</a></li>
 				<li><a href="#userAdminPanel">user administration</a></li>
+				<li><a onclick="javascript:logout();" href="#">logout</a></li>
 			</ul>
 
 			<div id="zoneAdminPanel">
@@ -59,8 +60,8 @@
 			</div>
 			<p>Please enter your username/password combination to log in:</p>
 			<p>
-				username: <input type="text" name="username" /><br />
-				password: <input type="password" name="password" />
+				username: <input type="text" id="usernameInput" name="username" /><br />
+				password: <input type="password" id="passwordInput" name="password" />
 			</p>
 		</div>
 	</body>
