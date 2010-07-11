@@ -24,6 +24,8 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+define('RRTYPE_PATH',API_ROOT.'/lib/rrtypes');
+
 /**
  * @package phpDNSAdmin
  * @subpackage Core
@@ -116,23 +118,16 @@ abstract class ResourceRecord {
 	}
 
 	/**
-	 * Return an array of registered types
-	 *
-	 * @return array Array of record type => class name
-	 */
-	final public static function getRegisteredTypes() {
-		return self::$recordTypes;
-	}
-
-	/**
 	 * return the name of a class which implements the given RRType
 	 *
 	 * @param string $type RRType string
 	 * @return string name of the class which implements the given RRType
 	 */
 	public static final function getTypeClassName($type) {
-		if (isset(self::$recordTypes[$type])) {
-			return self::$recordTypes[$type];
+		$assumedName = strtoupper(substr($type,0,1)).strtolower(substr($type,1)).'Record';
+		if (file_exists(RRTYPE_PATH.'/'.strtolower($assumedName).'.class.php')) {
+			require_once(RRTYPE_PATH.'/'.strtolower($assumedName).'.class.php');
+			if (class_exists($assumedName)) return $assumedName;
 		}
 		else {
 			return null;
@@ -162,19 +157,15 @@ abstract class ResourceRecord {
 	 */
 	abstract public function listFields();
 
-	/**
-	 * register a new record type with its handler class
-	 *
-	 * @param string $type resource record type
-	 * @param string $className name of the handler class
-	 * @return bool true on success, otherwise false
-	 */
-	public static final function registerType($className) {
-		require_once(dirname(__FILE__).'/rrtypes/'.strtolower($className).'.class.php');
-		$type = call_user_func(array($className,'getTypeString'));
-		if (isset(self::$recordTypes[$type])) return false;
-		self::$recordTypes[$type] = $className;
-		return true;
+	public static final function listTypes() {
+		$result = array();
+		foreach (glob(RRTYPE_PATH.'/*record.class.php') as $filename) {
+			$type = strtoupper(basename($filename,'record.class.php'));
+			$tmp = new stdClass();
+			$tmp->type = $type;
+			$result[] = $tmp;
+		}
+		return $result;
 	}
 
 	/**
@@ -231,13 +222,13 @@ abstract class ResourceRecord {
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
+ * @subpackage Exceptions
  */
 class NoSuchFieldException extends Exception {}
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
+ * @subpackage Exceptions
  */
 class FieldNotInitializedException extends Exception {}
 

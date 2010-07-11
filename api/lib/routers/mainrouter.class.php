@@ -31,38 +31,66 @@
  */
 class MainRouter extends RequestRouter {
 
-	public function login() {
-
-	}
-
-	public function logout() {
-		$autologin = AutologinManager::getInstance();
-		$autologin->notifyLogout();
-	}
-
-	public function rrtypes() {
-
+	public function rrtypes($type = null) {
+		if ($type === null) {
+			// list all ResourceRecord types
+			return ResourceRecord::listTypes();
+		}
+		else {
+			$result = new stdClass();
+			$className = ResourceRecord::getTypeClassName($type);
+			if ($className !== null) {
+				$result->type = $type;
+				$record = new $className('@','',86400);
+				$result->fields = $record->listFields();
+			}
+			return $result;
+		}
 	}
 
 	public function servers($serverId = null) {
+		// check for login
+		$result = new stdClass();
+		$autologin = AutologinManager::getInstance();
+		if ($autologin->getUser() === null) {
+			$result->error = 'Please log in first!';
+			return $result;
+		}
+		// work request
 		if ($serverId === null) {
 
 		}
 		else {
 
 		}
+		return $result;
 	}
 
 	public function status() {
 		$result = new stdClass();
 		$autologin = AutologinManager::getInstance();
-		$user = $autologin->getUser();
-		if ($user === null) {
-			$result->loggedIn = false;
-		}
-		else {
-			$result->loggedIn = true;
-			$result->username = $user->getUsername();
+		$authentication = AuthenticationManager::getInstance();
+		switch (RequestRouter::getRequestType()) {
+			case 'POST':
+				$data = RequestRouter::getJsonData();
+				if ($data !== null) {
+					if (isset($data->username) && isset($data->password)) {
+						$user = new User($data->username);
+						if ($authentication->userCheckPassword($user, $data->password)) {
+							$autologin->notifyLogin($user);
+						}
+					}
+				}
+			case 'GET':
+				$user = $autologin->getUser();
+				if ($user === null) {
+					$result->loggedIn = false;
+				}
+				else {
+					$result->loggedIn = true;
+					$result->username = $user->getUsername();
+				}
+				break;
 		}
 		return $result;
 	}
