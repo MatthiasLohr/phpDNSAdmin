@@ -20,50 +20,29 @@
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
+ * @subpackage Routers
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
+ * @subpackage Routers
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class Zone {
+class ZoneRouter extends RequestRouter {
 
-	/** @var string */
-	private $name;
+	private $zone = null;
 
-	/** @var ZoneModule */
-	private $module;
-
-	public function  __construct($zoneName,ZoneModule $zoneModule) {
-		$this->name = $zoneName;
-		$this->module = $zoneModule;
+	public function __construct($zone) {
+		$this->zone = $zone;
 	}
 
-	public function create() {
-		return $this->module->zoneCreate($this->getName());
+	function records($recordid = null) {
+
 	}
 
-	public function delete() {
-		return $this->module->zoneDelete($this);
-	}
+	function views() {
 
-	public function exists() {
-		return $this->module->zoneExists($this);
-	}
-
-	public function getName() {
-		return $this->name;
-	}
-
-	public function getRecordById($recordid) {
-		return $this->module->getRecordById($this,$recordid);
-	}
-
-	public function listRecords() {
-		return $this->module->listRecords($this);
 	}
 }
 

@@ -29,6 +29,9 @@ GET     rrtypes/{RRTYPE}
 GET     servers
   get a list of all configured DNS servers (configuration for zone modules)
 
+GET     servers/{SYSNAME}/rrtypes
+  get a list of all supported rrtypes by this server
+
 GET     servers/{SYSNAME}/zones
   get a list of all zones
 

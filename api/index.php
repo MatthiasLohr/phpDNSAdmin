@@ -39,20 +39,17 @@ AutologinManager::initialize($configuration->getAutologinConfig());
 ZoneManager::initialize($configuration->getZoneConfig());
 
 // prepare path and start script execution
-if (isset($_GET['pda_request_path']) && strlen($_GET['pda_request_path']) > 0) {
-	if (substr($_GET['pda_request_path'],-1) == '/') {
-		$_GET['pda_request_path'] = substr($_GET['pda_request_path'],0,-1);
-	}
-	$pdaPath = explode('/',$_GET['pda_request_path']);
-}
-else {
-	$pdaPath = array();
-	header('Location: status');
-	exit;
-}
-
 try {
 	$router = new MainRouter();
+	if (isset($_GET['pda_request_path']) && strlen($_GET['pda_request_path']) > 0) {
+		if (substr($_GET['pda_request_path'],-1) == '/') {
+			$_GET['pda_request_path'] = substr($_GET['pda_request_path'],0,-1);
+		}
+		$pdaPath = explode('/',$_GET['pda_request_path']);
+	}
+	else {
+		$pdaPath = array();
+	}
 	$result = $router->track($pdaPath);
 	header('Content-type: text/plain');
 	echo(json_encode($result));

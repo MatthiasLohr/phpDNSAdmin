@@ -37,6 +37,10 @@ class ServerRouter extends RequestRouter {
 		$this->zoneModule = $zoneModule;
 	}
 
+	public function rrtypes() {
+
+	}
+
 	public function zones($zonename = null) {
 		if ($zonename === null) {
 			$result = array();
@@ -51,16 +55,7 @@ class ServerRouter extends RequestRouter {
 		else {
 			$zone = new Zone($zonename,$this->zoneModule);
 			try {
-				switch (RequestRouter::getRequestType()) {
-					case 'DELETE':
-						$this->zoneModule->zoneDelete($zone);
-						break;
-					case 'PUT':
-						$this->zoneModule->zoneCreate($zonename);
-						break;
-					case 'GET':
-						break;
-				}
+				
 			}
 			catch(NoSuchZoneException $e) {
 				$result = new stdClass();

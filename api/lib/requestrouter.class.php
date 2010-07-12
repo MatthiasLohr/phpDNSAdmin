@@ -33,6 +33,14 @@ abstract class RequestRouter {
 
 	protected $routingPath = array();
 
+	public function __default() {
+		return null;
+	}
+
+	protected function endOfTracking() {
+		return (count($this->routingPath) == 0);
+	}
+
 	public static function getJsonData() {
 		switch ($_SERVER['REQUEST_METHOD']) {
 			case 'POST':
@@ -56,7 +64,7 @@ abstract class RequestRouter {
 	 * @throws RequestRoutingException if a method cannot be called
 	 */
 	public final function track(array $path) {
-		if (count($path) == 0) throw new RequestRoutingException('Can\'t track empty path!');
+		if (count($path) == 0) return $this->__default();
 		$className = get_class($this);
 		$routerReflector = new ReflectionClass($className);
 		if ($routerReflector->hasMethod($path[0])) {

@@ -31,6 +31,11 @@
  */
 class MainRouter extends RequestRouter {
 
+	public function __default() {
+		header('Location: status');
+		exit;
+	}
+
 	public function rrtypes($type = null) {
 		if ($type === null) {
 			// list all ResourceRecord types
