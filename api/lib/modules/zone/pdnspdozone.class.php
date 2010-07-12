@@ -30,12 +30,26 @@
  */
 class PdnsPdoZone extends ZoneModule {
 
+	/** @var PDO */
 	private $db = null;
+
+	/** @var int[] */
 	private $zoneIds = array();
 
 	protected function __construct($config) {
 		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
 		$this->listZones();
+	}
+
+	public function getFeatures() {
+		return array(
+			'dnssec',
+			'rrtypes' => array(
+				'A','AAAA','AFSDB','CERT','CNAME','DNSKEY','DS','HINFO','KEY','LOC',
+				'MX','NAPTR','NS','NSEC','NSEC3','PTR','RP','RRSIG','SOA','SPF','SSHFP',
+				'SRV','TXT'
+			)
+		);
 	}
 
 	public static function getInstance($config) {
@@ -124,16 +138,64 @@ class PdnsPdoZone extends ZoneModule {
 
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
 		$this->zoneAssureExistence($zone);
-
+		$domainid = $this->zoneIds[$zone->getName()];
+		try {
+			$priority = $record->getFieldByName('priority');
+			$this->db->query(
+				'INSERT INTO '.$this->tablePrefix.'records (domain_id,name,type,content,ttl,prio) VALUES ('
+				.$this->db->quote($domainid).','
+				.$this->db->quote($this->hostnameShort2Long($zone,$record->getName())).','
+				.$this->db->quote($record->getTypeString()).','
+				.$this->db->quote(strval($record)).','
+				.$this->db->quote($record->getTTL()).','
+				.$this->db->quote($priority).')'
+			);
+		}
+		catch (NoSuchFieldException $e) {
+			$this->db->query(
+				'INSERT INTO '.$this->tablePrefix.'records (domain_id,name,type,content,ttl) VALUES ('
+				.$this->db->quote($domainid).','
+				.$this->db->quote($this->hostnameShort2Long($zone,$record->getName())).','
+				.$this->db->quote($record->getTypeString()).','
+				.$this->db->quote(strval($record)).','
+				.$this->db->quote($record->getTTL()).')'
+			);
+		}
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
 		$this->zoneAssureExistence($zone);
-
+		$domainid = $this->zoneIds[$zone->getName()];
+		$this->db->query('DELETE FROM records WHERE id = '.$this->db->quote($recordid).' AND domain_id = '.$this->db->quote($domainid));
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
 		$this->zoneAssureExistence($zone);
+		$domainid = $this->zoneIds[$zone->getName()];
+		try {
+			$priority = $record->getFieldByName('priority');
+			$this->db->query(
+				'UPDATE records SET'
+				.' name = '.$this->db->quote($this->hostnameShort2Long($zone,$record->getName())).','
+				.' type = '.$this->db->quote($record->getTypeString()).','
+				.' content = '.$this->db->quote(strval($record)).','
+				.' ttl = '.$this->db->quote($record->getTTL()).','
+				.' prio = '.$this->db->quote($priority)
+				.' WHERE id = '.$this->pgEscape($recordid)
+				.' AND domain_id = '.$domainid
+			);
+		}
+		catch (NoSuchFieldException $e) {
+			$this->db->query(
+				'UPDATE records SET'
+				.' name = '.$this->db->quote($this->hostnameShort2Long($zone,$record->getName())).','
+				.' type = '.$this->db->quote($record->getTypeString()).','
+				.' content = '.$this->db->quote(strval($record)).','
+				.' ttl = '.$this->db->quote($record->getTTL())
+				.' WHERE id = '.$this->pgEscape($recordid)
+				.' AND domain_id = '.$domainid
+			);
+		}
 
 	}
 

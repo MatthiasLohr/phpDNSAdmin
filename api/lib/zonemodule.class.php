@@ -30,6 +30,9 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 abstract class ZoneModule {
+
+	abstract public function getFeatures();
+
 	/**
 	 * Get a record by its unique ID
 	 *
