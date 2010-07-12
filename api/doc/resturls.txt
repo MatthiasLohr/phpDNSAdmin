@@ -1,0 +1,54 @@
+/*
+ * This file is part of phpDNSAdmin.
+ * (c) 2010 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
+ *
+ * phpDNSAdmin is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * phpDNSAdmin is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+Here is a definition of all available REST urls of the phpDNSAdmin API:
+
+METHOD  URL
+================================================================================
+GET     rrtypes
+  list all available rrtypes
+
+GET     rrtypes/{RRTYPE}
+  list the fields and simpletypes for a specifig rrtype (like A, AAAA, ...)
+
+GET     servers
+  get a list of all configured DNS servers (configuration for zone modules)
+
+GET     servers/{SYSNAME}/zones
+  get a list of all zones
+
+PUT     servers/{SYSNAME}/zones
+  create a new zone
+
+GET     servers/{SYSNAME}/zones/{ZONENAME}/records
+PUT     servers/{SYSNAME}/zones/{ZONENAME}/records
+  list records of a zone or create a new one
+
+GET     servers/{SYSNAME}/zones/{ZONENAME}/records/{RECORDID}
+POST    servers/{SYSNAME}/zones/{ZONENAME}/records/{RECORDID}
+DELETE  servers/{SYSNAME}/zones/{ZONENAME}/records/{RECORDID}
+  list/update/delete records
+
+GET     servers/{SYSNAME}/zones/{ZONENAME}/views
+  list views of this zone
+
+POST    simpletypes/{SIMPLETYPE}
+  check if a value is valid for a specific simple type
+
+GET     status
+  get user status
