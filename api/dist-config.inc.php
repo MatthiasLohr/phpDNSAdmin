@@ -48,19 +48,11 @@ $config = array(
 	'zone' => array(
 		/*
 		array(
-			'_module' => 'PdnsPgsqlZone',
-			'host' => 'localhost',
-			'username' => 'powerdns',
-			'password' => 'powerdns'
-		),
-		// */
-		/*
-		array(
-			'_module' => 'PdnsMysqlZone',
-			'host' => 'localhost',
-			'database' => 'powerdns',
-			'username' => 'powerdns',
-			'password' => 'powerdns'
+			'_module' => 'PdnsPdoZone',
+		 * '_sysname' => 'main',
+			'pdo_dsn' => 'pgsql:host=localhost;dbname=pdns',
+			'pdo_username' => 'powerdns',
+			'pdo_password' => 'powerdns'
 		),
 		// */
 	)

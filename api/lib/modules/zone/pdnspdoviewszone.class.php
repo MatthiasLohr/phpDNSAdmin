@@ -16,12 +16,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
+*/
+
+/**
+ * @package phpDNSAdmin
+ * @subpackage Zone
+ * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
-interface Views {
+/**
+ * @package phpDNSAdmin
+ * @subpackage Zone
+ */
+class PdnsPdoViewsZone extends PdnsPdoZone implements Views {
 
-	public function listViews();
-	
+		public function listViews() {
+
+		}
+
 }
 
 ?>

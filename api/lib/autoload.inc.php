@@ -35,7 +35,7 @@ function pdaAutoload($className) {
 		includeIfExists(API_ROOT.'/lib/'.substr($className,0,-9).'.exception.php');
 	}
 	else {
-		includeIfExists(API_ROOT.'/lib/modules/'.$className.'.class.php');
+		if (substr($className,-4) == 'zone') includeIfExists(API_ROOT.'/lib/modules/zone/'.$className.'.class.php');
 		includeIfExists(API_ROOT.'/lib/routers/'.$className.'.class.php');
 		includeIfExists(API_ROOT.'/lib/rrtypes/'.$className.'.class.php');
 		includeIfExists(API_ROOT.'/lib/simpletypes/'.$className.'.class.php');
