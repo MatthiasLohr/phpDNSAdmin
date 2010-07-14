@@ -59,7 +59,7 @@ class NsecRecord extends ResourceRecord {
 		return 'NSEC';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'nextdomain' => 'Hostname',
 			'types' => 'String'

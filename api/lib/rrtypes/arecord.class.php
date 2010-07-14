@@ -47,7 +47,7 @@ class ARecord extends ResourceRecord {
 		return 'A';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'target' => 'IPv4'
 		);

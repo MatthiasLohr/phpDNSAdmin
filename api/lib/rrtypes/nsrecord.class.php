@@ -47,7 +47,7 @@ class NsRecord extends ResourceRecord {
 		return 'NS';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'target' => 'Hostname'
 		);

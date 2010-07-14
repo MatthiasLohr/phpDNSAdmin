@@ -47,7 +47,7 @@ class AaaaRecord extends ResourceRecord {
 		return 'AAAA';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'target' => 'IPv6'
 		);

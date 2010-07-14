@@ -47,7 +47,7 @@ class DnameRecord extends ResourceRecord {
 		return 'DNAME';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'target' => 'Hostname'
 		);

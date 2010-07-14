@@ -61,7 +61,7 @@ class DnskeyRecord extends ResourceRecord {
 		return 'DNSKEY';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'flags' => 'UInt16',
 			'protocol' => 'DnskeyProtocol',

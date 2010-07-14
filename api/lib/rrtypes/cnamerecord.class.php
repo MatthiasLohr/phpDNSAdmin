@@ -47,7 +47,7 @@ class CnameRecord extends ResourceRecord {
 		return 'CNAME';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'target' => 'Hostname'
 		);

@@ -47,7 +47,7 @@ class SpfRecord extends ResourceRecord {
 		return 'SPF';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'rules' => 'SpfContent'
 		);

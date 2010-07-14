@@ -61,7 +61,7 @@ class DsRecord extends ResourceRecord {
 		return 'DS';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'keytag' => 'UInt16',
 			'algorithm' => 'UInt8',

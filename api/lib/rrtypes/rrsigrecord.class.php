@@ -77,7 +77,7 @@ class RrsigRecord extends ResourceRecord {
 		return 'RRSIG';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'typecovered' => 'StringNoSpaces',
 			'algorithm' => 'UInt8',

@@ -48,7 +48,7 @@ class MxRecord extends ResourceRecord {
 		return 'MX';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'target' => 'Hostname',
 			'priority' => 'UInt'

@@ -87,7 +87,7 @@ class SoaRecord extends ResourceRecord {
 		return $result;
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'primary'     => 'Hostname',
 			'hostmaster'  => 'Email',

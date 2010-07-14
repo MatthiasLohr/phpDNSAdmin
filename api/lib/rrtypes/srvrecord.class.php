@@ -55,7 +55,7 @@ class SrvRecord extends ResourceRecord {
 		return 'SRV';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'importance' => 'UInt',
 			'port' => 'UInt',

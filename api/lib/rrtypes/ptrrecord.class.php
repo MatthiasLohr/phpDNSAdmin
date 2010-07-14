@@ -47,7 +47,7 @@ class PtrRecord extends ResourceRecord {
 		return 'PTR';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'target' => 'Hostname'
 		);

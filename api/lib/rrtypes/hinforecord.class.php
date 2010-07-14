@@ -52,7 +52,7 @@ class HinfoRecord extends ResourceRecord {
 		return 'HINFO';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'architecture' => 'StringNoSpaces',
 			'os' => 'StringNoSpaces'

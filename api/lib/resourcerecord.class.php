@@ -161,7 +161,7 @@ abstract class ResourceRecord {
 	 *
 	 * @return array fieldname => SimpleType
 	 */
-	abstract public function listFields();
+	abstract public static function listFields();
 
 	public static final function listTypes() {
 		$result = array();

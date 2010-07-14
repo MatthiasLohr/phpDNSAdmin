@@ -46,8 +46,7 @@ class MainRouter extends RequestRouter {
 			$className = ResourceRecord::getTypeClassName($type);
 			if ($className !== null) {
 				$result->type = $type;
-				$record = new $className('@','',86400);
-				$result->fields = $record->listFields();
+				$result->fields = call_user_func(array($className,'listFields'));
 			}
 			return $result;
 		}

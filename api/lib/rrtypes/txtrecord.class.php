@@ -47,7 +47,7 @@ class TxtRecord extends ResourceRecord {
 		return 'TXT';
 	}
 
-	public function listFields() {
+	public static function listFields() {
 		return array(
 			'content' => 'String'
 		);
