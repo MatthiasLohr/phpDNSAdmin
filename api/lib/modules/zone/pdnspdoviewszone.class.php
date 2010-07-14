@@ -41,7 +41,7 @@ class PdnsPdoViewsZone extends ZoneModule implements Views {
 
 	}
 
-	public function getRecordById(Zone $zone, integer $recordid) {
+	public function getRecordById(Zone $zone, $recordid) {
 
 	}
 
@@ -49,7 +49,7 @@ class PdnsPdoViewsZone extends ZoneModule implements Views {
 
 	}
 
-	public function listRecordsByType(Zone $zone, Something $type) {
+	public function listRecordsByType(Zone $zone, $type) {
 
 	}
 
@@ -65,11 +65,11 @@ class PdnsPdoViewsZone extends ZoneModule implements Views {
 
 	}
 
-	public function recordDelete(Zone $zone, integer $recordid) {
+	public function recordDelete(Zone $zone, $recordid) {
 
 	}
 
-	public function recordUpdate(Zone $zone, integer $recordid, ResourceRecord $record) {
+	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
 
 	}
 
