@@ -45,12 +45,20 @@ abstract class SimpleType {
 		return $this->normalize();
 	}
 
+	public function isValid() {
+		return $this->isValidValue($this->content);
+	}
+	
   /**
    * Validate data against data type
    * @param string $string data to check
    * @return bool true if valid, otherwise false
    */
 	abstract public static function isValidValue($string);
+
+	public function normalize() {
+		return $this->normalizeValue($this->content);
+	}
 
   /**
    * Normalize data, e.g. cut off leading zeros

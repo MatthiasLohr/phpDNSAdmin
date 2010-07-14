@@ -28,13 +28,6 @@
  * @subpackage Simpletypes
  */
 class Hostname extends SimpleType {
-  public function isValid() {
-    return self::isValidValue($this->content);
-  }
-
-  public function normalize() {
-    return self::normalizeValue($this->content);
-  }
 
   public static function isValidValue($string) {
     if (strpos($string, '.') === false)

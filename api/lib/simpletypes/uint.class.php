@@ -28,13 +28,6 @@
  * @subpackage Simpletypes
  */
 class UInt extends SimpleType {
-	public function isValid() {
-		return self::isValidValue($this->content);
-	}
-
-	public function normalize() {
-		return self::normalize($this->content);
-	}
 
 	public static function isValidValue($string) {
 		return preg_match('!^[0-9]+$!', $string);

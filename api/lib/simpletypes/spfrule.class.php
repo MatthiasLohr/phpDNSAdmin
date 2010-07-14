@@ -28,13 +28,6 @@
  * @subpackage Simpletypes
  */
 class SpfRule extends SimpleType {
-	public function isValid() {
-		return self::isValidValue($this->content);
-	}
-
-	public function normalize() {
-		return self::normalize($this->content);
-	}
 
 	public static function isValidValue($string) {
 		// remove qualifier if given
