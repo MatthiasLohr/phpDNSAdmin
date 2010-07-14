@@ -11,9 +11,11 @@
           if(!($("#field_"+i).length > 0)) {
             // Feld erstellen
             html =  "<tr id=\"field_"+i+"\">";
+            html += " <td>"+(i+1)+"</td>";
             html += " <td style=\"text-align:center\">";
             html += "   <input id=\"field_key_"+i+"\" type=\"text\" />";
             html += " </td>";
+            html += " <td>:</td>";
             html += " <td style=\"text-align:center\">";
             html += "   <input id=\"field_value_"+i+"\" type=\"text\" />";
             html += " </td>";
@@ -21,11 +23,20 @@
             $("#fieldbox").append(html);
             break;
           } else if(i==99) {
-            alert('Max. 100 Felder erlaubt!');
+            alert('Max. 100 fields!');
           }
         }
       }
+
       $(document).ready(function() {
+        // Pressed Enter?
+        $("#url").keypress(function (e) {
+          if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+            $('#doIt').click();
+          }
+        });
+
+        // Clicked the Button
         $("#doIt").click(function() {
           $("#doIt").val("loading...");
 
@@ -79,11 +90,11 @@
     <table>
       <tbody>
         <tr>
-          <td>URL</td>
+          <td colspan="2">URL</td>
           <td>Method</td>
         </tr>
         <tr>
-          <td><input id="url" value="api/status" type="text" style="width: 600px" /></td>
+          <td colspan="2"><input id="url" value="api/status" type="text" style="width: 600px" /></td>
           <td>
             <select id="method">
               <option value="GET" selected="selected">GET</option>
@@ -94,6 +105,7 @@
           </td>
         </tr>
         <tr>
+          <td style="width: 70px;font-weight: bold">Raw-Output:</td>
           <td style="WORD-BREAK:BREAK-ALL; width:400px" id="output">
           </td>
           <td style="text-align: right">
@@ -101,15 +113,17 @@
           </td>
         </tr>
         <tr>
-          <td>
-            <table border="1">
-              <tbody style="width: 600px">
+          <td colspan="2">
+            <table>
+              <tbody style="width: 550px">
                 <tr>
-                  <td style="width: 430px">
+                  <td style="width: 380px">
                     <table>
                       <tbody id="fieldbox">
                         <tr>
+                          <th>#</th>
                           <th style="width:200px">Key</th>
+                          <th>&nbsp;</th>
                           <th style="width:200px">Value</th>
                         </tr>
                       </tbody>
