@@ -29,24 +29,6 @@
  */
 class TxtRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		$this->setFieldByName('content',$content);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('content'));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new TxtRecord($name,'',$ttl);
-  }
-
-  public static function getTypeString() {
-		return 'TXT';
-	}
-
 	public static function listFields() {
 		return array(
 			'content' => 'String'

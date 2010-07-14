@@ -29,36 +29,6 @@
  */
 class NsecRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-    /**
-     * TODO: Hier tritt ein Fehler auf...
-     * "Undefined offset: 1 in [...]/api/lib/rrtypes/nsecrecord.class.php on line 38"
-     */
-		list(
-			$nextdomain,
-			$types
-		) = explode(' ',$content);
-		$this->setFieldByName('nextdomain',$nextdomain);
-		$this->setFieldByName('types',$types);
-	}
-
-	public function __toString() {
-		return implode(' ',array(
-			strval($this->getFieldByName('nextdomain')),
-			strval($this->getFieldByName('types'))
-		));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new NsecRecord($name,' ',$ttl);
-  }
-
-  public static function getTypeString() {
-		return 'NSEC';
-	}
-
 	public static function listFields() {
 		return array(
 			'nextdomain' => 'Hostname',

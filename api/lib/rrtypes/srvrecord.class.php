@@ -29,32 +29,6 @@
  */
 class SrvRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		$this->setFieldByName('priority',10);
-		list(
-			$importance,
-			$port,
-			$host
-		) = explode(' ',$content);
-		$this->setFieldByName('importance',$importance);
-		$this->setFieldByName('port',$port);
-		$this->setFieldByName('host',$host);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('importance')).' '.strval($this->getFieldByName('port')).' '.strval($this->getFieldByName('host'));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new SrvRecord($name,'0 0 '.$zone->getName(),$ttl);
-  }
-
-  public static function getTypeString() {
-		return 'SRV';
-	}
-
 	public static function listFields() {
 		return array(
 			'importance' => 'UInt',

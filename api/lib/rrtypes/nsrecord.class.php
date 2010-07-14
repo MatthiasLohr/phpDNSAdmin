@@ -29,24 +29,6 @@
  */
 class NsRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		$this->setFieldByName('target',$content);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('target'));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new NsRecord($name,'ns1.'.$zone->getName(),$ttl);
-  }
-
-	public static function getTypeString() {
-		return 'NS';
-	}
-
 	public static function listFields() {
 		return array(
 			'target' => 'Hostname'

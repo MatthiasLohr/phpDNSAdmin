@@ -37,6 +37,10 @@ class ServerRouter extends RequestRouter {
 		$this->zoneModule = $zoneModule;
 	}
 
+	public function __default() {
+		return $this->zones();
+	}
+
 	public function rrtypes() {
 
 	}

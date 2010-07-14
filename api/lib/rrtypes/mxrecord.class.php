@@ -29,25 +29,6 @@
  */
 class MxRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		$this->setFieldByName('target',$content);
-		$this->setFieldByName('priority',$priority);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('target'));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new MxRecord($name,'mail.'.$zone->getName(),$ttl,10);
-  }
-
-	public static function getTypeString() {
-		return 'MX';
-	}
-
 	public static function listFields() {
 		return array(
 			'target' => 'Hostname',

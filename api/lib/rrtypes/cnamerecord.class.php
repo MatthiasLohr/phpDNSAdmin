@@ -29,24 +29,6 @@
  */
 class CnameRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		$this->setFieldByName('target',$content);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('target'));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new CnameRecord($name,$zone->getName(),$ttl);
-  }
-
-	public static function getTypeString() {
-		return 'CNAME';
-	}
-
 	public static function listFields() {
 		return array(
 			'target' => 'Hostname'

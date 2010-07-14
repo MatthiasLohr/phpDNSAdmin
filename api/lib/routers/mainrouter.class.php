@@ -43,7 +43,7 @@ class MainRouter extends RequestRouter {
 		}
 		else {
 			$result = new stdClass();
-			$className = ResourceRecord::getTypeClassName($type);
+			$className = ResourceRecord::getClassByType($type);
 			if ($className !== null) {
 				$result->type = $type;
 				$result->fields = call_user_func(array($className,'listFields'));

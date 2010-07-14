@@ -29,54 +29,6 @@
  */
 class RrsigRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		list(
-			$typecovered,
-			$algorithm,
-			$labelcount,
-			$originalttl,
-			$sigexpiration,
-			$siginception,
-			$keytag,
-			$signer,
-			$signature
-		) = explode(' ',$content);
-		$this->setFieldByName('typecovered',$typecovered);
-		$this->setFieldByName('algorithm',$algorithm);
-		$this->setFieldByName('labelcount',$labelcount);
-		$this->setFieldByName('originalttl',$originalttl);
-		$this->setFieldByName('sigexpiration',$sigexpiration);
-		$this->setFieldByName('siginception',$siginception);
-		$this->setFieldByName('keytag',$keytag);
-		$this->setFieldByName('signer',$signer);
-		$this->setFieldByName('signature',$signature);
-		
-	}
-
-	public function __toString() {
-		return implode(' ',array(
-			strval($this->getFieldByName('typecovered')),
-			strval($this->getFieldByName('algorithm')),
-			strval($this->getFieldByName('labelcount')),
-			strval($this->getFieldByName('originalttl')),
-			strval($this->getFieldByName('sigexpiration')),
-			strval($this->getFieldByName('siginception')),
-			strval($this->getFieldByName('keytag')),
-			strval($this->getFieldByName('signer')),
-			strval($this->getFieldByName('signature'))
-		));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new RrsigRecord($name,'   86400     ',$ttl);
-  }
-
-  public static function getTypeString() {
-		return 'RRSIG';
-	}
-
 	public static function listFields() {
 		return array(
 			'typecovered' => 'StringNoSpaces',

@@ -29,24 +29,6 @@
  */
 class AaaaRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		$this->setFieldByName('target',$content);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('target'));
-	}
-
-	public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new AaaaRecord($name,'0000:0000:0000:0000:0000:0000:0000:0000', $ttl);
-  }
-
-	public static function getTypeString() {
-		return 'AAAA';
-	}
-
 	public static function listFields() {
 		return array(
 			'target' => 'IPv6'

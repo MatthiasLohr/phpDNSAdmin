@@ -29,38 +29,6 @@
  */
 class DsRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		list(
-			$keytag,
-			$algorithm,
-			$digesttype,
-			$digest
-		) = explode(' ',$content);
-		$this->setFieldByName('keytag',$keytag);
-		$this->setFieldByName('algorithm',$algorithm);
-		$this->setFieldByName('digesttype',$digesttype);
-		$this->setFieldByName('digest',$digest);
-	}
-
-	public function __toString() {
-		return implode(' ',array(
-			strval($this->getFieldByName('keytag')),
-			strval($this->getFieldByName('algorithm')),
-			strval($this->getFieldByName('digesttype')),
-			strval($this->getFieldByName('digest'))
-		));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new DsRecord($name,'   ',$ttl);
-  }
-
-  public static function getTypeString() {
-		return 'DS';
-	}
-
 	public static function listFields() {
 		return array(
 			'keytag' => 'UInt16',

@@ -29,24 +29,6 @@
  */
 class PtrRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		$this->setFieldByName('target',$content);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('target'));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new PtrRecord($name,$zone->getName(),$ttl);
-  }
-
-	public static function getTypeString() {
-		return 'PTR';
-	}
-
 	public static function listFields() {
 		return array(
 			'target' => 'Hostname'

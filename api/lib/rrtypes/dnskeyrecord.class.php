@@ -29,38 +29,6 @@
  */
 class DnskeyRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		list(
-			$flags,
-			$protocol,
-			$algorithm,
-			$pubkey
-		) = explode(' ',$content);
-		$this->setFieldByName('flags',$flags);
-		$this->setFieldByName('protocol',$protocol);
-		$this->setFieldByName('algorithm',$algorithm);
-		$this->setFieldByName('pubkey',$pubkey);
-	}
-
-	public function __toString() {
-		return implode(' ',array(
-			strval($this->getFieldByName('flags')),
-			strval($this->getFieldByName('protocol')),
-			strval($this->getFieldByName('algorithm')),
-			strval($this->getFieldByName('pubkey'))
-		));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new DnskeyRecord($name,' 3  ',$ttl);
-  }
-
-  public static function getTypeString() {
-		return 'DNSKEY';
-	}
-
 	public static function listFields() {
 		return array(
 			'flags' => 'UInt16',

@@ -29,29 +29,6 @@
  */
 class HinfoRecord extends ResourceRecord {
 
-	public function __construct($name,$content,$ttl,$priority = null) {
-		$this->setName($name);
-		$this->setTTL($ttl);
-		list(
-			$architecture,
-			$os
-		) = explode(' ',$content);
-		$this->setFieldByName('architecture',$architecture);
-		$this->setFieldByName('os',$os);
-	}
-
-	public function __toString() {
-		return strval($this->getFieldByName('architecture')).' '.strval($this->getFieldByName('os'));
-	}
-
-  public static function defaultRecord(Zone $zone, $name, $ttl) {
-    return new HinfoRecord($name,'i386 Linux',$ttl);
-  }
-
-  public static function getTypeString() {
-		return 'HINFO';
-	}
-
 	public static function listFields() {
 		return array(
 			'architecture' => 'StringNoSpaces',
