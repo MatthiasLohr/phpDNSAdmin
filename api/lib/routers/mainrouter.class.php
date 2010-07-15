@@ -93,13 +93,14 @@ class MainRouter extends RequestRouter {
 		$authentication = AuthenticationManager::getInstance();
 		switch (RequestRouter::getRequestType()) {
 			case 'POST':
-				if (isset($_POST['username']) && strlen($_POST['username']) == 0) {
+				$data = RequestRouter::getRequestData();
+				if (isset($data['username']) && strlen($data['username']) == 0) {
 					$autologin->notifyLogout();
 				}
-				elseif (isset($_POST['username']) && isset($_POST['password'])) {
-					$user = new User($_POST['username']);
+				elseif (isset($data['username']) && isset($data['password'])) {
+					$user = new User($data['username']);
 					try {
-						if ($authentication->userCheckPassword($user,$_POST['password'])) {
+						if ($authentication->userCheckPassword($user,$data['password'])) {
 							$autologin->notifyLogin($user);
 						}
 					}

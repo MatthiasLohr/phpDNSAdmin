@@ -41,12 +41,14 @@ abstract class RequestRouter {
 		return (count($this->routingPath) == 0);
 	}
 
-	public static function getJsonData() {
+	public static function getRequestData() {
 		switch ($_SERVER['REQUEST_METHOD']) {
 			case 'POST':
 			case 'PUT':
-				return json_decode(file_get_contents('php://input'));
-				break;
+			case 'DELETE':
+				$str = file_get_contents('php://input');
+				parse_str($str,$data);
+				return $data;
 			default:
 				return null;
 		}
