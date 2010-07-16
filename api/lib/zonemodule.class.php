@@ -33,7 +33,7 @@ abstract class ZoneModule {
 
 	abstract public function getFeatures();
 
-	abstract public function getInstance($config);
+	abstract public static function getInstance($config);
 
 	/**
 	 * Get a record by its unique ID
