@@ -18,6 +18,17 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @package phpDNSAdmin
+ * @subpackage Zone
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
+
+/**
+ * @package phpDNSAdmin
+ * @subpackage Zone
+ * @author Matthias Lohr <mail@matthias-lohr.net>
+ */
 class MultiServerViewZone extends ZoneModule implements Views {
 
 	private $modules = array();

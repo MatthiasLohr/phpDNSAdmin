@@ -24,6 +24,7 @@
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
+/** path to rrtype classes */
 define('RRTYPE_PATH',API_ROOT.'/lib/rrtypes');
 
 /**
