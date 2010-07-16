@@ -40,10 +40,13 @@ abstract class ResourceRecord {
 	private $ttl;
 
 	/** @var array Array of field values */
-	protected $fieldValues = array();
+	private $fieldValues = array();
 
-	protected function __construct() {
-
+	protected function __construct($name,array $fieldValues,$ttl,$priority = null) {
+		$this->setName($name);
+		$this->fieldValues = $fieldValues;
+		$this->setTTL($ttl);
+		if ($priority !== null) $this->setField('priority',$priority);
 	}
 
 	/**
@@ -52,7 +55,16 @@ abstract class ResourceRecord {
 	 * @return string string representation of record content
 	 */
 	public function __toString() {
+		$tmp = array();
+		foreach ($this->listFields() as $fieldname => $simpletype) {
+			$tmp[] = $this->getField($fieldname);
+		}
+		return implode(' ',$tmp);
+	}
 
+	public function fieldExists($fieldname) {
+		$fields = $this->listFields();
+		return isset($fields[$fieldname]);
 	}
 
 	/**
@@ -72,6 +84,17 @@ abstract class ResourceRecord {
 		}
 	}
 
+	final public function getField($fieldname) {
+		if (!$this->fieldExists($fieldname)) throw new NoSuchFieldException();
+		return $this->fieldValues[$fieldname];
+	}
+
+	final public static function getInstance($type,$name,$content,$ttl,$priority = null) {
+		$className = self::getClassByType($type);
+		if ($className === null) throw new NotSupportedException('RRType '.$type.' is not supported yet!');
+	
+	}
+
 	/**
 	 * return the (host)name of this record
 	 *
@@ -80,8 +103,6 @@ abstract class ResourceRecord {
 	final public function getName() {
 		return $this->name;
 	}
-
-	
 
 	/**
 	 * return the Time-to-live of this record
@@ -118,6 +139,20 @@ abstract class ResourceRecord {
 			$result[] = $tmp;
 		}
 		return $result;
+	}
+
+	final public function setField($fieldname,$value) {
+		if (!$this->fieldExists($fieldname)) throw new NoSuchFieldException();
+		$fields = $this->listFields();
+		$simpletype = $fields[$fieldname];
+		$stypeInstance = new $simpletype($value);
+		if ($stypeInstance->isValid()) {
+			$this->fieldValues[$fieldname] = $value;
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -157,11 +192,5 @@ abstract class ResourceRecord {
  * @subpackage Exceptions
  */
 class NoSuchFieldException extends Exception {}
-
-/**
- * @package phpDNSAdmin
- * @subpackage Exceptions
- */
-class FieldNotInitializedException extends Exception {}
 
 ?>

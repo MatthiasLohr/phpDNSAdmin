@@ -2,7 +2,7 @@
 
 /*
  * This file is part of phpDNSAdmin.
- * (c) 2010 University of Trier - http://phpdnsadmin.sourceforge.net/
+ * (c) 2010 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
  *
  * phpDNSAdmin is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +18,19 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
- * @package phpDNSAdmin
- * @subpackage Zone
- * @author Matthias Lohr <lohr@uni-trier.de>
- */
-
-/**
- * @package phpDNSAdmin
- * @subpackage Zone
- * @author Matthias Lohr <lohr@uni-trier.de>
- */
-class PdnsPdoViewsZone extends ZoneModule implements Views {
+class MultiServerViewZone extends ZoneModule implements Views {
 
 	private $modules = array();
 
-	public function __construct($moduleConfig) {
+	protected function __construct($config) {
 
 	}
 
 	public function getFeatures() {
+
+	}
+
+	public static function getInstance($config) {
 
 	}
 
@@ -50,10 +43,6 @@ class PdnsPdoViewsZone extends ZoneModule implements Views {
 	}
 
 	public function listRecordsByType(Zone $zone, $type) {
-
-	}
-
-	public function listViews() {
 
 	}
 
