@@ -33,7 +33,7 @@ function recordUpdateList(server,zonename) {
 			}
 			$("#recordTable tbody").append();
 			$("#recordTable").trigger("update");
-			alert($("#recordTable").tablesorter.config.sortList);
+			//alert($("#recordTable").tablesorter.config.sortList);
 		}
 	});
 }

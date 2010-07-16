@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of phpDNSAdmin.
  * (c) 2010 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
@@ -17,77 +16,84 @@
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
-
 ?>
 <html>
-	<head>
-		<title>phpDNSAdmin</title>
-		<link rel="stylesheet" href="css/jquery/jquery.css" type="text/css" />
-		<link rel="stylesheet" href="js/tablesorter-theme/style.css" type="text/css" />
-		<link rel="stylesheet" href="css/pdastyle.css" type="text/css" />
-		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
-		<script type="text/javascript" src="js/jquery-ui-1.8.2.min.js"></script>
-		<script type="text/javascript" src="js/jquery.cookie.js"></script>
-		<script type="text/javascript" src="js/jquery.jstree.js"></script>
-		<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
-		<script type="text/javascript" src="js/pda.system.js"></script>
-		<script type="text/javascript" src="js/pda.records.js"></script>
-	</head>
-	<body>
-		<div id="mainPanel">
-			<ul>
-				<li><a href="#zoneAdminPanel">zone</a></li>
-				<li><a href="#userAdminPanel">user administration</a></li>
-				<li><a onclick="javascript:logout();" href="#">logout</a></li>
-			</ul>
+  <head>
+    <title>phpDNSAdmin</title>
+    <link rel="stylesheet" href="css/jquery/jquery.css" type="text/css" />
+    <link rel="stylesheet" href="js/tablesorter-theme/style.css" type="text/css" />
+    <link rel="stylesheet" href="css/pdastyle.css" type="text/css" />
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.cookie.js"></script>
+    <script type="text/javascript" src="js/jquery.jstree.js"></script>
+    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
 
-			<div id="zoneAdminPanel">
-				<div id="zoneSelector" style="padding: 3px; float: left;">
-					Zonetree
-				</div>
-				<div id="recordList">
-					<table id="recordTable" class="ui-corner-all tablesorter">
-						<thead><tr>
-							<th>Name</th>
-							<th>Type</th>
-							<th>Content</th>
-							<th>TTL</th>
-							<th>Options</th>
-						</tr></thead>
-						<tbody>
+    <script type="text/javascript" src="js/pda.records.js"></script>
+    <script type="text/javascript" src="js/pda.system.js"></script>
+  </head>
+  <body>
+    <div id="mainPanel">
+      <ul>
+        <li><a href="#zoneAdminPanel">zone</a></li>
+        <li><a href="#userAdminPanel">user administration</a></li>
+        <li><a onclick="javascript:logout();" href="#">logout</a></li>
+      </ul>
 
-						</tbody>
-					</table>
-					<input type="submit" onclick="recordUpdateList('test','ml.vg');" value="laden" />
-				</div>
-			</div>
-			<div id="userAdminPanel">
+      <div id="zoneAdminPanel">
+        <div id="zoneSelector" style="padding: 3px; float: left">
 
-			</div>
-		</div>
-		<!-- dialogs -->
-		<div id="loadingDialog" title="Loading...">
-			<div class="ui-autocomplete-loading">Loading, please wait...</div>
-		</div>
+        </div>
+        <br />
+        <div id="recordList"  style="padding: 3px;">
+          <table id="recordTable" class="ui-corner-all tablesorter">
+            <thead><tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Content</th>
+                <th>TTL</th>
+                <th>Options</th>
+              </tr></thead>
+            <tbody>
+              <tr>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+          <input type="submit" onclick="recordUpdateList('test','ml.vg');" value="laden" />
+        </div>
+      </div>
+      <div id="userAdminPanel">
 
-		<div id="loginDialog" title="Login" style="display: none;">
-			<div id="loginErrorText" style="padding: 0pt 0.7em; visibility: hidden;" class="ui-state-error ui-corner-all">
-				<p><span style="float: left; margin-right: 0.3em;" class="ui-icon ui-icon-alert"></span>
-				<strong>Error:</strong> Invalid login credentials!</p>
-			</div>
-			<p>Please enter your username/password combination to log in:</p>
-			<p>
+      </div>
+    </div>
+    <!-- dialogs -->
+    <div id="loadingDialog" title="Loading...">
+      <div class="ui-autocomplete-loading">Loading, please wait...</div>
+    </div>
+
+    <div id="loginDialog" title="Login" style="display: none;">
+      <div id="loginErrorText" style="padding: 0pt 0.7em; visibility: hidden;" class="ui-state-error ui-corner-all">
+        <p><span style="float: left; margin-right: 0.3em;" class="ui-icon ui-icon-alert"></span>
+          <strong>Error:</strong> Invalid login credentials!</p>
+      </div>
+      <p>Please enter your username/password combination to log in:</p>
+      <p>
 				username: <input type="text" id="usernameInput" name="username" /><br />
 				password: <input type="password" id="passwordInput" name="password" />
-			</p>
-		</div>
+      </p>
+    </div>
 
-		<div id="zoneProperties">
+    <div id="zoneProperties">
 
-		</div>
+    </div>
 
-		<div id="recordProperties">
+    <div id="recordProperties">
 
-		</div>
-	</body>
+    </div>
+  </body>
 </html>
