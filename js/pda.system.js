@@ -190,7 +190,8 @@ $(document).ready(function() {
   $("#mainPanel").tabs();
   // table
   $("#recordTable").tablesorter({
-    sortList: [[0,0],[1,1]]
+    sortList: [[0,0],[1,1]],
+    widthFixed: true
   });
 
   // Tree
@@ -260,5 +261,9 @@ $(document).ready(function() {
       }
     }
   });
-//$("#recordTable").trigger("sorton",[[[0,0],[1,1]]]);
+
+  $("#treeToogleButton").click(function() {
+    $("#zoneSelector").toggle();
+  });
+  //$("#recordTable").trigger("sorton",[[[0,0],[1,1]]]);
 });

@@ -41,11 +41,14 @@
       </ul>
 
       <div id="zoneAdminPanel">
-        <div id="zoneSelector" style="padding: 3px; float: left">
+        <div id="treeBox">
+          <img id="treeToogleButton" src="css/jquery/images/tree.gif" />
+          <div id="zoneSelector">
 
+          </div>
         </div>
         <br />
-        <div id="recordList"  style="padding: 3px;">
+        <div id="recordList">
           <table id="recordTable" class="ui-corner-all tablesorter">
             <thead><tr>
                 <th>Name</th>
