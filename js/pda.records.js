@@ -31,9 +31,9 @@ function recordUpdateList(server,zonename) {
 				str += "</tr>";
 				$("#recordTable tbody").append(str);
 			}
-			$("#recordTable tbody").append();
 			$("#recordTable").trigger("update");
-			alert($("#recordTable").tablesorter.config.sortList);
+			sortorder = $("#recordTable")[0].config.sortList;
+			$("#recordTable").trigger("sorton",[sortorder]);
 		}
 	});
 }
