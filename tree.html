@@ -61,7 +61,7 @@
           // Recursion End
           return {
             data: zone,
-            state: "closed",
+            //state: "closed",
             attr: {
               id: "zones-"+zone
             }
@@ -71,7 +71,7 @@
           reststr = zone.substr(0, zone.lastIndexOf('.'));
           return {
             data: datastr,
-            state: "closed",
+            //state: "closed",
             attr: {
               id: "zones-"+datastr
             },
@@ -105,7 +105,7 @@
                       data: data[sysname]['name'],
                       state: "closed",
                       attr: {
-                        id: "server-"+data[sysname]['sysname']
+                        id: "server-"+sysname
                       }
                     });
                   }
