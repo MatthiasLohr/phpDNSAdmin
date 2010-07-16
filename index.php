@@ -29,13 +29,8 @@
 		<script type="text/javascript" src="js/jquery.jstree.js"></script>
 		<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
 		<script type="text/javascript" src="js/pda.system.js"></script>
-
 	</head>
 	<body>
-		<div id="loadingDialog" title="Loading...">
-			<div class="ui-autocomplete-loading">Loading, please wait...</div>
-		</div>
-
 		<div id="mainPanel">
 			<ul>
 				<li><a href="#zoneAdminPanel">zone</a></li>
@@ -45,12 +40,17 @@
 
 			<div id="zoneAdminPanel">
 				<div id="zoneSelector" style="padding: 3px;">
-					
+
 				</div>
+				
 			</div>
 			<div id="userAdminPanel">
 
 			</div>
+		</div>
+		<!-- dialogs -->
+		<div id="loadingDialog" title="Loading...">
+			<div class="ui-autocomplete-loading">Loading, please wait...</div>
 		</div>
 
 		<div id="loginDialog" title="Login" style="display: none;">
@@ -63,6 +63,14 @@
 				username: <input type="text" id="usernameInput" name="username" /><br />
 				password: <input type="password" id="passwordInput" name="password" />
 			</p>
+		</div>
+
+		<div id="zoneProperties">
+
+		</div>
+
+		<div id="recordProperties">
+
 		</div>
 	</body>
 </html>
