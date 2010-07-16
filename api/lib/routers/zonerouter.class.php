@@ -76,6 +76,8 @@ class ZoneRouter extends RequestRouter {
 		$result = new stdClass();
 		$result->id = $recordid;
 		$result->name = $record->getName();
+		$result->type = $record->getType();
+		$result->content = strval($record);
 		$result->fields = array();
 		$fields = $record->listFields();
 		foreach ($fields as $fieldname => $simpletype) {

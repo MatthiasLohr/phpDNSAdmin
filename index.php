@@ -23,12 +23,15 @@
 	<head>
 		<title>phpDNSAdmin</title>
 		<link rel="stylesheet" href="css/jquery/jquery.css" type="text/css" />
+		<link rel="stylesheet" href="js/tablesorter-theme/style.css" type="text/css" />
+		<link rel="stylesheet" href="css/pdastyle.css" type="text/css" />
 		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
 		<script type="text/javascript" src="js/jquery-ui-1.8.2.min.js"></script>
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
 		<script type="text/javascript" src="js/jquery.jstree.js"></script>
 		<script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
 		<script type="text/javascript" src="js/pda.system.js"></script>
+		<script type="text/javascript" src="js/pda.records.js"></script>
 	</head>
 	<body>
 		<div id="mainPanel">
@@ -39,10 +42,24 @@
 			</ul>
 
 			<div id="zoneAdminPanel">
-				<div id="zoneSelector" style="padding: 3px;">
-
+				<div id="zoneSelector" style="padding: 3px; float: left;">
+					Zonetree
 				</div>
-				
+				<div id="recordList">
+					<table id="recordTable" class="ui-corner-all tablesorter">
+						<thead><tr>
+							<th>Name</th>
+							<th>Type</th>
+							<th>Content</th>
+							<th>TTL</th>
+							<th>Options</th>
+						</tr></thead>
+						<tbody>
+
+						</tbody>
+					</table>
+					<input type="submit" onclick="recordUpdateList('test','ml.vg');" value="laden" />
+				</div>
 			</div>
 			<div id="userAdminPanel">
 
