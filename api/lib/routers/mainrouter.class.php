@@ -64,7 +64,12 @@ class MainRouter extends RequestRouter {
 		$zonemanager = ZoneManager::getInstance();
 		if ($sysname === null) {
 			// list all servers
-			return $zonemanager->listModules();
+			foreach($zonemanager->listModules() as $module) {
+				$sysname = $module->sysname;
+				$server = new stdClass();
+				$server->name = $module->name;
+				$result->$sysname = $server;
+			}
 		}
 		else {
 			$zoneModule = $zonemanager->getModuleBySysname($sysname);
