@@ -124,7 +124,7 @@ abstract class ResourceRecord {
 	 * @return string RRType string
 	 */
 	public function getType() {
-		if ($this instanceof ResourceRecord) return null;
+		if (get_class($this) == 'ResourceRecord') return null;
 		return strtoupper(substr(get_class($this),0,-6));
 	}
 

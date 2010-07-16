@@ -125,5 +125,9 @@ $(document).ready(function() {
 		width: '400px'
 	});
 	$("#mainPanel").tabs();
-	$("#zonetreeroot").treeview();
+	// table
+	$("#recordTable").tablesorter({
+		sortList: [[0,0],[1,1]]
+	});
+	//$("#recordTable").trigger("sorton",[[[0,0],[1,1]]]);
 });

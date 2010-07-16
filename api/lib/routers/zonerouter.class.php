@@ -62,7 +62,13 @@ class ZoneRouter extends RequestRouter {
 				return $this->records();
 			}
 			// return the one record
-
+			$record = $this->zone->getRecordById($recordid);
+			if ($record === null) {
+				return new stdClass();
+			}
+			else {
+				return $this->record2Json($recordid,$record);
+			}
 		}
 	}
 
@@ -70,12 +76,18 @@ class ZoneRouter extends RequestRouter {
 		$result = new stdClass();
 		$result->id = $recordid;
 		$result->name = $record->getName();
+		$result->type = $record->getType();
+		$result->content = strval($record);
 		$result->fields = array();
 		$fields = $record->listFields();
 		foreach ($fields as $fieldname => $simpletype) {
 			$result->fields[$fieldname] = new stdClass();
 			$result->fields[$fieldname]->type = $simpletype;
 			$result->fields[$fieldname]->value = $record->getField($fieldname);
+		}
+		$viewinfo = $record->getViewinfo();
+		if (count($viewinfo) > 0) {
+			$result->views = $viewinfo;
 		}
 		$result->ttl = $record->getTTL();
 		return $result;
