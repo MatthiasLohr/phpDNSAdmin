@@ -3,81 +3,157 @@
   <head>
     <title></title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
-		<script type="text/javascript" src="js/jquery-ui-1.8.2.min.js"></script>
-		<script type="text/javascript" src="js/jquery.cookie.js"></script>
-		<script type="text/javascript" src="js/jquery.jstree.js"></script>
-		<script type="text/javascript">
-			$(document).ready(function() {
-				$("#zonetree").jstree({
-					core: {
-						animation: 10
-					},
-					plugins: ['json_data','types','themes'],
-					json_data: {
-						ajax: {
-							url: function(node) {
-								this.contextNode = node;
-								if (node == -1) return "api/servers";
-								tagid = node.attr('id');
-								if (tagid.substr(0,7) == "server-") {
-									return "api/servers/"+tagid.substr(7)+"/zones";
-								}
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.8.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.cookie.js"></script>
+    <script type="text/javascript" src="js/jquery.jstree.js"></script>
+    <script type="text/javascript">
+      function mergeArray(var1, var2) {
+        var d = var1.length;
+        for(i = 0; i < d; i++) {
+          if($.isArray(var2)) {
+            var x = var2.length;
+            for(j = 0; j < x; j++) {
+              if((var1[i].data != null && var2[j].data != null) && var1[i].data.toString() == var2[j].data.toString()) {
+                //alert("equal");
+                if(var1[i].children == null && var2[j].children != null) {
+                  //alert("Children umhaengen!");
+                  var1[i].children = var2[j].children;
+                } else if(var1[i].children != null && var2[j].children != null) {
+                  //alert("Merging Children!");
+                  mergeArray(var1[i].children, var2[j].children);
+                } else {
+                  //alert("Hier ist noch nix!");
+                }
+              } else if(var2[j].data != null) {
+                if(j == (x-1)) {
+                  //alert("not equal");
+                  var1.push(var2[j]);
+                }
+              }
+            }
+          } else {
+            //alert("Var1: " + var1[i].data + " Var2: " + var2.data);
+            if((var1[i].data != null && var2.data != null) && var1[i].data.toString() == var2.data.toString()) {
+              //alert("equal");
+              if(var1[i].children == null && var2.children != null) {
+                //alert("Children umhaengen!");
+                var1[i].children = var2.children;
+              } else if(var1[i].children != null && var2.children != null) {
+                //alert("Merging Children!");
+                mergeArray(var1[i].children, var2.children);
+              } else {
+                //alert("Hier ist noch nix!");
+              }
+            } else if(var2.data != null) {
+              if(i == (d-1)) {
+                //alert("not equal");
+                var1.push(var2);
+              }
+            }
+          }
+        }
+      }
 
-							},
-							success: function(data) {
-								if (this.contextNode == -1) {
-									servers = [];
-									for (sysname in data) {
-										servers.push({
-											data: data[sysname]['name'],
-											state: "closed",
-											attr: {
-												id: "server-"+sysname
-											}
-										});
-									}
-									return servers;
-								}
-								else {
-									tagid = this.contextNode.attr('id');
-									if (tagid.substr(0,7) == "server-") {
-										zones = [];
-										$(data).each(function(index,zone) {
-											zones.push({data: zone.name});
-										});
-										return zones;
-									}
-								}
-								return {};
-							}
-						}
-					},
-					themes: {
-						url: 'js/jstree-themes/default/style.css'
-					},
-					types: {
-						server: {
-							valid_children: ['ezone','izone'],
-							open_node: function(arg1) {
-								alert(arg1);
-							}
-						},
-						ezone: {
-							valid_children: ['ezone','izone']
-						},
-						izone: {
-							valid_children: ['ezone','izone']
-						}
-					}
-				});
-			});
-		</script>
+      function formatZoneArray(zone) {
+        zone = zone.toString();
+        if(zone.lastIndexOf('.') == -1) {
+          // Recursion End
+          return {
+            data: zone,
+            state: "closed",
+            attr: {
+              id: "zones-"+zone
+            }
+          }
+        } else {
+          datastr = zone.substr(zone.lastIndexOf('.')+1, zone.length - zone.lastIndexOf('.'));
+          reststr = zone.substr(0, zone.lastIndexOf('.'));
+          return {
+            data: datastr,
+            state: "closed",
+            attr: {
+              id: "zones-"+datastr
+            },
+            children: [formatZoneArray(reststr)]
+          }
+        }
+      }
+
+      $(document).ready(function() {
+        $("#zonetree").jstree({
+          core: {
+            animation: 10
+          },
+          plugins: ['json_data','types','themes'],
+          json_data: {
+            ajax: {
+              url: function(node) {
+                this.contextNode = node;
+                if (node == -1) return "api/servers";
+                tagid = node.attr('id');
+                if (tagid.substr(0,7) == "server-") {
+                  return "api/servers/"+tagid.substr(7)+"/zones";
+                }
+
+              },
+              success: function(data) {
+                if (this.contextNode == -1) {
+                  servers = [];
+                  for (sysname in data) {
+                    servers.push({
+                      data: data[sysname]['name'],
+                      state: "closed",
+                      attr: {
+                        id: "server-"+data[sysname]['sysname']
+                      }
+                    });
+                  }
+                  return servers;
+                }
+                else {
+                  tagid = this.contextNode.attr('id');
+                  if (tagid.substr(0,7) == "server-") {
+                    zones = [];
+                    $(data).each(function(index, zone) {
+                      if(zones.length == 0) {
+                        zones.push(formatZoneArray(zone.name));
+                      } else {
+                        mergeArray(zones, formatZoneArray(zone.name));
+                      }
+                    });
+                    return zones;
+                  }
+                }
+                return {};
+              }
+            }
+          },
+          themes: {
+            url: 'js/jstree-themes/default/style.css'
+          },
+          types: {
+            server: {
+              valid_children: ['ezone','izone'],
+              open_node: function(arg1) {
+                alert(arg1);
+              }
+            },
+            ezone: {
+              valid_children: ['ezone','izone']
+            },
+            izone: {
+              valid_children: ['ezone','izone']
+            }
+          }
+        });
+      });
+    </script>
   </head>
   <body>
     <div id="zonetree">
-			
-		</div>
-		<input type="submit" onclick="addServer('a','b');" value="Add server" />
+
+    </div>
+    <input type="submit" onclick="addServer('a','b');" value="Add server" />
   </body>
 </html>
