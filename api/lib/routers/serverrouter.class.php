@@ -42,7 +42,8 @@ class ServerRouter extends RequestRouter {
 	}
 
 	public function rrtypes() {
-
+		$features = $this->zoneModule->getFeatures();
+		return array_values(array_intersect(ResourceRecord::listTypes(),$features['rrtypes']));
 	}
 
 	public function zones($zonename = null) {
@@ -59,7 +60,8 @@ class ServerRouter extends RequestRouter {
 		else {
 			$zone = new Zone($zonename,$this->zoneModule);
 			try {
-				
+				$zoneRouter = new ZoneRouter($zone);
+				return $zoneRouter->track($this->routingPath);
 			}
 			catch(NoSuchZoneException $e) {
 				$result = new stdClass();

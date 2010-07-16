@@ -59,21 +59,30 @@ abstract class ZoneModule {
 		}
 	}
 
-
 	/**
 	 * Get all records from all zones
 	 *
 	 * @return ResourceRecord[] the records
 	 */
-	abstract public function listRecords(Zone $zone);
+	public function listRecords(Zone $zone) {
+		return $this->listRecordsByFilter($zone);
+	}
+
+	abstract public function listRecordsByFilter(Zone $zone,array $filter = array());
+
+	public function listRecordsByname(Zone $zone,$name) {
+		return $this->listRecordsByFilter($zone,array('name' => $name));
+	}
 
 	/**
 	 * Get records of a specific type from all zones
 	 *
-	 * @param Something $type record type to search for
+	 * @param string $type record type to search for
 	 * @return ResourceRecord[] matching records
 	 */
-	abstract public function listRecordsByType(Zone $zone,$type);
+	public function listRecordsByType(Zone $zone,$type) {
+		return $this->listRecordsByFilter($zone,array('type' => $type));
+	}
 
 	/**
 	 * Get all zones

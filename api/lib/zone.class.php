@@ -54,6 +54,10 @@ class Zone {
 		return $this->module->zoneExists($this);
 	}
 
+	public function getModule() {
+		return $this->module;
+	}
+
 	public function getName() {
 		return $this->name;
 	}

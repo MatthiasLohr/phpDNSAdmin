@@ -86,8 +86,25 @@ class MainRouter extends RequestRouter {
 
 	public function simpletypes($type) {
 		$result = new stdClass();
+		if (!class_exists($type) || !is_subclass_of($type,'Simpletype')) {
+			$result->error = $type.' is no Simpletype!';
+			return $result;
+		}
 		if (RequestRouter::getRequestType() == 'POST') {
-
+			$data = RequestRouter::getRequestData();
+			if ($data === null || !isset($data['value'])) return $result;
+			if (is_array($data['value'])) {
+				$result->value = array();
+				foreach ($data['value'] as $key => $value) {
+					$result->value[$key] = new stdClass();
+					$typeInstance = new $type($value);
+					$result->value[$key]->valid = $typeInstance->isValid();
+				}
+			}
+			else {
+				$typeInstance = new $type($data['value']);
+				$result->valid = $typeInstance->isValid();
+			}
 		}
 		return $result;
 	}

@@ -31,18 +31,63 @@
  */
 class ZoneRouter extends RequestRouter {
 
+	/** @var Zone instance of zone object */
 	private $zone = null;
 
-	public function __construct($zone) {
+	public function __construct(Zone $zone) {
 		$this->zone = $zone;
 	}
 
-	function records($recordid = null) {
+	public function __default() {
+		return $this->records();
+	}
 
+	function records($recordid = null) {
+		if ($recordid === null) {
+			// create new record
+			if (RequestRouter::getRequestType() == 'PUT') {
+
+			}
+			$result = array();
+			$records = $this->zone->listRecords();
+			foreach ($records as $recordid => $record) {
+				$result[$recordid] = $this->record2Json($recordid,$record);
+			}
+			return $result;
+		}
+		else {
+			// delete record
+			if (RequestRouter::getRequestType() == 'DELETE') {
+
+				return $this->records();
+			}
+			// return the one record
+
+		}
+	}
+
+	private function record2Json($recordid,ResourceRecord $record) {
+		$result = new stdClass();
+		$result->id = $recordid;
+		$result->name = $record->getName();
+		$result->fields = array();
+		$fields = $record->listFields();
+		foreach ($fields as $fieldname => $simpletype) {
+			$result->fields[$fieldname] = new stdClass();
+			$result->fields[$fieldname]->type = $simpletype;
+			$result->fields[$fieldname]->value = $record->getField($fieldname);
+		}
+		$result->ttl = $record->getTTL();
+		return $result;
 	}
 
 	function views() {
+		if ($this->zone->getModule() instanceof Views) {
 
+		}
+		else {
+			return new stdClass();
+		}
 	}
 }
 

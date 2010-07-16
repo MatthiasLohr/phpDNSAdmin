@@ -78,6 +78,10 @@ class AuthorizationManager {
 		self::$instance = new AuthorizationManager($configuration);
 		return self::$instance;
 	}
+
+	public function userIsAdmin(User $user) {
+
+	}
 }
 
 ?>

@@ -85,12 +85,7 @@ class PdnsPdoZone extends ZoneModule {
 		}
 	}
 
-	public function listRecords(Zone $zone) {
-		$this->zoneAssureExistence($zone);
-		return $this->listRecordsByFilter(array());
-	}
-
-	private function listRecordsByFilter(Zone $zone,array $filter) {
+	public function listRecordsByFilter(Zone $zone,array $filter = array()) {
 		$this->zoneAssureExistence($zone);
 		$query = 'SELECT id,name,type,content,ttl,prio FROM records WHERE domain_id = '.$this->db->quote($this->zoneIds[$zone->getName()]);
 		// apply filters
@@ -103,25 +98,25 @@ class PdnsPdoZone extends ZoneModule {
 		if (isset($filter['type'])) {
 			$query .= ' AND type = '.$this->db->quote($filter['type']);
 		}
+		if (isset($filter['content'])) {
+			$query .= ' AND content = '.$this->db->quote($filter['content']);
+		}
+		if (isset($filter['ttl'])) {
+			$query .= ' AND ttl = '.$this->db->quote($filter['ttl']);
+		}
 		// execute query
 		$result = array();
 		$stm = $this->db->query($query);
 		while ($row = $stm->fetch()) {
-			$result[$row['id']] = ResourceRecord::instantiate(
-				$row['type'],$this->hostnameLong2Short($row['name']),
+			$result[$row['id']] = ResourceRecord::getInstance(
+				$row['type'],
+				$this->hostnameLong2Short($zone,$row['name']),
 				$row['content'],
 				$row['ttl'],
-				$row['priority']
+				$row['prio']
 			);
 		}
 		return $result;
-	}
-
-	public function listRecordsByType(Zone $zone,$type) {
-		$this->zoneAssureExistence($zone);
-		$filter = array();
-		$filter['type'] = $type;
-		return $this->listRecordsByFilter($filter);
 	}
 
 	public function listZones() {

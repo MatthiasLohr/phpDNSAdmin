@@ -49,11 +49,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	}
 
-	public function listRecords(Zone $zone) {
-
-	}
-
-	public function listRecordsByType(Zone $zone, $type) {
+	public function listRecordsByFilter(Zone $zone, array $filter = array()) {
 
 	}
 

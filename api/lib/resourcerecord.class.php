@@ -43,11 +43,14 @@ abstract class ResourceRecord {
 	/** @var array Array of field values */
 	private $fieldValues = array();
 
-	protected function __construct($name,array $fieldValues,$ttl,$priority = null) {
+	private $viewinfo = array();
+
+	protected final function __construct($name,$content,$ttl,$priority = null,array $viewinfo = array()) {
 		$this->setName($name);
-		$this->fieldValues = $fieldValues;
+		$this->fieldValues = $this->parseContent($content);
 		$this->setTTL($ttl);
 		if ($priority !== null) $this->setField('priority',$priority);
+		$this->viewinfo = $viewinfo;
 	}
 
 	/**
@@ -93,7 +96,8 @@ abstract class ResourceRecord {
 	final public static function getInstance($type,$name,$content,$ttl,$priority = null) {
 		$className = self::getClassByType($type);
 		if ($className === null) throw new NotSupportedException('RRType '.$type.' is not supported yet!');
-	
+		$record = new $className($name,$content,$ttl,$priority);
+		return $record;
 	}
 
 	/**
@@ -124,6 +128,10 @@ abstract class ResourceRecord {
 		return strtoupper(substr(get_class($this),0,-6));
 	}
 
+	public function getViewinfo() {
+		return $this->viewinfo;
+	}
+
 	/**
 	 * return a list of fields contained in the specific record type
 	 *
@@ -138,6 +146,20 @@ abstract class ResourceRecord {
 			$tmp = new stdClass();
 			$tmp->type = $type;
 			$result[] = $tmp;
+		}
+		return $result;
+	}
+
+	protected function parseContent($content) {
+		$fields = $this->listFields();
+		$fieldCount = count($fields);
+		$values = explode(' ',$content,$fieldCount);
+		$i = 0;
+		$result = array();
+		foreach ($fields as $key => $simpletype) {
+			if ($key == 'priority') continue;
+			$result[$key] = $values[$i];
+			$i++;
 		}
 		return $result;
 	}

@@ -31,6 +31,7 @@
  */
 abstract class RequestRouter {
 
+	/** @var array remaining routing path */
 	protected $routingPath = array();
 
 	public function __default() {
