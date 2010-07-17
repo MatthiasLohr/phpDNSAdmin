@@ -15,39 +15,28 @@
             var x = var2.length;
             for(j = 0; j < x; j++) {
               if((var1[i].data != null && var2[j].data != null) && var1[i].data.toString() == var2[j].data.toString()) {
-                //alert("equal");
                 if(var1[i].children == null && var2[j].children != null) {
-                  //alert("Children umhaengen!");
                   var1[i].children = var2[j].children;
                 } else if(var1[i].children != null && var2[j].children != null) {
-                  //alert("Merging Children!");
                   mergeArray(var1[i].children, var2[j].children);
-                } else {
-                  //alert("Hier ist noch nix!");
                 }
+                return 0;
               } else if(var2[j].data != null) {
-                if(j == (x-1)) {
-                  //alert("not equal");
+                if(i == (d-1)) {
                   var1.push(var2[j]);
                 }
               }
             }
           } else {
-            //alert("Var1: " + var1[i].data + " Var2: " + var2.data);
             if((var1[i].data != null && var2.data != null) && var1[i].data.toString() == var2.data.toString()) {
-              //alert("equal");
               if(var1[i].children == null && var2.children != null) {
-                //alert("Children umhaengen!");
                 var1[i].children = var2.children;
               } else if(var1[i].children != null && var2.children != null) {
-                //alert("Merging Children!");
                 mergeArray(var1[i].children, var2.children);
-              } else {
-                //alert("Hier ist noch nix!");
               }
+              return 0;
             } else if(var2.data != null) {
               if(i == (d-1)) {
-                //alert("not equal");
                 var1.push(var2);
               }
             }

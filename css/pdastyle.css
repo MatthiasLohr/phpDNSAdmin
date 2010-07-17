@@ -14,28 +14,53 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 div#recordList {
-	margin: 5px;
-
+  margin: 5px;
 }
 
 div#recordList table {
-	font-family: Verdana, sans-serif;
-	font-size: 12px;
-	border-collapse: collapse;
-	margin: 5px;
+  font-family: Verdana, sans-serif;
+  font-size: 12px;
+  border-collapse: collapse;
+  margin: 5px;
 }
 
 div#recordList table thead {
-	font-weight: bold;
+  font-weight: bold;
 }
 
 div#recordList table tbody {
-	font-weight: normal;
+  font-weight: normal;
 }
 
 div#recordList table th, div#recordList table td {
-	border: solid #AAAAAA 1px;
+  border: solid #AAAAAA 1px;
+}
+
+div#zoneSelector {
+  display: none;
+
+}
+
+div#treeBox {
+  position: fixed;
+  top: 80px;
+  left: 10px;
+}
+
+#treeToggleButton {
+  border-right-style: dotted;
+  border-left-style: dotted;
+  border-bottom-style: dotted;
+  border-top-style: dotted;
+  border-right-width: 1px;
+  border-left-width: 1px;
+  border-bottom-width: 1px;
+  border-top-width: 1px;
+  border-right-color: #000000;
+  border-left-color: #000000;
+  border-bottom-color: #000000;
+  border-top-color: #000000;
 }
