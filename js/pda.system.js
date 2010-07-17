@@ -15,6 +15,43 @@
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
+function var_dump(element, limit, depth)
+{
+	depth =	depth?depth:0;
+	limit = limit?limit:1;
+
+	returnString = '<ol>';
+
+	for(property in element)
+	{
+		//Property domConfig isn't accessable
+		if (property != 'domConfig')
+		{
+			returnString += '<li><strong>'+ property + '</strong> <small>(' + (typeof element[property]) +')</small>';
+
+			if (typeof element[property] == 'number' || typeof element[property] == 'boolean')
+				returnString += ' : <em>' + element[property] + '</em>';
+			if (typeof element[property] == 'string' && element[property])
+				returnString += ': <div style="background:#C9C9C9;border:1px solid black; overflow:auto;"><code>' +
+									element[property].replace(/</g, '&amp;lt;').replace(/>/g, '&amp;gt;') + '</code></div>';
+
+			if ((typeof element[property] == 'object') && (depth < limit))
+				returnString += var_dump(element[property], limit, (depth + 1));
+
+			returnString += '</li>';
+		}
+	}
+	returnString += '</ol>';
+
+	if(depth == 0)
+	{
+		winpop = window.open("", "","width=800,height=600,scrollbars,resizable");
+		winpop.document.write('<pre>'+returnString+ '</pre>');
+		winpop.document.close();
+	}
+
+	return returnString;
+}
 
 function login(username,password) {
   $.ajax({
@@ -127,15 +164,21 @@ function mergeArray(var1, var2) {
   }
 }
 
-function formatZoneArray(zone) {
+function formatZoneArray(zone, c, full) {
   zone = zone.toString();
+  rel = "ezone";
+  if(c == 0) {
+    rel = "izone";
+  }
+  c++;
   if(zone.lastIndexOf('.') == -1) {
     // Recursion End
     return {
       data: zone,
       //state: "closed",
       attr: {
-        id: "zones-"+zone
+        id: full,
+        rel: rel
       }
     }
   } else {
@@ -145,9 +188,10 @@ function formatZoneArray(zone) {
       data: datastr,
       //state: "closed",
       attr: {
-        id: "zones-"+datastr
+        id: full,
+        rel: rel
       },
-      children: [formatZoneArray(reststr)]
+      children: [formatZoneArray(reststr, c, full)]
     }
   }
 }
@@ -199,7 +243,7 @@ $(document).ready(function() {
     core: {
       animation: 10
     },
-    plugins: ['json_data','types','themes'],
+    plugins: ['json_data','types','themes', 'ui'],
     json_data: {
       ajax: {
         url: function(node) {
@@ -219,7 +263,8 @@ $(document).ready(function() {
                 data: data[sysname]['name'],
                 state: "closed",
                 attr: {
-                  id: "server-"+sysname
+                  id: "server-"+sysname,
+                  rel: "server"
                 }
               });
             }
@@ -228,12 +273,13 @@ $(document).ready(function() {
           else {
             tagid = this.contextNode.attr('id');
             if (tagid.substr(0,7) == "server-") {
-              zones = [];
+              zones = [];  
               $(data).each(function(index, zone) {
+                fullstr = zone.name+"|"+tagid.substr(7,tagid.length);
                 if(zones.length == 0) {
-                  zones.push(formatZoneArray(zone.name));
+                  zones.push(formatZoneArray(zone.name, 0, fullstr));
                 } else {
-                  mergeArray(zones, formatZoneArray(zone.name));
+                  mergeArray(zones, formatZoneArray(zone.name, 0, fullstr));
                 }
               });
               return zones;
@@ -247,23 +293,48 @@ $(document).ready(function() {
       url: 'js/jstree-themes/default/style.css'
     },
     types: {
-      server: {
-        valid_children: ['ezone','izone'],
-        open_node: function(arg1) {
-          alert(arg1);
+      "valid_children": ["server"],
+      "types": {
+        "server": {
+          "valid_children": ["ezone", "izone"],
+          "open_node": function() {
+            return true;
+          },
+          "select_node": false,
+          "icon": {
+            "image" : "css/jquery/images/server-icon.png"
+          }
+        },
+        "ezone": {
+          "valid_children": ["ezone", "izone"],
+          "select_node": function(obj) {
+            //var_dump(event.currentTarget,2);
+            obj = this._get_node(obj);
+            info = obj[0].id.split('|');
+            recordUpdateList(info[1],info[0]);
+            $("#treeToggleButton").click();
+            return true;
+          },
+          "icon": {
+            "image" : "css/jquery/images/ezone.png"
+          }
+        },
+        "izone": {
+          "valid_children": ["ezone", "izone"],
+          "select_node": false,
+          "icon": {
+            "image" : "css/jquery/images/izone.png"
+          }
         }
-      },
-      ezone: {
-        valid_children: ['ezone','izone']
-      },
-      izone: {
-        valid_children: ['ezone','izone']
       }
+    },
+    "ui" : {
+      "select_limit" : 1
     }
   });
 
-  $("#treeToogleButton").click(function() {
+  $("#treeToggleButton").click(function() {
     $("#zoneSelector").toggle();
   });
-  //$("#recordTable").trigger("sorton",[[[0,0],[1,1]]]);
+//$("#recordTable").trigger("sorton",[[[0,0],[1,1]]]);
 });

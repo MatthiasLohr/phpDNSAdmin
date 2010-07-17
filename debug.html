@@ -4,8 +4,17 @@
     <title>REST-API Debug Tool</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.ezCookie.js"></script>
     <script type="text/javascript">
-      function addField() {
+      function addField(key, value) {
+        skey = "";
+        svalue = "";
+        if(key != null) {
+          skey = key;
+        }
+        if(value != null) {
+          svalue = value;
+        }
         // Check for next free Number (max. 100)
         for(i=0;i<100;i++) {
           if(!($("#field_"+i).length > 0)) {
@@ -13,11 +22,11 @@
             html =  "<tr id=\"field_"+i+"\">";
             html += " <td>"+(i+1)+"</td>";
             html += " <td style=\"text-align:center\">";
-            html += "   <input id=\"field_key_"+i+"\" type=\"text\" />";
+            html += "   <input id=\"field_key_"+i+"\" type=\"text\" value=\""+skey+"\" />";
             html += " </td>";
             html += " <td>:</td>";
             html += " <td style=\"text-align:center\">";
-            html += "   <input id=\"field_value_"+i+"\" type=\"text\" />";
+            html += "   <input id=\"field_value_"+i+"\" type=\"text\"  value=\""+svalue+"\" />";
             html += " </td>";
             html += "</tr>";
             $("#fieldbox").append(html);
@@ -28,7 +37,76 @@
         }
       }
 
+      // Fav. Funtions
+      function saveFav(name) {
+        fav = {};
+        fav.name = name;
+        fav.url = $("#url").val();
+        fav.method = $("#method").val();
+        fav.data = [];
+
+        i = 0;
+        while(($("#field_"+i).length > 0)) {
+          data = {
+            key: $("#field_key_"+i).val(),
+            value : $("#field_value_"+i).val()
+          };
+          fav.data.push(data);
+          i++;
+        }
+
+        if($.cookie('RESTDEBUGFAV') == null) {
+          // no cookie found, create new
+          $.setCookie('RESTDEBUGFAV', [fav]);
+        } else {
+          // append new data to existing
+          cur = $.cookie('RESTDEBUGFAV');
+          cur.push(fav);
+          $.setCookie('RESTDEBUGFAV', cur);
+          
+        }
+        loadFavs();
+      }
+
+      function loadFavs() {
+        $("#favbox").html('');
+        //$("#fieldbox").html('');
+        if($.cookie('RESTDEBUGFAV') != null) {
+          fav = $.cookie('RESTDEBUGFAV');
+          for(i = 0; i < fav.length; i++) {
+            content  = "<tr>";
+            content += "<td style=\"width: 15px\">";
+            content += (i+1);
+            content += "</td>";
+            content += "<td>";
+            content += "<input id=\"load_fav_"+i+"\" value=\""+fav[i].name+"\" type=\"button\" />";
+            content += "</td>";
+            content += "<td>";
+            content += "<input id=\"del_fav_"+i+"\" value=\"Del\" type=\"button\" />";
+            content += "</td>";
+            content += "</tr>";
+            $("#favbox").append(content);
+
+            $("#load_fav_"+i).bind("click", {fava: fav[i]}, function(event) {
+              $("#fieldbox").html('');
+              $("#url").val(event.data.fava.url);
+              $("#method").val(event.data.fava.method);
+              for(i = 0; i < event.data.fava.data.length; i++) {
+                addField(event.data.fava.data[i].key, event.data.fava.data[i].value);
+              }
+            });
+            $("#del_fav_"+i).bind("click", {index: i}, function(event) {
+              cur = $.cookie('RESTDEBUGFAV');
+              cur.splice(event.data.index, 1);
+              $.setCookie('RESTDEBUGFAV', cur);
+              loadFavs();
+            });
+          }
+        }
+      }
+
       $(document).ready(function() {
+        loadFavs();
         // Pressed Enter?
         $("#url").keypress(function (e) {
           if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
@@ -39,7 +117,6 @@
         // Clicked the Button
         $("#doIt").click(function() {
           $("#doIt").val("loading...");
-
           // Generate Field Data
           i = 0;
           while(($("#field_"+i).length > 0)) {
@@ -47,7 +124,6 @@
             // nur volle Keys
             if(key != '') {
               value = $("#field_value_"+i).val();
-
               other = $("#hiddenData").val();
               if(other == '') {
                 other = key + "=" + value;
@@ -80,6 +156,15 @@
           while(($("#field_"+i).length > 0)) {
             $("#field_"+i).remove();
             i++;
+          }
+        });
+        $("#saveFav").click(function() {
+          var name = prompt("Please enter a name:","Favorit");
+          if(name != "") {
+            // Save to favorite
+            saveFav(name);
+          } else {
+            alert("Name must not be blank!");
           }
         });
       });
@@ -117,21 +202,34 @@
             <table>
               <tbody style="width: 550px">
                 <tr>
-                  <td style="width: 380px">
+                  <td style="width: 380px; vertical-align: top">
                     <table>
-                      <tbody id="fieldbox">
+                      <thead>
                         <tr>
                           <th>#</th>
                           <th style="width:200px">Key</th>
                           <th>&nbsp;</th>
                           <th style="width:200px">Value</th>
                         </tr>
+                      </thead>
+                      <tbody id="fieldbox">
                       </tbody>
                     </table>
                   </td>
                   <td style="margin:0px; vertical-align: top">
                     <input style="margin:0px;padding:0px" id="addField" value="Add field" type="button">
                     <input style="margin:0px;padding:0px" id="resetBtn" value="Reset" type="button">
+                    <input style="margin:0px;padding:0px" id="saveFav" value="Save Fav." type="button">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th colspan="3">Favorites</th>
+                        </tr>
+                      </thead>
+                      <tbody id="favbox">
+
+                      </tbody>
+                    </table>
                   </td>
                 </tr>
               </tbody>

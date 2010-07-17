@@ -42,7 +42,7 @@
 
       <div id="zoneAdminPanel">
         <div id="treeBox">
-          <img id="treeToogleButton" src="css/jquery/images/tree.gif" />
+          <img id="treeToggleButton" src="css/jquery/images/tree.gif" />
           <div id="zoneSelector">
 
           </div>
