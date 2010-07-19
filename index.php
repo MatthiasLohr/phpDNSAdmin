@@ -28,8 +28,10 @@
     <script type="text/javascript" src="js/jquery.cookie.js"></script>
     <script type="text/javascript" src="js/jquery.jstree.js"></script>
     <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="js/jquery.tablefilter.js"></script>
 
     <script type="text/javascript" src="js/pda.records.js"></script>
+    <script type="text/javascript" src="js/pda.tree.js"></script>
     <script type="text/javascript" src="js/pda.system.js"></script>
   </head>
   <body>
@@ -47,8 +49,10 @@
 
           </div>
         </div>
-        <br />
+        
+       
         <div id="recordList">
+          <span>Filter: <input id="searchBox" /></span>
           <table id="recordTable" class="ui-corner-all tablesorter">
             <thead><tr>
                 <th>Name</th>

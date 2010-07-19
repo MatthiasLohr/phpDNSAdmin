@@ -91,74 +91,6 @@ function updateStatus() {
   });
 }
 
-function mergeArray(var1, var2) {
-  var d = var1.length;
-  for(i = 0; i < d; i++) {
-    if($.isArray(var2)) {
-      var x = var2.length;
-      for(j = 0; j < x; j++) {
-        if((var1[i].data != null && var2[j].data != null) && var1[i].data.toString() == var2[j].data.toString()) {
-          if(var1[i].children == null && var2[j].children != null) {
-            var1[i].children = var2[j].children;
-          } else if(var1[i].children != null && var2[j].children != null) {
-            mergeArray(var1[i].children, var2[j].children);
-          }
-          return 0;
-        } else if(var2[j].data != null) {
-          if(i == (d-1)) {
-            var1.push(var2[j]);
-          }
-        }
-      }
-    } else {
-      if((var1[i].data != null && var2.data != null) && var1[i].data.toString() == var2.data.toString()) {
-        if(var1[i].children == null && var2.children != null) {
-          var1[i].children = var2.children;
-        } else if(var1[i].children != null && var2.children != null) {
-          mergeArray(var1[i].children, var2.children);
-        }
-        return 0;
-      } else if(var2.data != null) {
-        if(i == (d-1)) {
-          var1.push(var2);
-        }
-      }
-    }
-  }
-}
-
-function formatZoneArray(zone, c, full) {
-  zone = zone.toString();
-  rel = "ezone";
-  if(c == 0) {
-    rel = "izone";
-  }
-  c++;
-  if(zone.lastIndexOf('.') == -1) {
-    // Recursion End
-    return {
-      data: zone,
-      //state: "closed",
-      attr: {
-        id: full,
-        rel: rel
-      }
-    }
-  } else {
-    datastr = zone.substr(zone.lastIndexOf('.')+1, zone.length - zone.lastIndexOf('.'));
-    reststr = zone.substr(0, zone.lastIndexOf('.'));
-    return {
-      data: datastr,
-      //state: "closed",
-      attr: {
-        id: full,
-        rel: rel
-      },
-      children: [formatZoneArray(reststr, c, full)]
-    }
-  }
-}
-
 // immediate execution
 $(document).ready(function() {
   // set ajax default options
@@ -201,103 +133,15 @@ $(document).ready(function() {
     widthFixed: true
   });
 
-  // Tree
-  $("#zoneSelector").jstree({
-    core: {
-      animation: 10
-    },
-    plugins: ['json_data','types','themes', 'ui'],
-    json_data: {
-      ajax: {
-        url: function(node) {
-          this.contextNode = node;
-          if (node == -1) return "api/servers";
-          tagid = node.attr('id');
-          if (tagid.substr(0,7) == "server-") {
-            return "api/servers/"+tagid.substr(7)+"/zones";
-          }
-          return "";
-        },
-        success: function(data) {
-          if (this.contextNode == -1) {
-            servers = [];
-            for (sysname in data) {
-              servers.push({
-                data: data[sysname]['name'],
-                state: "closed",
-                attr: {
-                  id: "server-"+sysname,
-                  rel: "server"
-                }
-              });
-            }
-            return servers;
-          }
-          else {
-            tagid = this.contextNode.attr('id');
-            if (tagid.substr(0,7) == "server-") {
-              zones = [];  
-              $(data).each(function(index, zone) {
-                fullstr = zone.name+"|"+tagid.substr(7,tagid.length);
-                if(zones.length == 0) {
-                  zones.push(formatZoneArray(zone.name, 0, fullstr));
-                } else {
-                  mergeArray(zones, formatZoneArray(zone.name, 0, fullstr));
-                }
-              });
-              return zones;
-            }
-          }
-          return {};
-        }
-      }
-    },
-    themes: {
-      url: 'js/jstree-themes/default/style.css'
-    },
-    types: {
-      "valid_children": ["server"],
-      "types": {
-        "server": {
-          "valid_children": ["ezone", "izone"],
-          "open_node": function() {
-            return true;
-          },
-          "select_node": false,
-          "icon": {
-            "image" : "css/jquery/images/server-icon.png"
-          }
-        },
-        "ezone": {
-          "valid_children": ["ezone", "izone"],
-          "select_node": function(obj) {
-            //var_dump(event.currentTarget,2);
-            obj = this._get_node(obj);
-            info = obj[0].id.split('|');
-            recordUpdateList(info[1],info[0]);
-            $("#treeToggleButton").click();
-            return true;
-          },
-          "icon": {
-            "image" : "css/jquery/images/ezone.png"
-          }
-        },
-        "izone": {
-          "valid_children": ["ezone", "izone"],
-          "select_node": false,
-          "icon": {
-            "image" : "css/jquery/images/izone.png"
-          }
-        }
-      }
-    },
-    "ui" : {
-      "select_limit" : 1
-    }
-  });
+  // execute init Tree script
+  initTree("#zoneSelector");
 
   $("#treeToggleButton").click(function() {
     $("#zoneSelector").toggle();
+  });
+
+  $("#searchBox").keyup(function() {
+    $.uiTableFilter($("#recordTable"), this.value);
   });
 //$("#recordTable").trigger("sorton",[[[0,0],[1,1]]]);
 });
