@@ -143,9 +143,10 @@ abstract class ResourceRecord {
 		$result = array();
 		foreach (glob(RRTYPE_PATH.'/*record.class.php') as $filename) {
 			$type = strtoupper(basename($filename,'record.class.php'));
-			$tmp = new stdClass();
-			$tmp->type = $type;
-			$result[] = $tmp;
+			/*$tmp = new stdClass();
+			$tmp->type = $type;*/
+			//$result[] = $tmp;
+      $result[] = $type;
 		}
 		return $result;
 	}
