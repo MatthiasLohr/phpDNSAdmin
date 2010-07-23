@@ -34,7 +34,7 @@ class UInt extends SimpleType {
 	}
 
 	public static function normalizeValue($string) {
-		if (!self::isValid($string))
+		if (!self::isValidValue($string))
 			throw new InvalidTypeException($string . ' is no valid UInt');
 		return intval($string);
 	}
