@@ -47,9 +47,22 @@ abstract class ResourceRecord {
 
 	protected final function __construct($name,$content,$ttl,$priority = null,array $viewinfo = array()) {
 		$this->setName($name);
-		$this->fieldValues = $this->parseContent($content);
-		$this->setTTL($ttl);
+		if (is_array($content)) {
+			$this->fieldValues = $content;
+		}
+		else {
+			$this->fieldValues = $this->parseContent($content);
+		}
 		if ($priority !== null) $this->setField('priority',$priority);
+		// check fields
+		foreach ($this->listFields() as $fieldname => $simpletype) {
+			if (!isset($this->fieldValues[$fieldname])) throw new InvalidFieldDataException('Field '.$fieldname.' is empty!');
+			$value = new $simpletype($this->fieldValues[$fieldname]);
+			if (!$value->isValid()) throw new InvalidFieldDataException('No valid data for field '.$fieldname.' ('.$simpletype.')');
+			$this->fieldValues[$fieldname] = $value->normalize();
+		}
+		// do the rest
+		$this->setTTL($ttl);
 		$this->viewinfo = $viewinfo;
 	}
 
