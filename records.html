@@ -1,0 +1,56 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+		<script type="text/javascript">
+			function loadFields(index) {
+				if (index == 0) return;
+				rrtype = $('#rrtypeSelection option')[index].text;
+				
+
+			}
+
+			function createRecord() {
+				$.ajax({
+					url: "api/servers/test/zones/clwp.de/records",
+					type: "PUT",
+					data: {
+						name: 'bla',
+						ttl: '86400',
+						type: 'A',
+						fields: {
+							target: '123.123.123.123'
+						}
+					},
+					dataType: "json",
+					success: function(data) {}
+				});
+			}
+
+			$(document).ready(function() {
+				$.ajax({
+					url: "api/rrtypes",
+					dataType: 'json',
+					success: function(data) {
+
+						for (i = 0; i < data.length; i++) {
+							$('#rrtypeSelection').append("<option value=\""+data[i]+"\">"+data[i]+"</option>");
+						}
+					}
+				});
+			});
+		</script>
+  </head>
+  <body>
+    <select id="rrtypeSelection" onchange="loadFields(this.selectedIndex);">
+			<option>Bitte wählen...</option>
+		</select>
+		<input type="submit" onclick="createRecord();"/>
+  </body>
+</html>

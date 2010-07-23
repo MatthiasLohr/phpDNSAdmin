@@ -69,6 +69,10 @@ class Zone {
 	public function listRecords() {
 		return $this->module->listRecords($this);
 	}
+
+	public function recordAdd(ResourceRecord $record) {
+		return $this->module->recordAdd($this,$record);
+	}
 }
 
 ?>

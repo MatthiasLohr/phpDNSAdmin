@@ -50,18 +50,20 @@ class ZoneRouter extends RequestRouter {
 				if (isset($data['type'])) {
 					try {
 						if (!isset($data['name'])) {
-							throw new InvalidFieldDataException('Field name is empty!');
+							throw new InvalidFieldDataException('name is empty!');
 						}
 						if (!isset($data['ttl'])) {
-							throw new InvalidFieldDataException('Field ttl is empty!');
+							throw new InvalidFieldDataException('ttl is empty!');
 						}
-
+						if (!isset($data['fields']) || !is_array($data['fields'])) {
+							throw new InvalidFieldDataException('No field values given!');
+						}
 						// needed to avoid Php Warnings
-						$prio = isset($data['priority']) ? $data['priority'] : null;
+						$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
 
-						$record = ResourceRecord::getInstance($data['type'], $data['name'], $data, $data['ttl'], $prio);
+						$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
 
-						$this->zone->createRecord($record);
+						return $this->zone->recordAdd($record);
 					} catch (Exception $e) {
 						$result = new stdClass();
 						$result->error = $e->getMessage();
