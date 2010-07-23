@@ -49,23 +49,14 @@ $config = array(
 		
 		array(
 			'_module' => 'PdnsPdoZone',
-		  '_sysname' => 'main',
+			'_sysname' => 'main',
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=pdns',
 			'pdo_username' => 'powerdns',
 			'pdo_password' => 'powerdns',
-      /**
-       * Optional option for PDO_PGSQL()
-       * !IMPORTANT!
-       * Only change it, if you know what you do!
-       */
-      /*
-      'sequence' => array(
-        'records' => 'records_id_seq',
-        'domains' => 'domains_id_seq',
-      )
-      */
+			// 'domain_sequence' => 'domains_id_seq',
+			// 'records_sequence' => 'domains_id_seq',
+			// 'tableprefix' => '',
 		),
-		
 	),
 );
 

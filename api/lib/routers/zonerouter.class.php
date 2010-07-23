@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 /**
  * @package phpDNSAdmin
@@ -31,98 +31,98 @@
  */
 class ZoneRouter extends RequestRouter {
 
-  /** @var Zone instance of zone object */
-  private $zone = null;
+	/** @var Zone instance of zone object */
+	private $zone = null;
 
-  public function __construct(Zone $zone) {
-    $this->zone = $zone;
-  }
+	public function __construct(Zone $zone) {
+		$this->zone = $zone;
+	}
 
-  public function __default() {
-    return $this->records();
-  }
+	public function __default() {
+		return $this->records();
+	}
 
-  function records($recordid = null) {
-    if ($recordid === null) {
-      // create new record
-      if (RequestRouter::getRequestType() == 'PUT') {
-        $data = RequestRouter::getRequestData();
-        if (isset($data['type'])) {
-          try {
-            if (!isset($data['name'])) {
-              throw new InvalidFieldDataException('Field name is empty!');
-            }
-            if (!isset($data['ttl'])) {
-              throw new InvalidFieldDataException('Field ttl is empty!');
-            }
+	function records($recordid = null) {
+		if ($recordid === null) {
+			// create new record
+			if (RequestRouter::getRequestType() == 'PUT') {
+				$data = RequestRouter::getRequestData();
+				if (isset($data['type'])) {
+					try {
+						if (!isset($data['name'])) {
+							throw new InvalidFieldDataException('Field name is empty!');
+						}
+						if (!isset($data['ttl'])) {
+							throw new InvalidFieldDataException('Field ttl is empty!');
+						}
 
-            // needed to avoid Php Warnings
-            $prio = isset($data['priority']) ? $data['priority'] : null;
+						// needed to avoid Php Warnings
+						$prio = isset($data['priority']) ? $data['priority'] : null;
 
-            $record = ResourceRecord::getInstance($data['type'], $data['name'], $data, $data['ttl'], $prio);
+						$record = ResourceRecord::getInstance($data['type'], $data['name'], $data, $data['ttl'], $prio);
 
-            $this->zone->createRecord($record);
-          } catch (Exception $e) {
-            $result = new stdClass();
-            $result->error = $e->getMessage();
-            return $result;
-          }
-        } else {
-          $result = new stdClass();
-          $result->error = 'No record type given!';
-          return $result;
-        }
-      }
-      $result = array();
-      $records = $this->zone->listRecords();
-      foreach ($records as $recordid => $record) {
-        $result[$recordid] = $this->record2Json($recordid, $record);
-      }
-      return $result;
-    } else {
-      // delete record
-      if (RequestRouter::getRequestType() == 'DELETE') {
+						$this->zone->createRecord($record);
+					} catch (Exception $e) {
+						$result = new stdClass();
+						$result->error = $e->getMessage();
+						return $result;
+					}
+				} else {
+					$result = new stdClass();
+					$result->error = 'No record type given!';
+					return $result;
+				}
+			}
+			$result = array();
+			$records = $this->zone->listRecords();
+			foreach ($records as $recordid => $record) {
+				$result[$recordid] = $this->record2Json($recordid, $record);
+			}
+			return $result;
+		} else {
+			// delete record
+			if (RequestRouter::getRequestType() == 'DELETE') {
 
-        return $this->records();
-      }
-      // return the one record
-      $record = $this->zone->getRecordById($recordid);
-      if ($record === null) {
-        return new stdClass();
-      } else {
-        return $this->record2Json($recordid, $record);
-      }
-    }
-  }
+				return $this->records();
+			}
+			// return the one record
+			$record = $this->zone->getRecordById($recordid);
+			if ($record === null) {
+				return new stdClass();
+			} else {
+				return $this->record2Json($recordid, $record);
+			}
+		}
+	}
 
-  private function record2Json($recordid, ResourceRecord $record) {
-    $result = new stdClass();
-    $result->id = $recordid;
-    $result->name = $record->getName();
-    $result->type = $record->getType();
-    $result->content = strval($record);
-    $result->fields = array();
-    $fields = $record->listFields();
-    foreach ($fields as $fieldname => $simpletype) {
-      $result->fields[$fieldname] = new stdClass();
-      $result->fields[$fieldname]->type = $simpletype;
-      $result->fields[$fieldname]->value = $record->getField($fieldname);
-    }
-    $viewinfo = $record->getViewinfo();
-    if (count($viewinfo) > 0) {
-      $result->views = $viewinfo;
-    }
-    $result->ttl = $record->getTTL();
-    return $result;
-  }
+	private function record2Json($recordid, ResourceRecord $record) {
+		$result = new stdClass();
+		$result->id = $recordid;
+		$result->name = $record->getName();
+		$result->type = $record->getType();
+		$result->content = strval($record);
+		$result->fields = array();
+		$fields = $record->listFields();
+		foreach ($fields as $fieldname => $simpletype) {
+			$result->fields[$fieldname] = new stdClass();
+			$result->fields[$fieldname]->type = $simpletype;
+			$result->fields[$fieldname]->value = $record->getField($fieldname);
+		}
+		$viewinfo = $record->getViewinfo();
+		if (count($viewinfo) > 0) {
+			$result->views = $viewinfo;
+		}
+		$result->ttl = $record->getTTL();
+		return $result;
+	}
 
-  function views() {
-    if ($this->zone->getModule() instanceof Views) {
-      
-    } else {
-      return new stdClass();
-    }
-  }
+	function views() {
+		if ($this->zone->getModule() instanceof Views) {
+
+		} else {
+			return new stdClass();
+		}
+	}
 
 }
 ?>
