@@ -36,6 +36,9 @@ class PdnsPdoZone extends ZoneModule {
 	/** @var int[] */
 	private $zoneIds = array();
 
+	/** @var string */
+	private $recordsSequence = 'records_id_seq';
+
 	protected function __construct($config) {
 		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
 		$this->listZones();
@@ -155,6 +158,12 @@ class PdnsPdoZone extends ZoneModule {
 				.$this->db->quote(strval($record)).','
 				.$this->db->quote($record->getTTL()).')'
 			);
+		}
+		switch($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
+			case 'pgsql':
+				return $this->db->lastInsertId($this->recordsSequence);
+			default:
+				return $this->db->lastInsertId();
 		}
 	}
 
