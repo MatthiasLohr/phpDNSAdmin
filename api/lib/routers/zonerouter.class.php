@@ -84,7 +84,7 @@ class ZoneRouter extends RequestRouter {
 		} else {
 			// delete record
 			if (RequestRouter::getRequestType() == 'DELETE') {
-
+				$this->zone->recordDel($recordid);
 				return $this->records();
 			}
 			// return the one record
