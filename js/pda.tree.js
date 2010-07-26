@@ -63,13 +63,7 @@ function initTree(selector) {
     }
   }
 
-  function formatZoneArray(zone, c, full) {
-    zone = zone.toString();
-    rel = "ezone";
-    if(c == 0) {
-      rel = "izone";
-    }
-    c++;
+  function formatZoneArray(zone, full) {
     if(zone.lastIndexOf('.') == -1) {
       // Recursion End
       return {
@@ -77,7 +71,7 @@ function initTree(selector) {
         //state: "closed",
         attr: {
           id: full,
-          rel: rel
+          rel: "ezone"
         }
       }
     } else {
@@ -88,9 +82,9 @@ function initTree(selector) {
         //state: "closed",
         attr: {
           id: full,
-          rel: rel
+          rel: "izone"
         },
-        children: [formatZoneArray(reststr, c, full)]
+        children: [formatZoneArray(reststr, full)]
       }
     }
   }
@@ -134,9 +128,9 @@ function initTree(selector) {
               $(data).each(function(index, zone) {
                 fullstr = zone.name+"|"+tagid.substr(7,tagid.length);
                 if(zones.length == 0) {
-                  zones.push(formatZoneArray(zone.name, 0, fullstr));
+                  zones.push(formatZoneArray(zone.name, fullstr));
                 } else {
-                  mergeArray(zones, formatZoneArray(zone.name, 0, fullstr));
+                  mergeArray(zones, formatZoneArray(zone.name, fullstr));
                 }
               });
               return zones;
