@@ -42,6 +42,14 @@ abstract class RequestRouter {
 		return (count($this->routingPath) == 0);
 	}
 
+	public static function forceRequestType($type) {
+		if (in_array($type,array('GET','POST','PUT','DELETE'))) {
+			$_SERVER['REQUEST_METHOD'] = $type;
+			return true;
+		}
+		return false;
+	}
+
 	public static function getRequestData() {
 		switch ($_SERVER['REQUEST_METHOD']) {
 			case 'POST':
@@ -55,6 +63,11 @@ abstract class RequestRouter {
 		}
 	}
 
+	/**
+	 *
+	 * @return string
+	 * @see forceRequestType
+	 */
 	public static function getRequestType() {
 		return $_SERVER['REQUEST_METHOD'];
 	}

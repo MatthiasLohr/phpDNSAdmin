@@ -62,8 +62,10 @@ class ZoneRouter extends RequestRouter {
 						$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
 
 						$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
-
-						return $this->zone->recordAdd($record);
+						$newid = $this->zone->recordAdd($record);
+						// show new record
+						RequestRouter::forceRequestType('GET');
+						return $this->records($newid);
 					} catch (Exception $e) {
 						$result = new stdClass();
 						$result->error = $e->getMessage();
