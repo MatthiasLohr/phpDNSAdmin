@@ -207,11 +207,10 @@ class PdnsPdoZone extends ZoneModule {
 		}
 	}
 
-	public function zoneCreate($zonename) {
-		$zone = new Zone($zonename, $this);
+	public function zoneCreate(Zone $zone) {
 		if ($this->zoneExists($zone))
 			return false;
-		$this->db->query('INSERT INTO ' . $this->tablePrefix . 'domains (name,last_check,type,notified_serial) VALUES (' . $this->db->quote($zonename) . ',0,\'MASTER\',0)');
+		$this->db->query('INSERT INTO ' . $this->tablePrefix . 'domains (name,last_check,type,notified_serial) VALUES (' . $this->db->quote($zone->getName()) . ',0,\'MASTER\',0)');
 	}
 
 	public function zoneDelete(Zone $zone) {
