@@ -38,6 +38,9 @@ class Zone {
 	private $module;
 
 	public function  __construct($zoneName,ZoneModule $zoneModule) {
+		if(!Hostname::isValidValue($zoneName)) {
+		 throw new InvalidFieldDataException("\'$zoneName\' is no valid hostname.");
+		}
 		$this->name = $zoneName;
 		$this->module = $zoneModule;
 	}
