@@ -119,7 +119,7 @@ abstract class ZoneModule {
 	 */
 	abstract public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record);
 
-	abstract public function zoneCreate($zonename);
+	abstract public function zoneCreate(Zone $zone);
 
 	protected function zoneAssureExistence(Zone $zone) {
 		if (!$this->zoneExists($zone)) throw new NoSuchZoneException('No zone '.$zone->getName().' here!');
