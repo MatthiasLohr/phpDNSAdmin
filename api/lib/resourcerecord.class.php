@@ -79,6 +79,16 @@ abstract class ResourceRecord {
 		return implode(' ',$tmp);
 	}
 
+	public function equals(ResourceRecord $record) {
+		if ($this->getName() != $record->getName()) return false;
+		if ($this->getType() != $record->getType()) return false;
+		if ($this->getTTL() != $record->getTTL()) return false;
+		foreach ($this->listFields() as $fieldname => $simpletype) {
+			if ($this->getField($fieldname) != $record->getField($fieldname)) return false;
+		}
+		return true;
+	}
+
 	public function fieldExists($fieldname) {
 		$fields = $this->listFields();
 		return isset($fields[$fieldname]);

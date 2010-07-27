@@ -51,6 +51,10 @@ class PdnsPdoZone extends ZoneModule {
 			$this->tablePrefix = $config['tableprefix'];
 		}
 
+		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
+			$this->db->query('SET search_path TO '.$this->db->quote($config['search_path']));
+		}
+
 		$this->listZones();
 	}
 
