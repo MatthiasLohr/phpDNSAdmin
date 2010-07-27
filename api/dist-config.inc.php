@@ -53,9 +53,12 @@ $config = array(
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=pdns',
 			'pdo_username' => 'powerdns',
 			'pdo_password' => 'powerdns',
+			// 'tableprefix' => '',
+
+			/// PGSQL only:
 			// 'domain_sequence' => 'domains_id_seq',
 			// 'records_sequence' => 'domains_id_seq',
-			// 'tableprefix' => '',
+			// 'search_path' => 'public'
 		),
 	),
 );
