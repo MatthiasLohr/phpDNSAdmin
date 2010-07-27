@@ -183,25 +183,25 @@ class PdnsPdoZone extends ZoneModule {
 		$this->zoneAssureExistence($zone);
 		$domainid = $this->zoneIds[$zone->getName()];
 		try {
-			$priority = $record->getFieldByName('priority');
+			$priority = $record->getField('priority');
 			$this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
 				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. ' type = ' . $this->db->quote($record->getTypeString()) . ','
+				. ' type = ' . $this->db->quote($record->getType()) . ','
 				. ' content = ' . $this->db->quote(strval($record)) . ','
 				. ' ttl = ' . $this->db->quote($record->getTTL()) . ','
 				. ' prio = ' . $this->db->quote($priority)
-				. ' WHERE id = ' . $this->pgEscape($recordid)
+				. ' WHERE id = ' . $this->db->quote($recordid)
 				. ' AND domain_id = ' . $domainid
 			);
 		} catch (NoSuchFieldException $e) {
 			$this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
 				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. ' type = ' . $this->db->quote($record->getTypeString()) . ','
+				. ' type = ' . $this->db->quote($record->getType()) . ','
 				. ' content = ' . $this->db->quote(strval($record)) . ','
 				. ' ttl = ' . $this->db->quote($record->getTTL())
-				. ' WHERE id = ' . $this->pgEscape($recordid)
+				. ' WHERE id = ' . $this->db->quote($recordid)
 				. ' AND domain_id = ' . $domainid
 			);
 		}
@@ -209,7 +209,7 @@ class PdnsPdoZone extends ZoneModule {
 
 	public function zoneCreate(Zone $zone) {
 		if ($this->zoneExists($zone))
-			return false;
+			throw new ZoneExistsException('Zone \''.$zone->getName().'\' already exists.!');
 		$this->db->query('INSERT INTO ' . $this->tablePrefix . 'domains (name,last_check,type,notified_serial) VALUES (' . $this->db->quote($zone->getName()) . ',0,\'MASTER\',0)');
 	}
 

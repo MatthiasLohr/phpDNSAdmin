@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 /**
  * @package phpDNSAdmin
@@ -46,6 +46,7 @@ class ZoneRouter extends RequestRouter {
 		if ($recordid === null) {
 			// create new record
 			if (RequestRouter::getRequestType() == 'PUT') {
+				$result = new stdClass();
 				$data = RequestRouter::getRequestData();
 				if (isset($data['type'])) {
 					try {
@@ -63,19 +64,19 @@ class ZoneRouter extends RequestRouter {
 
 						$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
 						$newid = $this->zone->recordAdd($record);
-						// show new record
-						RequestRouter::forceRequestType('GET');
-						return $this->records($newid);
+
+						$result->success = true;
+						$result->id = $newid;
 					} catch (Exception $e) {
-						$result = new stdClass();
+						// catch all exceptions
+						$result->success = false;
 						$result->error = $e->getMessage();
-						return $result;
 					}
 				} else {
-					$result = new stdClass();
+					$result->success = false;
 					$result->error = 'No record type given!';
-					return $result;
 				}
+				return $result;
 			}
 			$result = array();
 			$records = $this->zone->listRecords();
@@ -86,9 +87,49 @@ class ZoneRouter extends RequestRouter {
 		} else {
 			// delete record
 			if (RequestRouter::getRequestType() == 'DELETE') {
-				$this->zone->recordDel($recordid);
-				return $this->records();
+				$result = new stdClass();
+				try {
+					$this->zone->recordDel($recordid);
+					//Success
+					$result->success = true;
+				} catch (Exception $e) {
+					// catch all exceptions
+					$result->success = false;
+					$result->error = $e->getMessage();
+				}
+				return $result;
 			}
+
+			// update record
+			if (RequestRouter::getRequestType() == 'POST') {
+				$result = new stdClass();
+				$data = RequestRouter::getRequestData();
+				try {
+					if (!isset($data['name'])) {
+						throw new InvalidFieldDataException('name is empty!');
+					}
+					if (!isset($data['ttl'])) {
+						throw new InvalidFieldDataException('ttl is empty!');
+					}
+					if (!isset($data['fields']) || !is_array($data['fields'])) {
+						throw new InvalidFieldDataException('No field values given!');
+					}
+
+					// needed to avoid Php Warnings
+					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
+
+					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
+					$this->zone->recordUpdate($recordid, $record);
+
+					$result->success = true;
+				} catch (Exception $e) {
+					// catch all exceptions
+					$result->success = false;
+					$result->error = $e->getMessage();
+				}
+				return $result;
+			}
+
 			// return the one record
 			$record = $this->zone->getRecordById($recordid);
 			if ($record === null) {

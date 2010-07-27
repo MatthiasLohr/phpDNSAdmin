@@ -77,6 +77,10 @@ class Zone {
 		return $this->module->recordAdd($this,$record);
 	}
 
+	public function recordUpdate($recordid, ResourceRecord $record) {
+		return $this->module->recordUpdate($this, $recordid, $record);
+	}
+
 	public function recordDel($recordid) {
 		return $this->module->recordDelete($this, $recordid);
 	}
