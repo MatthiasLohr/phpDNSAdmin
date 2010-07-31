@@ -44,7 +44,7 @@ class PdnsPdoZone extends ZoneModule {
 	protected function __construct($config) {
 		$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
 
-		if (isset($config['domain_sequence'])) $this->domainSequence = $config['domain_sequence'];
+		if (isset($config['domains_sequence'])) $this->domainSequence = $config['domains_sequence'];
 		if (isset($config['records_sequence'])) $this->recordSequence = $config['records_sequence'];
 
 		if (isset($config['tableprefix'])) {

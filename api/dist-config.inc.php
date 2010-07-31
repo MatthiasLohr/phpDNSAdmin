@@ -56,7 +56,7 @@ $config = array(
 			// 'tableprefix' => '',
 
 			/// PGSQL only:
-			// 'domain_sequence' => 'domains_id_seq',
+			// 'domains_sequence' => 'domains_id_seq',
 			// 'records_sequence' => 'domains_id_seq',
 			// 'search_path' => 'public'
 		),
