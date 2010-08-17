@@ -35,17 +35,17 @@ class PdnsPdoZone extends ZoneModule {
 	/** @var int[] */
 	private $zoneIds = array();
 	/** @var string */
-	private $recordSequence = 'records_id_seq';
+	private $recordsSequence = 'records_id_seq';
 	/** @var string */
-	private $domainSequence = 'domains_id_seq';
+	private $domainsSequence = 'domains_id_seq';
 	/** @var string */
 	private $tablePrefix = '';
 
 	protected function __construct($config) {
 		$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
 
-		if (isset($config['domains_sequence'])) $this->domainSequence = $config['domains_sequence'];
-		if (isset($config['records_sequence'])) $this->recordSequence = $config['records_sequence'];
+		if (isset($config['domains_sequence'])) $this->domainsSequence = $config['domains_sequence'];
+		if (isset($config['records_sequence'])) $this->recordsSequence = $config['records_sequence'];
 
 		if (isset($config['tableprefix'])) {
 			$this->tablePrefix = $config['tableprefix'];
@@ -171,7 +171,7 @@ class PdnsPdoZone extends ZoneModule {
 		}
 		switch ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
 			case 'pgsql':
-				return $this->db->lastInsertId($this->recordSequence);
+				return $this->db->lastInsertId($this->recordsSequence);
 			default:
 				return $this->db->lastInsertId();
 		}
