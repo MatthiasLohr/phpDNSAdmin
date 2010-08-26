@@ -18,89 +18,30 @@
  */
 ?>
 <html>
-  <head>
-    <title>phpDNSAdmin</title>
-    <link rel="stylesheet" href="css/jquery/jquery.css" type="text/css" />
-    <link rel="stylesheet" href="js/tablesorter-theme/style.css" type="text/css" />
-    <link rel="stylesheet" href="css/pdastyle.css" type="text/css" />
-    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui-1.8.2.min.js"></script>
-    <script type="text/javascript" src="js/jquery.cookie.js"></script>
-    <script type="text/javascript" src="js/jquery.jstree.js"></script>
-    <script type="text/javascript" src="js/jquery.tablesorter.min.js"></script>
-    <script type="text/javascript" src="js/jquery.tablefilter.js"></script>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="js/extjs/resources/css/ext-all.css" />
+		<script type="text/javascript" src="js/extjs/adapter/ext/ext-base.js"></script>
+		<script type="text/javascript" src="js/extjs/ext-all-debug.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
+		<title id="page-title">phpDNSAdmin</title>
+		<script type="text/javascript">
+			var APIURL = 'api/';
 
-    <script type="text/javascript" src="js/pda.records.js"></script>
-    <script type="text/javascript" src="js/pda.tree.js"></script>
-    <script type="text/javascript" src="js/pda.system.js"></script>
-  </head>
-  <body>
-    <div id="mainPanel">
-      <ul>
-        <li><a href="#zoneAdminPanel">zone</a></li>
-        <li><a href="#userAdminPanel">user administration</a></li>
-        <li><a onclick="javascript:logout();" href="#">logout</a></li>
-      </ul>
+			// Path to the blank image must point to a valid location on your server
+			Ext.BLANK_IMAGE_URL = 'js/extjs/resources/images/default/s.gif';
 
-      <div id="zoneAdminPanel">
-        <div id="treeBox">
-          <img id="treeToggleButton" src="css/jquery/images/tree.gif" />
-          <div id="zoneSelector">
+			// Main application entry point
+			Ext.onReady(function() {
+				Ext.QuickTips.init();
+				mainWindow = initMain();
+				mainWindow.enable();
+				mainLogin = initLogin();
+			});
+		</script>
 
-          </div>
-        </div>
-        
-       
-        <div id="recordList">
-          <span>Filter: <input id="searchBox" /></span>
-          <table id="recordTable" class="ui-corner-all tablesorter">
-            <thead><tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Content</th>
-                <th>TTL</th>
-                <th>Options</th>
-              </tr></thead>
-            <tbody>
-              <tr>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-            </tbody>
-          </table>
-          <input type="submit" onclick="recordUpdateList('test','ml.vg');" value="laden" />
-        </div>
-      </div>
-      <div id="userAdminPanel">
+	</head>
+	<body>
 
-      </div>
-    </div>
-    <!-- dialogs -->
-    <div id="loadingDialog" title="Loading...">
-      <div class="ui-autocomplete-loading">Loading, please wait...</div>
-    </div>
-
-    <div id="loginDialog" title="Login" style="display: none;">
-      <div id="loginErrorText" style="padding: 0pt 0.7em; visibility: hidden;" class="ui-state-error ui-corner-all">
-        <p><span style="float: left; margin-right: 0.3em;" class="ui-icon ui-icon-alert"></span>
-          <strong>Error:</strong> Invalid login credentials!</p>
-      </div>
-      <p>Please enter your username/password combination to log in:</p>
-      <p>
-				username: <input type="text" id="usernameInput" name="username" /><br />
-				password: <input type="password" id="passwordInput" name="password" />
-      </p>
-    </div>
-
-    <div id="zoneProperties">
-
-    </div>
-
-    <div id="recordProperties">
-
-    </div>
-  </body>
+	</body>
 </html>
