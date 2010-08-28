@@ -42,7 +42,13 @@ function pdaAPI(url) {
 	}
 
 	this.listRecords = function(server,zone,callback) {
-
+		Ext.Ajax.request({
+			url: URL+'/servers/'+server+'/zones/'+zone+'/records',
+			success: function(response,options) {
+				var data = Ext.decode(response.responseText);
+				callback(server,zone,data);
+			}
+		});
 	}
 
 	this.listServers = function(callback) {

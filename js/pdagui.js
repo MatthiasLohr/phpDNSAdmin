@@ -18,6 +18,14 @@
 
 function pdaGUI(api) {
 
+	function displayRecords(serverkey,zone,records) {
+		var tab = zonetabs.findById('zonetab-'+serverkey+'-'+zone);
+		for (recordid in records) {
+
+		}
+		tab.enable();
+	}
+
 	function displayServers(servers) {
 		var rootNode = zonetree.root;
 		rootNode.removeAll(true);
@@ -64,12 +72,40 @@ function pdaGUI(api) {
 				allowDrop: false,
 				editable: false,
 				expandable: false,
+				serverkey: serverkey,
+				zone: zone.name,
 				leaf: true,
 				text: zone.name,
 				listeners: {
 					click: function(node, event) {
 						// search for zone tab. if exists, show, else create
-						
+						var tab = zonetabs.findById('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
+						if (tab == null) {
+							tab = new Ext.grid.GridPanel({
+								title: node.attributes.zone,
+								id: 'zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone,
+								closable: true,
+								selMode: new Ext.grid.CheckboxSelectionModel(),
+								colModel: new Ext.grid.ColumnModel({
+									defaults: {
+										sortable: true,
+										menuDisabled: true
+									},
+									columns: [
+										{header: 'name'},
+										{header: 'type'},
+										{header: 'content'},
+										{header: 'TTL'}
+									]
+								}),
+								store: new Ext.data.Store({})
+							});
+							zonetabs.add(tab);
+							// load record data
+							tab.disable();
+							API.listRecords(node.attributes.serverkey,node.attributes.zone,displayRecords);
+						}
+						zonetabs.setActiveTab('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
 					}
 				}
 			});
@@ -100,7 +136,6 @@ function pdaGUI(api) {
 		region: 'west',
 		collapsible: true,
 		title: 'Zones',
-		xtype: 'treepanel',
 		width: 300,
 		autoScroll: true,
 		split: true,
@@ -113,19 +148,20 @@ function pdaGUI(api) {
 			text: 'Delete Selected'
 		}]
 	});
+	var zonetabs = new Ext.TabPanel({
+		region: 'center',
+		title: 'Records',
+		items: [],
+		enableTabScroll: true,
+		buttons: [{
+			text: 'Add Record'
+		}, {
+			text: 'Delete Selected Records'
+		}]
+	});
 	var mainContainer = new Ext.Panel({
 		layout: 'border',
-		items: [zonetree, {
-			region: 'center',
-			xtype: 'tabpanel',
-			title: 'Records',
-			items: [],
-			buttons: [{
-				text: 'Add Record'
-			}, {
-				text: 'Delete Selected Records'
-			}]
-		}]
+		items: [zonetree, zonetabs]
 	});
 	mainContainer.disable();
 
