@@ -1,4 +1,3 @@
-<?php
 /*
  * This file is part of phpDNSAdmin.
  * (c) 2010 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
@@ -16,25 +15,44 @@
  * You should have received a copy of the GNU General Public License
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
-?>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<link rel="stylesheet" type="text/css" href="js/extjs/resources/css/ext-all.css" />
-		<script type="text/javascript" src="js/extjs/adapter/ext/ext-base.js"></script>
-		<script type="text/javascript" src="js/extjs/ext-all-debug.js"></script>
-		<script type="text/javascript" src="js/pdaapi.js"></script>
-		<script type="text/javascript" src="js/pdagui.js"></script>
-		<title id="page-title">phpDNSAdmin</title>
-		<script type="text/javascript">
-			Ext.onReady(function() {
-				var GUI = new pdaGUI(new pdaAPI('api'));
-				
-			});
-		</script>
 
-	</head>
-	<body>
+function pdaAPI(url) {
 
-	</body>
-</html>
+	this.checkLoginStatus = function(callback,options) {
+		var method = 'GET';
+		var data = {};
+		if (options != undefined) {
+			method = 'POST';
+			data.username = options.username;
+			data.password = options.password;
+		}
+		Ext.Ajax.request({
+			url: URL+'/status',
+			method: method,
+			params: data,
+			success: function(response,options) {
+				data = Ext.decode(response.responseText);
+				callback(data.loggedIn);
+			}
+		});
+	}
+
+	this.getURL = function() {
+		return URL;
+	}
+
+	this.listRecords = function(server,zone,callback) {
+
+	}
+
+	this.listServers = function(callback) {
+
+	}
+
+	this.listZones = function(server,callback) {
+
+	}
+
+	// =============== constructor ===========
+	var URL = url;
+}
