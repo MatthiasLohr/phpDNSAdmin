@@ -31,7 +31,7 @@ function pdaAPI(url) {
 			method: method,
 			params: data,
 			success: function(response,options) {
-				data = Ext.decode(response.responseText);
+				var data = Ext.decode(response.responseText);
 				callback(data.loggedIn);
 			}
 		});
@@ -46,11 +46,23 @@ function pdaAPI(url) {
 	}
 
 	this.listServers = function(callback) {
-
+		Ext.Ajax.request({
+			url: URL+'/servers',
+			success: function(response,options) {
+				var data = Ext.decode(response.responseText);
+				callback(data);
+			}
+		});
 	}
 
 	this.listZones = function(server,callback) {
-
+		Ext.Ajax.request({
+			url: URL+'/servers/'+server+'/zones',
+			success: function(response,options) {
+				var data = Ext.decode(response.responseText);
+				callback(server,data);
+			}
+		});
 	}
 
 	// =============== constructor ===========

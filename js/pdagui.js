@@ -18,10 +18,64 @@
 
 function pdaGUI(api) {
 
+	function displayServers(servers) {
+		var rootNode = zonetree.root;
+		rootNode.removeAll(true);
+		for (serverkey in servers) {
+			rootNode.appendChild(new Ext.tree.TreeNode({
+				allowChildren: true,
+				allowDrag: false,
+				allowDrop: false,
+				editable: false,
+				expandable: true,
+				serverkey: serverkey,
+				id: 'server-'+serverkey,
+				leaf:false,
+				text: servers[serverkey].name,
+				listeners: {
+					beforeexpand: function(node, deep, anim) {
+						if (!node.hasChildNodes()) {
+							API.listZones(node.attributes.serverkey,displayZones);
+						}
+					},
+					click: function(node, event) {
+						if (node.isExpanded()) {
+							node.collapse(1);
+						}
+						else {
+							node.expand(1);
+						}
+					}
+				}
+			}));
+		}
+	}
+
+	function displayZones(serverkey,zones) {
+		var serverNode = zonetree.root.findChild('id','server-'+serverkey,1);
+		serverNode.removeAll(true);
+		for (id in zones) {
+			zone = zones[id];
+			serverNode.appendChild({
+				allowChildren: false,
+				allowDrag: false,
+				allowDrop: false,
+				editable: false,
+				expandable: false,
+				leaf: true,
+				text: zone.name,
+				listeners: {
+					
+				}
+			});
+		}
+	}
+
 	function updateLoginStatus(loggedIn) {
 		if (loggedIn) {
 			loginWindow.hide();
 			mainContainer.enable();
+			API.listServers(displayServers);
 
 		}
 		else {
@@ -36,39 +90,21 @@ function pdaGUI(api) {
 	var URL = api.getURL();
 
 	// init main container
+	var zonetree = new Ext.tree.TreePanel({
+		region: 'west',
+		collapsible: true,
+		title: 'Zones',
+		xtype: 'treepanel',
+		width: 200,
+		autoScroll: true,
+		split: true,
+		loader: new Ext.tree.TreeLoader(),
+		root: new Ext.tree.TreeNode(),
+		rootVisible: false
+	});
 	var mainContainer = new Ext.Panel({
 		layout: 'border',
-		items: [{
-			region: 'west',
-			collapsible: true,
-			title: 'Zones',
-			xtype: 'treepanel',
-			width: 200,
-			autoScroll: true,
-			split: true,
-			loader: new Ext.tree.TreeLoader(),
-			root: new Ext.tree.AsyncTreeNode({
-				expanded: true,
-				children: [{
-					text: 'Menu Option 1',
-					leaf: true
-				}, {
-					text: 'Menu Option 2',
-					leaf: true
-				}, {
-					text: 'Menu Option 3',
-					leaf: true
-				}]
-			}),
-			rootVisible: false,
-			listeners: {
-				click: function(n) {
-					Ext.Msg.alert('Navigation Tree Click', 'You clicked: "' + n.attributes.text + '"');
-				}
-			}
-
-
-		}, {
+		items: [zonetree, {
 			region: 'center',
 			xtype: 'tabpanel',
 			title: 'Records',
