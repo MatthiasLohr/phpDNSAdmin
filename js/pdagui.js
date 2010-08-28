@@ -36,7 +36,9 @@ function pdaGUI(api) {
 					beforeexpand: function(node, deep, anim) {
 						if (!node.hasChildNodes()) {
 							API.listZones(node.attributes.serverkey,displayZones);
+							return false;
 						}
+						return true;
 					},
 					click: function(node, event) {
 						if (node.isExpanded()) {
@@ -65,10 +67,14 @@ function pdaGUI(api) {
 				leaf: true,
 				text: zone.name,
 				listeners: {
-					
+					click: function(node, event) {
+						// search for zone tab. if exists, show, else create
+						
+					}
 				}
 			});
 		}
+		serverNode.expand();
 	}
 
 	function updateLoginStatus(loggedIn) {
@@ -95,12 +101,17 @@ function pdaGUI(api) {
 		collapsible: true,
 		title: 'Zones',
 		xtype: 'treepanel',
-		width: 200,
+		width: 300,
 		autoScroll: true,
 		split: true,
 		loader: new Ext.tree.TreeLoader(),
 		root: new Ext.tree.TreeNode(),
-		rootVisible: false
+		rootVisible: false,
+		buttons: [{
+			text: 'Create'
+		}, {
+			text: 'Delete Selected'
+		}]
 	});
 	var mainContainer = new Ext.Panel({
 		layout: 'border',
@@ -108,7 +119,12 @@ function pdaGUI(api) {
 			region: 'center',
 			xtype: 'tabpanel',
 			title: 'Records',
-			items: []
+			items: [],
+			buttons: [{
+				text: 'Add Record'
+			}, {
+				text: 'Delete Selected Records'
+			}]
 		}]
 	});
 	mainContainer.disable();
