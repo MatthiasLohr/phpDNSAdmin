@@ -67,12 +67,13 @@ class ServerRouter extends RequestRouter {
 				return $result;
 			}
 
-			$result = array();
+			$result = new stdClass();
 			$zones = $this->zoneModule->listZones();
 			foreach ($zones as $zone) {
 				$tmp = new stdClass();
-				$tmp->name = $zone->getName();
-				$result[] = $tmp;
+				$name = $zone->getName();
+				$tmp->name = $name;
+				$result->$name = $tmp;
 			}
 			return $result;
 		} else {
