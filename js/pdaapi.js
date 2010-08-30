@@ -18,6 +18,7 @@
 
 function pdaAPI(url) {
 
+    Ext.Ajax.disableCaching = false;
 	this.checkLoginStatus = function(callback,options) {
 		var method = 'GET';
 		var data = {};
