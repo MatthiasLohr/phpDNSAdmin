@@ -24,15 +24,14 @@ function pdaGUI(api) {
 		//store.loadData(records);
 		for (recordid in records) {
 			record = records[recordid];
-			store.add([new store.recordType({
-				data: {
+			store.add(new store.recordType({
 					id: record.id,
 					name: record.name,
 					type: record.type,
 					content: record.content,
 					ttl: record.ttl
 				}
-			})]);
+			));
 		}
 		tab.enable();
 	}
@@ -100,25 +99,19 @@ function pdaGUI(api) {
 								colModel: new Ext.grid.ColumnModel({
 									defaults: {
 										sortable: true,
-										menuDisabled: true,
-										width: 120
+										menuDisabled: false
 									},
 									columns: [
-										{header: 'name'},
-										{header: 'type'},
-										{header: 'content'},
+										{header: 'name', dataIndex: 'name'},
+										{header: 'type', dataIndex: 'type'},
+										{header: 'content', id: 'content',  dataIndex: 'content'},
 										{header: 'TTL', dataIndex: 'ttl'}
 									]
 								}),
 								store: new Ext.data.JsonStore({
-									fields: [
-										{id: 'id'},
-										{name: 'name'},
-										{name: 'type'},
-										{name: 'content'},
-										{name: 'ttl'}
-									]
-								})
+									fields: ['id', 'name', 'type', 'content', 'ttl']
+								}),
+								autoExpandColumn: 'content'
 							});
 							zonetabs.add(tab);
 							// load record data
