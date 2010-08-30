@@ -73,6 +73,10 @@ class Zone {
 		return $this->module->listRecords($this);
 	}
 
+	public function listRecordsByFilter($filter) {
+		return $this->module->listRecordsByFilter($this,$filter);
+	}
+
 	public function recordAdd(ResourceRecord $record) {
 		return $this->module->recordAdd($this,$record);
 	}

@@ -79,7 +79,15 @@ class ZoneRouter extends RequestRouter {
 				return $result;
 			}
 			$result = array();
-			$records = $this->zone->listRecords();
+			// filter configuration
+			$filter = array();
+			// list records
+			if (isset($_GET['filter']) && is_array($_GET['filter'])) {
+				foreach ($_GET['filter'] as $key => $value) {
+					$filter[$key] = urldecode($value);
+				}
+			}
+			$records = $this->zone->listRecordsByFilter($filter);
 			foreach ($records as $recordid => $record) {
 				$result[$recordid] = $this->record2Json($recordid, $record);
 			}
