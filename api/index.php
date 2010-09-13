@@ -52,11 +52,21 @@ try {
 	}
 	$result = $router->track($pdaPath);
 	header('Content-type: text/plain');
+	if (!isset($result->success)) {
+		$result->success = true;
+	}
 	echo(json_encode($result));
 }
 catch (RequestRoutingException $e) {
 	$result = new stdClass();
+	$result->success = false;
 	$result->error = 'Routing error! '.$e->getMessage();
+	echo(json_encode($result));
+}
+catch (Exception $e) {
+	$result = new stdClass();
+	$result->success = false;
+	$result->error = $e->getMessage();
 	echo(json_encode($result));
 }
 

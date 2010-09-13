@@ -39,14 +39,22 @@ class MainRouter extends RequestRouter {
 	public function rrtypes($type = null) {
 		if ($type === null) {
 			// list all ResourceRecord types
-			return ResourceRecord::listTypes();
+			$result = new stdClass();
+			$result->rrtypes = ResourceRecord::listTypes();
+			return $result;
 		}
 		else {
 			$result = new stdClass();
 			$className = ResourceRecord::getClassByType($type);
 			if ($className !== null) {
-				$result->type = $type;
-				$result->fields = call_user_func(array($className,'listFields'));
+				$result->success = true;
+				$rrtype = new stdClass();
+				$rrtype->type = $type;
+				$rrtype->fields = call_user_func(array($className,'listFields'));
+				$result->rrtype = $rrtype;
+			}
+			else {
+				$result->success = false;
 			}
 			return $result;
 		}
@@ -54,12 +62,9 @@ class MainRouter extends RequestRouter {
 
 	public function servers($sysname = null) {
 		// check for login
-		$result = new stdClass();
+		$servers = new stdClass();
 		$autologin = AutologinManager::getInstance();
-		if ($autologin->getUser() === null) {
-			$result->error = 'Please log in first!';
-			return $result;
-		}
+		if ($autologin->getUser() === null) throw new AuthenticationException('Please log in first!');
 		// work request
 		$zonemanager = ZoneManager::getInstance();
 		if ($sysname === null) {
@@ -68,19 +73,21 @@ class MainRouter extends RequestRouter {
 				$sysname = $module->sysname;
 				$server = new stdClass();
 				$server->name = $module->name;
-				$result->$sysname = $server;
+				$servers->$sysname = $server;
 			}
 		}
 		else {
 			$zoneModule = $zonemanager->getModuleBySysname($sysname);
 			if ($zoneModule === null) {
-				$result->error = 'No server with this sysname found!';
+				throw new NoSuchServerException('No server with this sysname found!');
 			}
 			else {
 				$serverRouter = new ServerRouter($zoneModule);
 				return $serverRouter->track($this->routingPath);
 			}
 		}
+		$result = new stdClass();
+		$result->servers = $servers;
 		return $result;
 	}
 
