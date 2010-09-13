@@ -97,7 +97,7 @@ class ZoneRouter extends RequestRouter {
 				 */
 			}
 			elseif ($this->getRequestType() == 'DELETE') {
-				$result->success = $this->zone->recordDel($recordid);
+				$result->success = $this->zone->recordDelete($recordid);
 				$result->records = $this->listRecords();
 			}
 			else {

@@ -153,7 +153,7 @@ class Zone {
 	 * @param int $recordid
 	 * @return boolean success true/false
 	 */
-	public function recordDel($recordid) {
+	public function recordDelete($recordid) {
 		return $this->module->recordDelete($this, $recordid);
 	}
 }
