@@ -43,6 +43,7 @@ class ZoneRouter extends RequestRouter {
 	}
 
 	private function listRecords() {
+		$filter = array();
 		if (isset($_GET['filter']) && is_array($_GET['filter'])) {
 			foreach ($_GET['filter'] as $key => $value) {
 				$filter[$key] = urldecode($value);
