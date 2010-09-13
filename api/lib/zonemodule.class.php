@@ -31,8 +31,19 @@
  */
 abstract class ZoneModule {
 
+	/**
+	 * Return an array with feature information
+	 *
+	 * @return array feature list
+	 */
 	abstract public function getFeatures();
 
+	/**
+	 * Give an instance with the given config
+	 *
+	 * @param array $config
+	 * @return ZoneModule zone module instance
+	 */
 	abstract public static function getInstance($config);
 
 	/**
@@ -68,8 +79,22 @@ abstract class ZoneModule {
 		return $this->listRecordsByFilter($zone);
 	}
 
+	/**
+	 * Give a list of records with specified filter criteria
+	 *
+	 * @param Zone $zone zone object
+	 * @param array $filter filter criteria
+	 * @return ResourceRecord[] array with resource records
+	 */
 	abstract public function listRecordsByFilter(Zone $zone,array $filter = array());
 
+	/**
+	 * Give all records with a specified name
+	 *
+	 * @param Zone $zone zone object
+	 * @param string $name name to search for
+	 * @return ResourceRecord[] array with resource records
+	 */
 	public function listRecordsByname(Zone $zone,$name) {
 		return $this->listRecordsByFilter($zone,array('name' => $name));
 	}
@@ -119,10 +144,23 @@ abstract class ZoneModule {
 	 */
 	abstract public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record);
 
+	/**
+	 * Create a new zone in this server
+	 *
+	 * @param Zone $zone zone object to create here
+	 * @return boolean success true/false
+	 */
 	abstract public function zoneCreate(Zone $zone);
 
+	/**
+	 * Make the script explode if a zone doesn't exist
+	 *
+	 * @param Zone $zone zone object
+	 * @return boolean alway true - or a fat BOOOM
+	 */
 	protected function zoneAssureExistence(Zone $zone) {
 		if (!$this->zoneExists($zone)) throw new NoSuchZoneException('No zone '.$zone->getName().' here!');
+		return true;
 	}
 
 	/**
@@ -133,6 +171,12 @@ abstract class ZoneModule {
 	 */
 	abstract public function zoneDelete(Zone $zone);
 
+	/**
+	 * Check if a zone exists
+	 *
+	 * @param Zone $zone
+	 * @return true if the zone exists, false otherwise
+	 */
 	abstract public function zoneExists(Zone $zone);
 }
 

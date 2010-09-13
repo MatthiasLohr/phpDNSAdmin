@@ -34,14 +34,30 @@ abstract class RequestRouter {
 	/** @var array remaining routing path */
 	protected $routingPath = array();
 
+	/**
+	 * Default function for calls without a method name
+	 *
+	 * @return null
+	 */
 	public function __default() {
 		return null;
 	}
 
+	/**
+	 * Check if this request is the and of URL tracking
+	 *
+	 * @return boolean true: end of tracking
+	 */
 	protected function endOfTracking() {
 		return (count($this->routingPath) == 0);
 	}
 
+	/**
+	 * Change the request type for further tracking
+	 *
+	 * @param string $type GET, POST, PUT or DELETE
+	 * @return boolean success true/false
+	 */
 	public static function forceRequestType($type) {
 		if (in_array($type,array('GET','POST','PUT','DELETE'))) {
 			$_SERVER['REQUEST_METHOD'] = $type;
@@ -50,6 +66,11 @@ abstract class RequestRouter {
 		return false;
 	}
 
+	/**
+	 * Return the request data as php data structure
+	 *
+	 * @return mixed
+	 */
 	public static function getRequestData() {
 		switch ($_SERVER['REQUEST_METHOD']) {
 			case 'POST':

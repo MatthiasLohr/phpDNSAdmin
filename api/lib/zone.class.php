@@ -37,6 +37,13 @@ class Zone {
 	/** @var ZoneModule */
 	private $module;
 
+	/**
+	 * Constructor. Create a new instance of this zone with the given name and the
+	 * according zone module
+	 *
+	 * @param string $zoneName
+	 * @param ZoneModule $zoneModule
+	 */
 	public function  __construct($zoneName,ZoneModule $zoneModule) {
 		if(!Hostname::isValidValue($zoneName)) {
 		 throw new InvalidFieldDataException("\'$zoneName\' is no valid hostname.");
@@ -45,46 +52,107 @@ class Zone {
 		$this->module = $zoneModule;
 	}
 
+	/**
+	 * Create this zone in the zone module
+	 *
+	 * @return boolean true on success, false otherwise
+	 */
 	public function create() {
 		return $this->module->zoneCreate($this->getName());
 	}
 
+	/**
+	 * Delete this zone in the zone module
+	 *
+	 * @return boolean true on success, false otherwise
+	 */
 	public function delete() {
 		return $this->module->zoneDelete($this);
 	}
 
+	/**
+	 * Check if the zone exists in the according zone module
+	 *
+	 * @return boolean true/false if the zone exists
+	 */
 	public function exists() {
 		return $this->module->zoneExists($this);
 	}
 
+	/**
+	 * Returns the zone module of this zone
+	 *
+	 * @return ZoneModule
+	 */
 	public function getModule() {
 		return $this->module;
 	}
 
+	/**
+	 * Return the name of this zone
+	 *
+	 * @return string name of the zone
+	 */
 	public function getName() {
 		return $this->name;
 	}
 
+	/**
+	 * Give the record with the specified id
+	 *
+	 * @param int $recordid
+	 * @return ResourceRecord
+	 */
 	public function getRecordById($recordid) {
 		return $this->module->getRecordById($this,$recordid);
 	}
 
+	/**
+	 * List all records in this zone
+	 *
+	 * @return ResourceRecord[] list of zone records
+	 */
 	public function listRecords() {
 		return $this->module->listRecords($this);
 	}
 
+	/**
+	 * List all records in this zone with the specified filter criteria
+	 *
+	 * @param array $filter filter criteria
+	 * @return ResourceRecord[] list of zone records
+	 */
 	public function listRecordsByFilter($filter) {
 		return $this->module->listRecordsByFilter($this,$filter);
 	}
 
+	/**
+	 * Add a record to the zone
+	 *
+	 * @param ResourceRecord $record
+	 * @return boolean success true/false
+	 */
 	public function recordAdd(ResourceRecord $record) {
 		return $this->module->recordAdd($this,$record);
 	}
 
+	/**
+	 * Update a record
+	 *
+	 * @param int $recordid
+	 * @param ResourceRecord $record
+	 * @return boolean success true/false
+	 */
 	public function recordUpdate($recordid, ResourceRecord $record) {
 		return $this->module->recordUpdate($this, $recordid, $record);
 	}
 
+	/**
+	 * Delete a record
+	 *
+	 * @param int $recordid
+	 * @return boolean success true/false
+	 */
 	public function recordDel($recordid) {
 		return $this->module->recordDelete($this, $recordid);
 	}

@@ -79,6 +79,12 @@ abstract class ResourceRecord {
 		return implode(' ',$tmp);
 	}
 
+	/**
+	 * Check if this ResourceRecord equals to another one
+	 *
+	 * @param ResourceRecord $record ResourceRecord to compare
+	 * @return boolean true/false: equal/not equal
+	 */
 	public function equals(ResourceRecord $record) {
 		if ($this->getName() != $record->getName()) return false;
 		if ($this->getType() != $record->getType()) return false;
@@ -89,6 +95,12 @@ abstract class ResourceRecord {
 		return true;
 	}
 
+	/**
+	 * Check if the field exists in this ResourceRecord type
+	 *
+	 * @param string $fieldname
+	 * @return boolean true/false
+	 */
 	public function fieldExists($fieldname) {
 		$fields = $this->listFields();
 		return isset($fields[$fieldname]);
@@ -111,6 +123,12 @@ abstract class ResourceRecord {
 		}
 	}
 
+	/**
+	 * Return a field value
+	 *
+	 * @param string $fieldname
+	 * @return string field value
+	 */
 	final public function getField($fieldname) {
 		if (!$this->fieldExists($fieldname)) throw new NoSuchFieldException();
 		return $this->fieldValues[$fieldname];

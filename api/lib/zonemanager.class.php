@@ -31,9 +31,13 @@
  */
 class ZoneManager {
 
+	/** @var ZoneManager instance of zone manager */
 	private static $instance = null;
 
+	/** @var ZoneModule[] array with loaded zone modules */
 	private $modules = array();
+
+	/** @var array array with module information */
 	private $moduleInfo = array();
 
 	/**

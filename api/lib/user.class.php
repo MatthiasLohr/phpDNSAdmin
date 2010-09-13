@@ -31,16 +31,32 @@
  */
 class User {
 
+	/** @var string username */
 	private $username = null;
 
+	/**
+	 * Constructor. Create a new user instance
+	 *
+	 * @param string $username
+	 */
 	public function __construct($username) {
 		$this->username = $username;
 	}
 
+	/**
+	 * Return the username
+	 *
+	 * @return string username
+	 */
 	public function getUsername() {
 		return $this->username;
 	}
 
+	/**
+	 * Is the user admin?
+	 *
+	 * @return boolean yes/no
+	 */
 	public function isAdmin() {
 		$authorization = AuthorizationManager::getInstance();
 	}

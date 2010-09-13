@@ -35,33 +35,56 @@ class InvalidTypeException extends Exception { }
  */
 abstract class SimpleType {
 
+	/** @var string value of the simpletype */
 	protected $content;
 
+	/**
+	 * Constructor. Create a new SimpleType instance
+	 *
+	 * @param string $content
+	 */
 	public function __construct($content) {
 		$this->content = $content;
 	}
 
+	/**
+	 * Convert this instance to a string
+	 *
+	 * @return string
+	 */
 	public function __toString() {
 		return $this->normalize();
 	}
 
+	/**
+	 * Is the content valid?
+	 *
+	 * @return boolean yes/no
+	 */
 	public function isValid() {
 		return $this->isValidValue($this->content);
 	}
 	
   /**
    * Validate data against data type
+	 *
    * @param string $string data to check
    * @return bool true if valid, otherwise false
    */
 	abstract public static function isValidValue($string);
 
+	/**
+	 * Return the normalized content from this instance
+	 *
+	 * @return string normalized content
+	 */
 	public function normalize() {
 		return $this->normalizeValue($this->content);
 	}
 
   /**
    * Normalize data, e.g. cut off leading zeros
+	 *
    * @param string $string given data
    * @return string normalized data
    */
