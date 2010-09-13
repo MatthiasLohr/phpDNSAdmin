@@ -47,64 +47,40 @@ class ServerRouter extends RequestRouter {
 	}
 
 	public function zones($zonename = null) {
-		if ($zonename === null) {
-			if (RequestRouter::getRequestType() == 'PUT') {
-				// create new Zone
+		if ($this->endOfTracking()) {
+			if ($zonename === null) {
+				// list zones
 				$result = new stdClass();
-				$data = RequestRouter::getRequestData();
-				if (isset($data['zonename'])) {
-					try {
-						$this->zoneModule->zoneCreate(new Zone($data['zonename'], $this->zoneModule));
-						$result->success = true;
-					} catch (Exception $e) {
-						$result->success = false;
-						$result->error = $e->getMessage();
-					}
-				} else {
-					$result->success = false;
-					$result->error = 'No zonename given!';
+				$result->zones = array();
+				foreach ($this->zoneModule->listZones() as $zone) {
+					$tmpzone = new stdClass();
+					$tmpzone->id = $zone->getName();
+					$tmpzone->name = $zone->getName();
+					$result->zones[$zone->getName()] = $tmpzone;
 				}
 				return $result;
 			}
-
-			$result = new stdClass();
-			$zones = $this->zoneModule->listZones();
-			foreach ($zones as $zone) {
-				$tmp = new stdClass();
-				$name = $zone->getName();
-				$tmp->name = $name;
-				$result->$name = $tmp;
-			}
-			return $result;
-		} else {
-			if (RequestRouter::getRequestType() == 'DELETE' && $this->endOfTracking()) {
-				// Delete given Zone
-				$result = new stdClass();
-				try {
-					$this->zoneModule->zoneDelete(new Zone($zonename, $this->zoneModule));
+			else {
+				$zone = new Zone($zonename,$this->zoneModule);
+				if ($this->getRequestType() == 'DELETE') {
+					$this->zoneModule->zoneDelete($zone);
+					$result = new stdClass();
 					$result->success = true;
-				} catch (Exception $e) {
-					$result->success = false;
-					$result->error = $e->getMessage();
-				}
-				return $result;
-			} else {
-				try {
-					$zone = new Zone($zonename, $this->zoneModule);
-					$zoneRouter = new ZoneRouter($zone);
-					return $zoneRouter->track($this->routingPath);
-				} catch (NoSuchZoneException $e) {
-					$result = new stdClass();
-					$result->error = 'Zone not found!';
 					return $result;
-				} catch (InvalidFieldDataException $e) {
+				}
+				else {
 					$result = new stdClass();
-					$result->error = $e->getMessage();
+					$result->success = false;
 					return $result;
 				}
 			}
 		}
+		else {
+			$zone = new Zone($zonename,$this->zoneModule);
+			$zoneRouter = new ZoneRouter($zone);
+			return $zoneRouter->track($this->routingPath);
+		}
 	}
-
 }
+
 ?>
