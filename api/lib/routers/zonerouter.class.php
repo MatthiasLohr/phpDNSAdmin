@@ -42,110 +42,69 @@ class ZoneRouter extends RequestRouter {
 		return $this->records();
 	}
 
-	function records($recordid = null) {
-		if ($recordid === null) {
-			// create new record
-			if (RequestRouter::getRequestType() == 'PUT') {
-				$result = new stdClass();
-				$data = RequestRouter::getRequestData();
-				if (isset($data['type'])) {
-					try {
-						if (!isset($data['name'])) {
-							throw new InvalidFieldDataException('name is empty!');
-						}
-						if (!isset($data['ttl'])) {
-							throw new InvalidFieldDataException('ttl is empty!');
-						}
-						if (!isset($data['fields']) || !is_array($data['fields'])) {
-							throw new InvalidFieldDataException('No field values given!');
-						}
-						// needed to avoid Php Warnings
-						$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
-
-						$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
-						$newid = $this->zone->recordAdd($record);
-
-						$result->success = true;
-						$result->id = $newid;
-					} catch (Exception $e) {
-						// catch all exceptions
-						$result->success = false;
-						$result->error = $e->getMessage();
-					}
-				} else {
-					$result->success = false;
-					$result->error = 'No record type given!';
-				}
-				return $result;
-			}
-			$result = array();
-			// filter configuration
-			$filter = array();
-			// list records
-			if (isset($_GET['filter']) && is_array($_GET['filter'])) {
-				foreach ($_GET['filter'] as $key => $value) {
-					$filter[$key] = urldecode($value);
-				}
-			}
-			$records = $this->zone->listRecordsByFilter($filter);
-			foreach ($records as $recordid => $record) {
-				$result[$recordid] = $this->record2Json($recordid, $record);
-			}
-			return $result;
-		} else {
-			// delete record
-			if (RequestRouter::getRequestType() == 'DELETE') {
-				$result = new stdClass();
-				try {
-					$this->zone->recordDel($recordid);
-					//Success
-					$result->success = true;
-				} catch (Exception $e) {
-					// catch all exceptions
-					$result->success = false;
-					$result->error = $e->getMessage();
-				}
-				return $result;
-			}
-
-			// update record
-			if (RequestRouter::getRequestType() == 'POST') {
-				$result = new stdClass();
-				$data = RequestRouter::getRequestData();
-				try {
-					if (!isset($data['name'])) {
-						throw new InvalidFieldDataException('name is empty!');
-					}
-					if (!isset($data['ttl'])) {
-						throw new InvalidFieldDataException('ttl is empty!');
-					}
-					if (!isset($data['fields']) || !is_array($data['fields'])) {
-						throw new InvalidFieldDataException('No field values given!');
-					}
-
-					// needed to avoid Php Warnings
-					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
-
-					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
-					$this->zone->recordUpdate($recordid, $record);
-
-					$result->success = true;
-				} catch (Exception $e) {
-					// catch all exceptions
-					$result->success = false;
-					$result->error = $e->getMessage();
-				}
-				return $result;
-			}
-
-			// return the one record
-			$record = $this->zone->getRecordById($recordid);
-			if ($record === null) {
-				return new stdClass();
-			} else {
-				return $this->record2Json($recordid, $record);
+	private function listRecords() {
+		if (isset($_GET['filter']) && is_array($_GET['filter'])) {
+			foreach ($_GET['filter'] as $key => $value) {
+				$filter[$key] = urldecode($value);
 			}
 		}
+		$records = $this->zone->listRecordsByFilter($filter);
+		foreach ($records as $recordid => $record) {
+			$records[$recordid] = $this->record2Json($recordid, $record);
+		}
+		return $records;
+	}
+
+	function records($recordid = null) {
+		$result = new stdClass();
+		if ($this->endOfTracking() && $recordid === null) {
+			if (RequestRouter::getRequestType() == 'PUT') {
+				$data = RequestRouter::getRequestData();
+				if (!isset($data['type'])) {
+					$result->success = false;
+					$result->error = 'No record type specified!';
+				}
+				elseif (!isset($data['name'])) {
+					throw new InvalidFieldDataException('name is empty!');
+				}
+				elseif (!isset($data['ttl'])) {
+					throw new InvalidFieldDataException('ttl is empty!');
+				}
+				elseif (!isset($data['fields'])) {
+					throw new InvalidFieldDataException('No field values given!');
+				}
+				else {
+					// workaround to avoid php warnings
+					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
+					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
+					$newid = $this->zone->recordAdd($record);
+					$result->success = true;
+					$result->newid = $newid;
+					$result->records = $this->listRecords();
+				}
+			}
+			else {
+				$result->records = $this->listRecords();
+				$result->success = true;
+			}
+		}
+		elseif ($this->endOfTracking() && $recordid !== null) {
+			$record = $this->zone->getRecordById($recordid);
+			if ($this->getRequestType() == 'POST') {
+				/**
+				 * @TODO implement
+				 */
+			}
+			elseif ($this->getRequestType() == 'DELETE') {
+				$result->success = $this->zone->recordDel($recordid);
+				$result->records = $this->listRecords();
+			}
+			else {
+				$result->success = true;
+				$result->record = $record;
+			}
+		}
+		return $result;
 	}
 
 	private function record2Json($recordid, ResourceRecord $record) {
