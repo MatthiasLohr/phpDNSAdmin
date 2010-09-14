@@ -43,7 +43,9 @@ class ServerRouter extends RequestRouter {
 
 	public function rrtypes() {
 		$features = $this->zoneModule->getFeatures();
-		return array_values(array_intersect(ResourceRecord::listTypes(), $features['rrtypes']));
+		$result = new stdClass();
+		$result->rrtypes = array_values(array_intersect(ResourceRecord::listTypes(), $features['rrtypes']));
+		return $result;
 	}
 
 	public function zones($zonename = null) {
