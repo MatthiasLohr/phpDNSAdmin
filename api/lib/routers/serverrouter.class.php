@@ -44,16 +44,24 @@ class ServerRouter extends RequestRouter {
 	public function rrtypes() {
 		$features = $this->zoneModule->getFeatures();
 		$result = new stdClass();
-		$result->rrtypes = array_values(array_intersect(ResourceRecord::listTypes(), $features['rrtypes']));
+		$result->rrtypes = array();
+		foreach (array_values(array_intersect(ResourceRecord::listTypes(), $features['rrtypes'])) as $value) {
+			$className = ResourceRecord::getClassByType($value);
+			$rrtype = new stdClass();
+			$rrtype->type = $value;
+			$rrtype->fields = call_user_func(array($className, 'listFields'));
+
+			$result->rrtypes[] = $rrtype;
+		}
 		return $result;
 	}
 
 	public function zones($zonename = null) {
 		if ($this->endOfTracking()) {
 			if ($zonename === null) {
-				if($this->getRequestType() == 'PUT') {
+				if ($this->getRequestType() == 'PUT') {
 					$data = RequestRouter::getRequestData();
-					$zone = new Zone($data['zonename'],$this->zoneModule);
+					$zone = new Zone($data['zonename'], $this->zoneModule);
 					$this->zoneModule->zoneCreate($zone);
 					$result = new stdClass();
 					$result->success = true;
@@ -69,28 +77,26 @@ class ServerRouter extends RequestRouter {
 					$result->zones[$zone->getName()] = $tmpzone;
 				}
 				return $result;
-			}
-			else {
-				$zone = new Zone($zonename,$this->zoneModule);
+			} else {
+				$zone = new Zone($zonename, $this->zoneModule);
 				if ($this->getRequestType() == 'DELETE') {
 					$this->zoneModule->zoneDelete($zone);
 					$result = new stdClass();
 					$result->success = true;
 					return $result;
-				}
-				else {
+				} else {
 					$result = new stdClass();
 					$result->success = false;
 					return $result;
 				}
 			}
-		}
-		else {
-			$zone = new Zone($zonename,$this->zoneModule);
+		} else {
+			$zone = new Zone($zonename, $this->zoneModule);
 			$zoneRouter = new ZoneRouter($zone);
 			return $zoneRouter->track($this->routingPath);
 		}
 	}
+
 }
 
 ?>
