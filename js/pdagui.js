@@ -92,6 +92,8 @@ function pdaGUI(api) {
 						var tab = zonetabs.findById('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
 						if (tab == null) {
 							tab = new Ext.grid.GridPanel({
+								serverkey: node.attributes.serverkey,
+								zone: node.attributes.zone,
 								title: node.attributes.zone,
 								id: 'zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone,
 								closable: true,
@@ -247,7 +249,35 @@ function pdaGUI(api) {
 		buttons: [{
 			text: 'Add Record'
 		}, {
-			text: 'Delete Selected Records'
+			text: 'Delete Selected Records',
+			handler: function() {
+				var tab = zonetabs.getActiveTab();
+				if(tab != null) {
+					var selection = tab.getSelectionModel();
+					if(selection.getCount() > 0) {
+						if(selection.getCount() == 1) {
+							msg = 'a Record';
+						} else {
+							msg = selection.getCount() + ' Records';
+						}
+
+						Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+msg+"?", 
+							function(choice) {
+								if(choice== 'yes') {
+									selection.each(function(record) {
+										API.deleteRecord(tab.serverkey, tab.zone, record.data.id, function() {
+											var store = tab.getStore();
+											store.remove(record);
+											notifyMsg('Record deleted.');
+										}, function(error) {
+											notifyMsg(error, 'Error!');
+										});
+									});
+								}
+							});
+					}
+				}
+			}
 		}]
 	});
 	var mainContainer = new Ext.Panel({
@@ -304,7 +334,6 @@ function pdaGUI(api) {
 		}]
 	});
 
-	loginForm
 	// wrap window
 	var loginWindow = new Ext.Window({
 		title: 'phpDNSAdmin Login',

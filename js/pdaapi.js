@@ -108,6 +108,21 @@ function pdaAPI(url) {
 		});
 	}
 
+	this.deleteRecord = function(server, zone, recordid, success, failure) {
+		Ext.Ajax.request({
+			url: URL+'/servers/'+server+'/zones/'+zone+'/records/'+recordid,
+			method: 'DELETE',
+			success: function(response, options) {
+				var data = Ext.decode(response.responseText);
+				if(data.success) {
+					success(recordid);
+				} else {
+					failure(data.error);
+				}
+			}
+		});
+	}
+
 	// =============== constructor ===========
 	var URL = url;
 }
