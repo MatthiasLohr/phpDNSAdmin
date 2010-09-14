@@ -25,12 +25,12 @@ function pdaGUI(api) {
 		for (recordid in records) {
 			record = records[recordid];
 			store.add(new store.recordType({
-					id: record.id,
-					name: record.name,
-					type: record.type,
-					content: record.content,
-					ttl: record.ttl
-				}
+				id: record.id,
+				name: record.name,
+				type: record.type,
+				content: record.content,
+				ttl: record.ttl
+			}
 			));
 		}
 		tab.enable();
@@ -102,10 +102,26 @@ function pdaGUI(api) {
 										menuDisabled: false
 									},
 									columns: [
-										{header: 'name', dataIndex: 'name'},
-										{header: 'type', dataIndex: 'type'},
-										{header: 'content', id: 'content',  dataIndex: 'content'},
-										{header: 'TTL', dataIndex: 'ttl'}
+									{
+										header: 'name',
+										dataIndex: 'name'
+									},
+
+									{
+										header: 'type',
+										dataIndex: 'type'
+									},
+
+									{
+										header: 'content',
+										id: 'content',
+										dataIndex: 'content'
+									},
+
+									{
+										header: 'TTL',
+										dataIndex: 'ttl'
+									}
 									]
 								}),
 								store: new Ext.data.JsonStore({
@@ -131,11 +147,26 @@ function pdaGUI(api) {
 			loginWindow.hide();
 			mainContainer.enable();
 			API.listServers(displayServers);
-
-		}
-		else {
+		} else {
 			mainContainer.disable();
 			loginWindow.show();
+		}
+	}
+
+	function notifyMsg(msg, title) {
+		if(title==null) {
+			Ext.ux.Growl.notify({
+				message: msg,
+				alignment: "tr-tr",
+				offset: [-10, 10]
+			});
+		} else {
+			Ext.ux.Growl.notify({
+				title: title,
+				message: msg,
+				alignment: "tr-tr",
+				offset: [-10, 10]
+			});
 		}
 	}
 
@@ -146,6 +177,7 @@ function pdaGUI(api) {
 
 	// init main container
 	var zonetree = new Ext.tree.TreePanel({
+		itemId: 'zonetree',
 		region: 'west',
 		collapsible: true,
 		title: 'Zones',
@@ -156,9 +188,55 @@ function pdaGUI(api) {
 		root: new Ext.tree.TreeNode(),
 		rootVisible: false,
 		buttons: [{
-			text: 'Create'
+			text: 'Create',
+			handler: function() {
+				var node = zonetree.getSelectionModel().getSelectedNode();
+				if(node != null) {
+					Ext.MessageBox.prompt('Create New Zone', 'Enter new Zone Name:', function(btn, text) {
+						if(btn == 'ok') {
+							API.createZone(node.attributes.serverkey, text,
+								function(server) {
+									notifyMsg('Zone '+text+' was created!');
+									API.listZones(server, displayZones);
+								},
+								function(error) {
+									// notify fail
+									notifyMsg(error);
+								});
+						}
+					});
+				} else {
+					notifyMsg('Please select server first!');
+				}
+			}
 		}, {
-			text: 'Delete Selected'
+			text: 'Delete Selected',
+			handler: function() {
+				var node = zonetree.getSelectionModel().getSelectedNode();
+				if(node.attributes.zone) {
+					var servername = zonetree.root.findChild('id','server-'+node.attributes.serverkey,1).text;
+					Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+node.attributes.zone+" on "+servername+"?", function(choice) {
+						if(choice=='yes') {
+							API.deleteZone(node.attributes.serverkey, node.attributes.zone,
+								function(server) {
+									// close Tab, if open
+									var tab = zonetabs.findById('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
+									if(tab != null) {
+										zonetabs.remove(tab, true);
+									}
+									// refresh Tree
+									API.listZones(server, displayZones);
+
+									// notify success
+									notifyMsg("Zone "+node.attributes.zone+" was successfully deleted.");
+								}, function(error) {
+									// notify fail
+									notifyMsg(error);
+								});
+						}
+					});
+				}
+			}
 		}]
 	});
 	var zonetabs = new Ext.TabPanel({
@@ -183,43 +261,50 @@ function pdaGUI(api) {
 		defaultType:'textfield',
 		monitorValid:true,
 		url: URL+'/status',
-		method: 'POST',
-		listeners: {
-			actioncomplete: function(form,action) {
-				return true;
-			}
-		},
 		items: [{
-			fieldLabel: 'username',
-			name: 'loginUsername',
+			fieldLabel: 'Username',
+			name: 'username',
 			id: 'loginUsername',
-			inputType: 'textfield'
-
+			inputType: 'textfield',
+			allowBlank:false
 		}, {
-			fieldLabel: 'password',
-			name: 'loginPassword',
+			fieldLabel: 'Password',
+			name: 'password',
 			id: 'loginPassword',
-			inputType: 'password'
+			inputType: 'password',
+			allowBlank:false
 		}],
 		buttons: [{
 			text: 'Login',
 			formBind: true,
-			handler: function () {
-				var username = Ext.getDom('loginUsername').value;
-				var password = Ext.getDom('loginPassword').value;
-				API.checkLoginStatus(updateLoginStatus,{
-					username: username,
-					password: password
+			handler:function(){
+				loginForm.getForm().submit({
+					method:'POST',
+					waitTitle:'Connecting',
+					waitMsg:'Sending data...',
+					success: function(form, action) {
+						updateLoginStatus(action.result.loggedIn);
+						notifyMsg('Logged in as '+action.result.username);
+					},
+					failure: function(form, action) {
+						switch (action.failureType) {
+							case Ext.form.Action.CLIENT_INVALID:
+								notifyMsg('Form fields may not be submitted with invalid values');
+								break;
+							case Ext.form.Action.CONNECT_FAILURE:
+								notifyMsg('Ajax communication failed');
+								break;
+							case Ext.form.Action.SERVER_INVALID:
+								notifyMsg('Login failed!');
+						}
+						loginForm.getForm().reset();
+					}
 				});
 			}
-		/*}, {
-			text: 'Reset',
-			formBind: true,
-			handler: function() {
-
-			}*/
 		}]
 	});
+
+	loginForm
 	// wrap window
 	var loginWindow = new Ext.Window({
 		title: 'phpDNSAdmin Login',

@@ -21,8 +21,10 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<link rel="stylesheet" type="text/css" href="js/extjs/resources/css/ext-all.css" />
+		<link rel="stylesheet" type="text/css" href="js/extjs/growl/css/ext/ux/Growl.css" />
 		<script type="text/javascript" src="js/extjs/adapter/ext/ext-base.js"></script>
 		<script type="text/javascript" src="js/extjs/ext-all-debug.js"></script>
+		<script type="text/javascript" src="js/extjs/growl/Growl.js"></script>
 		<script type="text/javascript" src="js/pdaapi.js"></script>
 		<script type="text/javascript" src="js/pdagui.js"></script>
 		<title id="page-title">phpDNSAdmin</title>

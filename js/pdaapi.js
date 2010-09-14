@@ -46,7 +46,9 @@ function pdaAPI(url) {
 			url: URL+'/servers/'+server+'/zones/'+zone+'/records',
 			success: function(response,options) {
 				var data = Ext.decode(response.responseText);
-				callback(server,zone,data);
+				if(data.success) {
+					callback(server,zone,data.records);
+				}
 			}
 		});
 	}
@@ -56,7 +58,9 @@ function pdaAPI(url) {
 			url: URL+'/servers',
 			success: function(response,options) {
 				var data = Ext.decode(response.responseText);
-				callback(data);
+				if(data.success) {
+					callback(data.servers);
+				}
 			}
 		});
 	}
@@ -66,7 +70,40 @@ function pdaAPI(url) {
 			url: URL+'/servers/'+server+'/zones',
 			success: function(response,options) {
 				var data = Ext.decode(response.responseText);
-				callback(server,data);
+				if(data.success) {
+					callback(server,data.zones);
+				}
+			}
+		});
+	}
+
+	this.deleteZone = function(server, zone, success, failure) {
+		Ext.Ajax.request({
+			url: URL+'/servers/'+server+'/zones/'+zone,
+			method: 'DELETE',
+			success: function(response, options) {
+				var data = Ext.decode(response.responseText);
+				if(data.success) {
+					success(server);
+				} else {
+					failure(data.error);
+				}
+			}
+		});
+	}
+
+	this.createZone = function(server, zonename, success, failure) {
+		Ext.Ajax.request({
+			url: URL+'/servers/'+server+'/zones/',
+			method: 'PUT',
+			params: 'zonename='+zonename,
+			success: function(response, options) {
+				var data = Ext.decode(response.responseText);
+				if(data.success) {
+					success(server);
+				} else {
+					failure(data.error);
+				}
 			}
 		});
 	}
