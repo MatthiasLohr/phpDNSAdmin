@@ -139,10 +139,12 @@ class MainRouter extends RequestRouter {
 				$user = $autologin->getUser();
 				if ($user === null) {
 					$result->loggedIn = false;
+					$result->success = false;
 				}
 				else {
 					$result->loggedIn = true;
 					$result->username = $user->getUsername();
+					$result->success = true;
 				}
 				break;
 		}
