@@ -49,6 +49,14 @@ class ServerRouter extends RequestRouter {
 	public function zones($zonename = null) {
 		if ($this->endOfTracking()) {
 			if ($zonename === null) {
+				if($this->getRequestType() == 'PUT') {
+					$data = RequestRouter::getRequestData();
+					$zone = new Zone($data['zonename'],$this->zoneModule);
+					$this->zoneModule->zoneCreate($zone);
+					$result = new stdClass();
+					$result->success = true;
+					return $result;
+				}
 				// list zones
 				$result = new stdClass();
 				$result->zones = array();
