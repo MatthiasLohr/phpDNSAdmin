@@ -21,6 +21,7 @@ function pdaGUI(api) {
 	function displayRecords(serverkey,zone,records) {
 		var tab = zonetabs.findById('zonetab-'+serverkey+'-'+zone);
 		var store = tab.getStore();
+		store.removeAll();
 		//store.loadData(records);
 		for (recordid in records) {
 			record = records[recordid];
@@ -247,7 +248,13 @@ function pdaGUI(api) {
 		items: [],
 		enableTabScroll: true,
 		buttons: [{
-			text: 'Add Record'
+			text: 'Add Record',
+			handler: function() {
+				var tab = zonetabs.getActiveTab();
+				if(tab != null) {
+					createRecordWindow(tab.serverkey, tab.zone);
+				}
+			}
 		}, {
 			text: 'Delete Selected Records',
 			handler: function() {
@@ -346,6 +353,162 @@ function pdaGUI(api) {
 		height: 120,
 		items: [loginForm]
 	});
+
+	// Window Group
+	var recordWindows = new Ext.WindowGroup();
+
+	// Valid Values with Mode
+	function validValue(value, mode) {
+		switch(mode) {
+			case 'IPv4':
+				return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(value);
+			case 'IPv6':
+				return /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/.test(value);
+			case 'Hostname':
+				return true;
+			case 'UInt16':
+				return (/^[0-9]+$/.test(value) && value >= 0 && value <= 65535);
+			case 'UInt8':
+				return (/^[0-9]+$/.test(value) && value >= 0 && value <= 255);
+			case 'UInt':
+				return /^[0-9]+$/.test(value);
+			case 'DnskeyProtocol':
+				return (value == 3);
+			case 'Base64Content':
+				return true;
+			case 'StringNoSpaces':
+				return !(/\s/g.test(value));
+			case 'String':
+				return true;
+			case 'Email':
+				return /^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.(([0-9]{1,3})|([a-zA-Z]{2,3})|(aero|coop|info|museum|name))$/.test(value);
+			case 'SpfContent':
+				return true;
+			default:
+				return true;
+		}
+	}
+	// add record window
+	function createRecordWindow(server, zone) {
+		var recordForm = new Ext.FormPanel({
+			frame: true,
+			defaultType:'textfield',
+			monitorValid:true,
+			url: URL+'/servers/'+server+'/zones/'+zone+'/records/',
+
+			items: [{
+				xtype: "label",
+				fieldLabel: "Server",
+				text: zonetree.getNodeById('server-'+server).text
+			}, {
+				xtype: "label",
+				fieldLabel: "Zone",
+				text: zone
+			}, {
+				xtype: "combo",
+				name: "type",
+				fieldLabel: "Type",
+				editable: false,
+				width: 170,
+				height: 40,
+				mode: 'remote',
+				triggerAction: 'all',
+				emptyText: 'Please select first.',
+				displayField: 'type',
+				valueField: 'type',
+				store: new Ext.data.JsonStore({
+					url: URL+'/servers/'+server+'/rrtypes',
+					root: 'rrtypes',
+					fields: ['type', 'fields']
+				}),
+				listeners:{
+					// add Boxes on select
+					'select': function(combo, record, index) {
+
+						// first delete old Boxes
+						var children = recordForm.findByType('textfield');
+
+						for(i=0;i<children.length;i++) {
+							if(children[i].name != 'name' && children[i].name != 'type' && children[i].name != 'ttl') {
+								recordForm.remove(children[i]);
+							}
+						}
+
+						for(key in record.data.fields) {
+							recordForm.add({
+								name: 'fields['+key+']',
+								fieldLabel: key,
+								width: 170,
+								validType: record.data.fields[key],
+								validator: function(value) {
+									return validValue(value, this.validType);
+								}
+							});
+						}
+						recordForm.doLayout();
+					}
+				}
+			}, {
+				fieldLabel: 'Name',
+				name: 'name',
+				inputType: 'textfield',
+				allowBlank:false,
+				width: 170
+			}, {
+				fieldLabel: 'TTL',
+				name: 'ttl',
+				inputType: 'textfield',
+				allowBlank:false,
+				width: 170,
+				validator: function(value) {
+					return /^[0-9]+$/.test(value);
+				}
+			}],
+			buttons: [{
+				text: 'Add Record',
+				formBind: true,
+				handler: function() {
+					recordForm.getForm().submit({
+						method:'PUT',
+						waitTitle:'Connecting',
+						waitMsg:'Sending data...',
+						success: function(form, action) {
+							displayRecords(server, zone, action.result.records);
+							notifyMsg('Record successfully added! (New Id: '+action.result.newid+')');
+							recordWindow.hide();
+							recordWindow.destroy();
+						},
+						failure: function(form, action) {
+							switch (action.failureType) {
+								case Ext.form.Action.CLIENT_INVALID:
+									notifyMsg('Form fields may not be submitted with invalid values');
+									break;
+								case Ext.form.Action.CONNECT_FAILURE:
+									notifyMsg('Ajax communication failed');
+									break;
+								case Ext.form.Action.SERVER_INVALID:
+									data = Ext.util.JSON.decode(action.response.responseText);
+									notifyMsg(data.error, 'Add record failed!');
+							}
+						}
+					});
+				}
+			}]
+		});
+
+		var recordWindow = new Ext.Window({
+			title: 'Add record',
+			layout: 'anchor',
+			closable: true,
+			resizeable: false,
+			autoHeight: true,
+			autoScroll: true,
+			width: 320,
+			items: [recordForm]
+		});
+		
+		recordWindow.show();
+	}
 
 	// init viewport
 	var viewport = new Ext.Viewport({
