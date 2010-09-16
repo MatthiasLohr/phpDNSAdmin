@@ -29,7 +29,7 @@
  */
 class SpfRule extends SimpleType {
 
-	public static function isValidValue($string) {
+	public function isValidValue($string) {
 		// remove qualifier if given
 		if (in_array(substr($string,0,1),array('+','-','~','?'))) {
 			$string = substr($string,1);
@@ -103,7 +103,7 @@ class SpfRule extends SimpleType {
 		}
 	}
 
-	public static function normalizeValue($string) {
+	public function normalizeValue($string) {
 		if (!self::isValid($string))
 			throw new InvalidTypeException($string . ' is no valid SPF rule');
 		return $string;

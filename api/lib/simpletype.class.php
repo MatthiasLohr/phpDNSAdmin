@@ -71,7 +71,7 @@ abstract class SimpleType {
    * @param string $string data to check
    * @return bool true if valid, otherwise false
    */
-	abstract public static function isValidValue($string);
+	abstract public function isValidValue($string);
 
 	/**
 	 * Return the normalized content from this instance
@@ -88,7 +88,7 @@ abstract class SimpleType {
    * @param string $string given data
    * @return string normalized data
    */
-  abstract public static function normalizeValue($string);
+  abstract public function normalizeValue($string);
 
 }
 

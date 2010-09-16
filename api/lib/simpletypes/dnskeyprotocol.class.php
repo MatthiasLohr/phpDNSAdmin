@@ -29,11 +29,11 @@
  */
 class DnskeyProtocol extends SimpleType {
 
-	public static function isValidValue($string) {
+	public function isValidValue($string) {
 		return ($string == 3);
 	}
 
-  public static function normalizeValue($string) {
+  public function normalizeValue($string) {
     return 3;
   }
 

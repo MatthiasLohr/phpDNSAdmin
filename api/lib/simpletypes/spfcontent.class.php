@@ -29,7 +29,7 @@
  */
 class SpfContent extends SimpleType {
 
-	public static function isValidValue($string) {
+	public function isValidValue($string) {
 		$rules = explode(' ',$string);
 		if ($rules[0] !== 'v=spf1') return false;
 		$count = count($rules);
@@ -41,7 +41,7 @@ class SpfContent extends SimpleType {
 		return true;
 	}
 
-	public static function normalizeValue($string) {
+	public function normalizeValue($string) {
 		if (!self::isValid($string))
 			throw new InvalidTypeException($string.' is no valid SPF content');
 		return $string;

@@ -29,7 +29,7 @@
  */
 class Hostname extends SimpleType {
 
-  public static function isValidValue($string) {
+  public function isValidValue($string) {
     if (strpos($string, '.') === false)
       $tmp = array(0 => $string);
     else
@@ -45,7 +45,7 @@ class Hostname extends SimpleType {
 		return true;
 	}
 
-  public static function normalizeValue($string) {
+  public function normalizeValue($string) {
     if (!self::isValidValue($string))
       throw new InvalidTypeException($string . ' is no valid Hostname');
     if ($string[strlen($string) - 1] == '.')

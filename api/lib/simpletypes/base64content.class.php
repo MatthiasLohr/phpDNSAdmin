@@ -29,12 +29,12 @@
  */
 class Base64Content extends SimpleType {
 
-	public static function isValidValue($string) {
+	public function isValidValue($string) {
 		if (base64_decode($string) === false) return false;
 		return true;
 	}
 
-  public static function normalizeValue($string) {
+  public function normalizeValue($string) {
     if (!self::isValidValue($string))
       throw new InvalidTypeException($string . ' is no valid base64 string');
     return $string;

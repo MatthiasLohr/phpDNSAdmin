@@ -29,7 +29,7 @@
  */
 class Email extends SimpleType {
 
-	public static function isValidValue($string) {
+	public function isValidValue($string) {
 		$tmp = explode('@', $string);
     if (count($tmp) != 2) return false;
     $tmp[0] = strtolower(preg_replace('/\(.*\)/', '', $tmp[0]));
@@ -40,7 +40,7 @@ class Email extends SimpleType {
     return Hostname::isValidValue($tmp[1]);
 	}
 
-  public static function normalizeValue($string) {
+  public function normalizeValue($string) {
     if (!self::isValidValue($string))
       throw new InvalidTypeException($string . ' is no valid Email');
     $tmp = explode('@', $string);

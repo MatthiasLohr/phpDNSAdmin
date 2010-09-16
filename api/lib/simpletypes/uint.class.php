@@ -29,11 +29,11 @@
  */
 class UInt extends SimpleType {
 
-	public static function isValidValue($string) {
+	public function isValidValue($string) {
 		return preg_match('!^[0-9]+$!', $string);
 	}
 
-	public static function normalizeValue($string) {
+	public function normalizeValue($string) {
 		if (!self::isValidValue($string))
 			throw new InvalidTypeException($string . ' is no valid UInt');
 		return intval($string);

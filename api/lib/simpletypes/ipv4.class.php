@@ -29,7 +29,7 @@
  */
 class IPv4 extends SimpleType {
 
-  public static function isValidValue($string) {
+  public function isValidValue($string) {
     $tmp = explode('.',$string);
     if (count($tmp) != 4) return false;
     for ($i = 0; $i < 4; $i++) {
@@ -39,7 +39,7 @@ class IPv4 extends SimpleType {
     return true;
   }
 
-  public static function normalizeValue($string) {
+  public function normalizeValue($string) {
     if (!self::isValidValue($string))
       throw new InvalidTypeException($string . ' is no valid IPv4');
     $tmp = explode('.',$string);

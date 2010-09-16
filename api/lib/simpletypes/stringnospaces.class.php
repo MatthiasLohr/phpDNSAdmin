@@ -29,11 +29,11 @@
  */
 class StringNoSpaces extends SimpleType {
 
-  public static function isValidValue($string) {
+  public function isValidValue($string) {
     return (strpos($string,' ') === false);
   }
 
-  public static function normalizeValue($string) {
+  public function normalizeValue($string) {
     return $string;
   }
 
