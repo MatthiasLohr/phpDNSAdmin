@@ -64,17 +64,13 @@ class ZoneRouter extends RequestRouter {
 				if (!isset($data['type'])) {
 					$result->success = false;
 					$result->error = 'No record type specified!';
-				}
-				elseif (!isset($data['name'])) {
+				} elseif (!isset($data['name'])) {
 					throw new InvalidFieldDataException('name is empty!');
-				}
-				elseif (!isset($data['ttl'])) {
+				} elseif (!isset($data['ttl'])) {
 					throw new InvalidFieldDataException('ttl is empty!');
-				}
-				elseif (!isset($data['fields'])) {
+				} elseif (!isset($data['fields'])) {
 					throw new InvalidFieldDataException('No field values given!');
-				}
-				else {
+				} else {
 					// workaround to avoid php warnings
 					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
@@ -83,24 +79,35 @@ class ZoneRouter extends RequestRouter {
 					$result->newid = $newid;
 					$result->records = $this->listRecords();
 				}
-			}
-			else {
+			} else {
 				$result->records = $this->listRecords();
 				$result->success = true;
 			}
-		}
-		elseif ($this->endOfTracking() && $recordid !== null) {
+		} elseif ($this->endOfTracking() && $recordid !== null) {
 			$record = $this->zone->getRecordById($recordid);
 			if ($this->getRequestType() == 'POST') {
-				/**
-				 * @TODO implement
-				 */
-			}
-			elseif ($this->getRequestType() == 'DELETE') {
+				$data = RequestRouter::getRequestData();
+				if (!isset($data['type'])) {
+					$result->success = false;
+					$result->error = 'No record type specified!';
+				} elseif (!isset($data['name'])) {
+					throw new InvalidFieldDataException('name is empty!');
+				} elseif (!isset($data['ttl'])) {
+					throw new InvalidFieldDataException('ttl is empty!');
+				} elseif (!isset($data['fields'])) {
+					throw new InvalidFieldDataException('No field values given!');
+				} else {
+					// workaround to avoid php warnings
+					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
+					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
+					$this->zone->recordUpdate($recordid, $record);
+					$result->success = true;
+					$result->records = $this->listRecords();
+				}
+			} elseif ($this->getRequestType() == 'DELETE') {
 				$result->success = $this->zone->recordDelete($recordid);
 				$result->records = $this->listRecords();
-			}
-			else {
+			} else {
 				$result->success = true;
 				$result->record = $record;
 			}
@@ -138,4 +145,5 @@ class ZoneRouter extends RequestRouter {
 	}
 
 }
+
 ?>
