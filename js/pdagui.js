@@ -30,7 +30,8 @@ function pdaGUI(api) {
 				name: record.name,
 				type: record.type,
 				content: record.content,
-				ttl: record.ttl
+				ttl: record.ttl,
+				fields: record.fields
 			}
 			));
 		}
@@ -130,7 +131,16 @@ function pdaGUI(api) {
 								store: new Ext.data.JsonStore({
 									fields: ['id', 'name', 'type', 'content', 'ttl']
 								}),
-								autoExpandColumn: 'content'
+								autoExpandColumn: 'content',
+								listeners: {
+									dblclick: function(event) {
+										var selection = tab.getSelectionModel();
+										if(selection.getCount() == 1) {
+											record = selection.getSelected();
+											changeRecordWindow(tab.serverkey, tab.zone, record.data);
+										}
+									}
+								}
 							});
 							zonetabs.add(tab);
 							// load record data
@@ -252,7 +262,7 @@ function pdaGUI(api) {
 			handler: function() {
 				var tab = zonetabs.getActiveTab();
 				if(tab != null) {
-					createRecordWindow(tab.serverkey, tab.zone);
+					addRecordWindow(tab.serverkey, tab.zone);
 				}
 			}
 		}, {
@@ -268,7 +278,7 @@ function pdaGUI(api) {
 							msg = selection.getCount() + ' Records';
 						}
 
-						Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+msg+"?", 
+						Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+msg+"?",
 							function(choice) {
 								if(choice== 'yes') {
 									selection.each(function(record) {
@@ -388,8 +398,113 @@ function pdaGUI(api) {
 				return true;
 		}
 	}
+
+	function changeRecordWindow(server, zone, record) {
+		var recordForm = new Ext.FormPanel({
+			frame: true,
+			defaultType:'textfield',
+			monitorValid:true,
+			url: URL+'/servers/'+server+'/zones/'+zone+'/records/'+record.id,
+			items: [{
+				xtype: "label",
+				fieldLabel: "Server",
+				text: zonetree.getNodeById('server-'+server).text
+			}, {
+				xtype: "label",
+				fieldLabel: "Zone",
+				text: zone
+			}, {
+				xtype: "label",
+				fieldLabel: "Id",
+				text: record.id
+			}, {
+				xtype: "label",
+				fieldLabel: "Type",
+				text: record.type
+			}, {
+				xtype: "hidden",
+				name: "type",
+				value: record.type
+			}, {
+				xtype: "textfield",
+				width: 170,
+				fieldLabel: "Name",
+				name: "name",
+				value: record.name,
+				allowBlank: false
+			}, {
+				xtype: "textfield",
+				width: 170,
+				fieldLabel: "TTL",
+				name: "ttl",
+				value: record.ttl,
+				validator: function(value) {
+					return /^[0-9]+$/.test(value);
+				}
+			}],
+			buttons: [{
+				text: 'Change Record',
+				formBind: true,
+				handler: function() {
+					recordForm.getForm().submit({
+						method:'POST',
+						waitTitle:'Connecting',
+						waitMsg:'Sending data...',
+						success: function(form, action) {
+							displayRecords(server, zone, action.result.records);
+							notifyMsg('Record successfully changed!');
+							recordWindow.hide();
+							recordWindow.destroy();
+						},
+						failure: function(form, action) {
+							switch (action.failureType) {
+								case Ext.form.Action.CLIENT_INVALID:
+									notifyMsg('Form fields may not be submitted with invalid values');
+									break;
+								case Ext.form.Action.CONNECT_FAILURE:
+									notifyMsg('Ajax communication failed');
+									break;
+								case Ext.form.Action.SERVER_INVALID:
+									data = Ext.util.JSON.decode(action.response.responseText);
+									notifyMsg(data.error, 'Change record failed!');
+							}
+						}
+					});
+				}
+			}]
+		});
+
+		// add fields
+		for(key in record.fields) {
+			recordForm.add({
+				name: 'fields['+key+']',
+				fieldLabel: key,
+				width: 170,
+				value: record.fields[key].value,
+				validType: record.fields[key].type,
+				validator: function(value) {
+					return validValue(value, this.validType);
+				}
+			});
+		}
+		recordForm.doLayout();
+
+		var recordWindow = new Ext.Window({
+			title: 'Change record',
+			layout: 'anchor',
+			closable: true,
+			resizeable: false,
+			autoHeight: true,
+			autoScroll: true,
+			width: 320,
+			items: [recordForm]
+		});
+
+		recordWindow.show();
+	}
+
 	// add record window
-	function createRecordWindow(server, zone) {
+	function addRecordWindow(server, zone) {
 		var recordForm = new Ext.FormPanel({
 			frame: true,
 			defaultType:'textfield',
