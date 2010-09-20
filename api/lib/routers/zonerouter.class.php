@@ -114,7 +114,7 @@ class ZoneRouter extends RequestRouter {
 				}
 				else {
 					$result->success = true;
-					$result->record = $record;
+					$result->record = $this->record2Json($recordid, $record);
 				}
 			}
 		}
