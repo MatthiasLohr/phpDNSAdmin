@@ -108,8 +108,14 @@ class ZoneRouter extends RequestRouter {
 				$result->success = $this->zone->recordDelete($recordid);
 				$result->records = $this->listRecords();
 			} else {
-				$result->success = true;
-				$result->record = $record;
+				if ($record === null) {
+					$result->success = false;
+					$result->error = 'No such record!';
+				}
+				else {
+					$result->success = true;
+					$result->record = $record;
+				}
 			}
 		}
 		return $result;
