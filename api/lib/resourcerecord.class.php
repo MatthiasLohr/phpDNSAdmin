@@ -46,7 +46,9 @@ abstract class ResourceRecord {
 	private $viewinfo = array();
 
 	protected final function __construct($name,$content,$ttl,$priority = null,array $viewinfo = array()) {
-		$this->setName($name);
+		if (!$this->setName($name)) {
+			throw new InvalidFieldDataException('No valid record name!');
+		}
 		if (is_array($content)) {
 			$this->fieldValues = $content;
 		}
@@ -62,7 +64,9 @@ abstract class ResourceRecord {
 			$this->fieldValues[$fieldname] = $value->normalize();
 		}
 		// do the rest
-		$this->setTTL($ttl);
+		if (!$this->setTTL($ttl)) {
+			throw new InvalidFieldDataException('No valid record ttl!');
+		}
 		$this->viewinfo = $viewinfo;
 	}
 
