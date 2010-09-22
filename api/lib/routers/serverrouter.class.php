@@ -85,9 +85,9 @@ class ServerRouter extends RequestRouter {
 					$result->success = true;
 					return $result;
 				} else {
-					$result = new stdClass();
-					$result->success = false;
-					return $result;
+					$zone = new Zone($zonename, $this->zoneModule);
+					$zoneRouter = new ZoneRouter($zone);
+					return $zoneRouter->track($this->routingPath);
 				}
 			}
 		} else {
