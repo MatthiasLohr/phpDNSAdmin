@@ -11,6 +11,8 @@ Simply copy these files to a folder accessible via http. Copy
 api/dist-config.inc.php to api/config.inc.php and modify it in the way you
 want phpDNSAdmin to use.
 
+Please enable mod_rewrite for the api/ directory.
+
 Currently for authentication you need a existing .htpasswd file.
 phpDNSAdmin will read your data from there for authentication, you don't need
 to configure your web server for basic authentication! (In fact, browser http
