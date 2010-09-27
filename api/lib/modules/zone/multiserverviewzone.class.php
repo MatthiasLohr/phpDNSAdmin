@@ -33,8 +33,32 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	private $modules = array();
 
-	protected function __construct($config) {
-
+	protected function __construct($moduleConfig) {
+		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
+		$moduleCount = count($moduleConfig);
+		for ($moduleIndex = 0; $moduleIndex < $moduleCount; $moduleIndex++) {
+			$localConfig = $moduleConfig[$moduleIndex];
+			if (!isset($localConfig['_module'])) throw new ModuleConfigException('Found module config without _module definition!');
+			$moduleName = $localConfig['_module'];
+			unset($localConfig['_module']);
+			$moduleFile = API_ROOT.'/lib/modules/zone/'.strtolower($moduleName).'.class.php';
+			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file '.$moduleFile.'!');
+			require_once($moduleFile);
+			$this->modules[$moduleIndex] = new stdClass();
+			$this->modules[$moduleIndex]->module = call_user_func(array($moduleName,'getInstance'),$localConfig);
+			if ($this->modules[$moduleIndex]->module === null) {
+				unset($this->modules[$moduleIndex]);
+			}
+			else {
+				if (preg_match('/^([a-zA-Z0-9]+)$/',$localConfig['_sysname'])) {
+					$this->modules[$moduleIndex]->sysname = $localConfig['_sysname'];
+				}
+				else {
+					$this->modules[$moduleIndex]->sysname = $moduleIndex;
+				}
+				$this->modules[$moduleIndex]->name = (isset($localConfig['_name'])?$localConfig['_name']:'Server '.$moduleIndex);
+			}
+		}
 	}
 
 	public function getFeatures() {
@@ -42,7 +66,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	}
 
 	public static function getInstance($config) {
-
+		return new MultiServerViewZone($config['views']);
 	}
 
 	public function getRecordById(Zone $zone, $recordid) {
@@ -53,8 +77,19 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	}
 
-	public function listZones() {
+	public function listViews() {
+		
+	}
 
+	public function listZones() {
+		$zones = array();
+		foreach ($this->modules as $moduleIndex => $module) {
+			$tmpZones = $module->module->listZones();
+			foreach ($tmpZones as $tmpZone) {
+				$zones[$tmpZone->getName()] = $tmpZone;
+			}
+		}
+		return $zones;
 	}
 
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
@@ -69,7 +104,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	}
 
-	public function zoneCreate($zonename) {
+	public function zoneCreate(Zone $zone) {
 
 	}
 
@@ -80,6 +115,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	public function zoneExists(Zone $zone) {
 
 	}
+
 }
 
 ?>
