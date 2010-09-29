@@ -34,15 +34,20 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	private $modules = array();
 
 	protected function __construct($config) {
-
+		
 	}
 
 	public function getFeatures() {
-
+		$features = array();
+		foreach ($this->modules as $module) {
+			$tmpFeatures = $module->module->getFeatures();
+			
+		}
+		return $features;
 	}
 
 	public static function getInstance($config) {
-
+		
 	}
 
 	public function getRecordById(Zone $zone, $recordid) {
