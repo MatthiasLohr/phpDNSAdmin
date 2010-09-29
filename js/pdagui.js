@@ -67,6 +67,22 @@ function pdaGUI(api) {
 						else {
 							node.expand(1);
 						}
+					},
+					contextmenu: function(node, e) {
+						contextMenu = new Ext.menu.Menu({
+							items: [{id: 'create-zone', text: 'create zone'}],
+							listeners: {
+								itemclick: function(item) {
+									switch (item.id) {
+										case 'create-zone':
+
+										break;
+									}
+								}
+							}
+						}),
+						node.select();
+						contextMenu.show(node.ui.getEl());
 					}
 				}
 			}));
