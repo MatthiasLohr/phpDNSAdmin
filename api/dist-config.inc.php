@@ -23,7 +23,7 @@ $config = array(
 
 	// authentication modules
 	'authentication' => array(
-		/*
+		/* -- delete this line for enabling HtpasswdAuthentication --
 		array(
 			'_module' => 'HtpasswdAuthentication',
 			'filename' => '/var/www/phpdnsadmin/.htpasswd'
@@ -46,10 +46,11 @@ $config = array(
 
 	// zone modules
 	'zone' => array(
-		
+		/* -- delete this line for enabling PdnsPdoZone --
 		array(
 			'_module' => 'PdnsPdoZone',
 			'_sysname' => 'main',
+			'_name' => 'My DNS server',
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=pdns',
 			'pdo_username' => 'powerdns',
 			'pdo_password' => 'powerdns',
@@ -59,6 +60,7 @@ $config = array(
 			// 'domains_sequence' => 'domains_id_seq',
 			// 'records_sequence' => 'records_id_seq',
 			// 'search_path' => 'public'
+			// */
 		),
 	),
 );

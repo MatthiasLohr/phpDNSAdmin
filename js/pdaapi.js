@@ -18,6 +18,18 @@
 
 function pdaAPI(url) {
 
+	this.logout = function(callback) {
+		data = {username: ''};
+		Ext.Ajax.request({
+			url: URL+'/status',
+			method: 'POST',
+			params: data,
+			success: function(response,options) {
+				var data = Ext.decode(response.responseText);
+				callback(data.loggedIn);
+			}
+		});
+	}
 	this.checkLoginStatus = function(callback,options) {
 		var method = 'GET';
 		var data = {};
@@ -32,7 +44,7 @@ function pdaAPI(url) {
 			params: data,
 			success: function(response,options) {
 				var data = Ext.decode(response.responseText);
-				callback(data.loggedIn);
+				callback(data.loggedIn, data.username);
 			}
 		});
 	}

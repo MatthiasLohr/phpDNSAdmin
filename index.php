@@ -25,11 +25,13 @@
 		<script type="text/javascript" src="js/extjs/adapter/ext/ext-base.js"></script>
 		<script type="text/javascript" src="js/extjs/ext-all-debug.js"></script>
 		<script type="text/javascript" src="js/extjs/growl/Growl.js"></script>
+		<script type="text/javascript" src="js/extjs/extjs.addons.js"></script>
 		<script type="text/javascript" src="js/pdaapi.js"></script>
 		<script type="text/javascript" src="js/pdagui.js"></script>
 		<title id="page-title">phpDNSAdmin</title>
 		<script type="text/javascript">
 			Ext.onReady(function() {
+				Ext.QuickTips.init();
 				var GUI = new pdaGUI(new pdaAPI('api'));
 				
 			});

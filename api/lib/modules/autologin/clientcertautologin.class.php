@@ -29,7 +29,7 @@
  * @subpackage Autologin
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class SessionAutologin extends AutologinModule {
+class ClientcertAutologin extends AutologinModule {
 
 	private $fieldname = 'username';
 
