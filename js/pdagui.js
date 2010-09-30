@@ -395,7 +395,8 @@ function pdaGUI(api) {
 							case Ext.form.Action.SERVER_INVALID:
 								notifyMsg('Login failed!');
 						}
-						loginForm.getForm().reset();
+						//loginForm.getForm().reset();
+						Ext.getCmp('loginUsername').focus(true, 10);
 					}
 				});
 			}
@@ -412,7 +413,12 @@ function pdaGUI(api) {
 		border: false,
 		width: 300,
 		height: 120,
-		items: [loginForm]
+		items: [loginForm],
+		listeners: {
+			show: function(self) {
+				Ext.getCmp('loginUsername').focus(true, 10);
+			}
+		}
 	});
 
 	// Valid Values with Mode

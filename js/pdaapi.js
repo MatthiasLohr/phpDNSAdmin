@@ -31,17 +31,9 @@ function pdaAPI(url) {
 		});
 	}
 	this.checkLoginStatus = function(callback,options) {
-		var method = 'GET';
-		var data = {};
-		if (options != undefined) {
-			method = 'POST';
-			data.username = options.username;
-			data.password = options.password;
-		}
 		Ext.Ajax.request({
 			url: URL+'/status',
-			method: method,
-			params: data,
+			method: 'GET',
 			success: function(response,options) {
 				var data = Ext.decode(response.responseText);
 				callback(data.loggedIn, data.username);
