@@ -23,6 +23,42 @@ function pdaGUI(api) {
 		url: 'css/logo.png'
 	});
 
+	var contextMenuServer = new Ext.menu.Menu({
+		items: [{
+			id: 'create-zone',
+			text: 'create zone'
+		}, {
+			id: 'refresh-zones',
+			text: 'refresh zones'
+		}],
+		listeners: {
+			itemclick: function(item) {
+				switch(item.id) {
+					case 'create-zone':
+						createZone();
+						break;
+					case 'refresh-zones':
+						refreshZones();
+						break;
+				}
+			}
+		}
+	});
+
+	var contextMenuZone = new Ext.menu.Menu({
+		items: [{
+			id: 'delete-zone',
+			text: 'delete zone'
+		}],
+		listeners: {
+			itemclick: function(item) {
+				if(item.id == 'delete-zone')
+					deleteZone();
+			}
+		}
+	});
+
+
 	function displayRecords(serverkey,zone,records) {
 		var tab = zonetabs.findById('zonetab-'+serverkey+'-'+zone);
 		var store = tab.getStore();
@@ -74,20 +110,8 @@ function pdaGUI(api) {
 						}
 					},
 					contextmenu: function(node, e) {
-						contextMenu = new Ext.menu.Menu({
-							items: [{id: 'create-zone', text: 'create zone'}],
-							listeners: {
-								itemclick: function(item) {
-									switch (item.id) {
-										case 'create-zone':
-
-										break;
-									}
-								}
-							}
-						}),
 						node.select();
-						contextMenu.show(node.ui.getEl());
+						contextMenuServer.show(node.ui.getAnchor());
 					}
 				}
 			}));
@@ -163,6 +187,10 @@ function pdaGUI(api) {
 							API.listRecords(node.attributes.serverkey,node.attributes.zone,displayRecords);
 						}
 						zonetabs.setActiveTab('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
+					},
+					contextmenu: function(node, e) {
+						node.select();
+						contextMenuZone.show(node.ui.getAnchor());
 					}
 				}
 			});
@@ -202,6 +230,58 @@ function pdaGUI(api) {
 		}
 	}
 
+	function createZone() {
+		var node = zonetree.getSelectionModel().getSelectedNode();
+		if(node != null) {
+			Ext.MessageBox.prompt('Create New Zone on ' + node.attributes.text, 'Enter new Zone Name:', function(btn, text) {
+				if(btn == 'ok') {
+					API.createZone(node.attributes.serverkey, text,
+						function(server) {
+							notifyMsg('Zone '+text+' was created!');
+							API.listZones(server, displayZones);
+						},
+						function(error) {
+							// notify fail
+							notifyMsg(error);
+						});
+				}
+			});
+		} else {
+			notifyMsg('Please select server first!');
+		}
+	}
+
+	function deleteZone() {
+		var node = zonetree.getSelectionModel().getSelectedNode();
+		if(node.attributes.zone) {
+			var servername = zonetree.root.findChild('id','server-'+node.attributes.serverkey,1).text;
+			Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+node.attributes.zone+" on "+servername+"?", function(choice) {
+				if(choice=='yes') {
+					API.deleteZone(node.attributes.serverkey, node.attributes.zone,
+						function(server) {
+							// close Tab, if open
+							var tab = zonetabs.findById('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
+							if(tab != null) {
+								zonetabs.remove(tab, true);
+							}
+							// refresh Tree
+							API.listZones(server, displayZones);
+							// notify success
+							notifyMsg("Zone "+node.attributes.zone+" was successfully deleted.");
+						}, function(error) {
+							// notify fail
+							notifyMsg(error);
+						});
+				}
+			});
+		}
+	}
+
+	function refreshZones() {
+		var node = zonetree.getSelectionModel().getSelectedNode();
+		API.listZones(node.attributes.serverkey, displayZones);
+	}
+
 	// ============ constructor ==============
 
 	var API = api;
@@ -218,58 +298,7 @@ function pdaGUI(api) {
 		split: true,
 		loader: new Ext.tree.TreeLoader(),
 		root: new Ext.tree.TreeNode(),
-		rootVisible: false,
-		buttons: [{
-			text: 'Create',
-			handler: function() {
-				var node = zonetree.getSelectionModel().getSelectedNode();
-				if(node != null) {
-					Ext.MessageBox.prompt('Create New Zone', 'Enter new Zone Name:', function(btn, text) {
-						if(btn == 'ok') {
-							API.createZone(node.attributes.serverkey, text,
-								function(server) {
-									notifyMsg('Zone '+text+' was created!');
-									API.listZones(server, displayZones);
-								},
-								function(error) {
-									// notify fail
-									notifyMsg(error);
-								});
-						}
-					});
-				} else {
-					notifyMsg('Please select server first!');
-				}
-			}
-		}, {
-			text: 'Delete Selected',
-			handler: function() {
-				var node = zonetree.getSelectionModel().getSelectedNode();
-				if(node.attributes.zone) {
-					var servername = zonetree.root.findChild('id','server-'+node.attributes.serverkey,1).text;
-					Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+node.attributes.zone+" on "+servername+"?", function(choice) {
-						if(choice=='yes') {
-							API.deleteZone(node.attributes.serverkey, node.attributes.zone,
-								function(server) {
-									// close Tab, if open
-									var tab = zonetabs.findById('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
-									if(tab != null) {
-										zonetabs.remove(tab, true);
-									}
-									// refresh Tree
-									API.listZones(server, displayZones);
-
-									// notify success
-									notifyMsg("Zone "+node.attributes.zone+" was successfully deleted.");
-								}, function(error) {
-									// notify fail
-									notifyMsg(error);
-								});
-						}
-					});
-				}
-			}
-		}]
+		rootVisible: false
 	});
 	var zonetabs = new Ext.TabPanel({
 		region: 'center',
