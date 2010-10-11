@@ -83,7 +83,11 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	}
 
 	public function listViews() {
-		
+		$result = array();
+		foreach ($this->modules as $module) {
+			$result[$module->sysname] = $module->sysname; 
+		}
+		return $result;
 	}
 
 	public function listZones() {
