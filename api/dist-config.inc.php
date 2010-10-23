@@ -18,7 +18,7 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+$zoneModCount = 0;
 $config = array(
 
 	// authentication modules
@@ -46,10 +46,44 @@ $config = array(
 
 	// zone modules
 	'zone' => array(
+		/* -- delete this line for enabling BindDlzPdoZone --
+		array(
+			'_module' => 'BindDlzPdoZone',
+			'_sysname' => 'server'.(++$zoneModCount),
+			'_name' => 'My DNS server',
+			'pdo_dsn' => 'pgsql:host=localhost;dbname=bind',
+			'pdo_username' => 'bind',
+			'pdo_password' => 'bind',
+		),
+		// */
+
+		/* -- delete this line for enabling MultiServerViewZone --
+		array(
+			'_module' => 'MultiServerViewZone',
+			'_sysname' => 'server'.(++$zoneModCount),
+			'_name' => 'My DNS server',
+			'views' => array(
+				// paste here zone module configurations
+
+			)
+		),
+		// */
+
+		/* -- delete this line for enabling MydnsPdoZone --
+		array(
+			'_module' => 'MydnsPdoZone',
+			'_sysname' => 'server'.(++$zoneModCount),
+			'_name' => 'My DNS server',
+			'pdo_dsn' => 'pgsql:host=localhost;dbname=mydns',
+			'pdo_username' => 'mydns',
+			'pdo_password' => 'mydns',
+		),
+		// */
+
 		/* -- delete this line for enabling PdnsPdoZone --
 		array(
 			'_module' => 'PdnsPdoZone',
-			'_sysname' => 'main',
+			'_sysname' => 'server'.(++$zoneModCount),
 			'_name' => 'My DNS server',
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=pdns',
 			'pdo_username' => 'powerdns',
@@ -60,8 +94,9 @@ $config = array(
 			// 'domains_sequence' => 'domains_id_seq',
 			// 'records_sequence' => 'records_id_seq',
 			// 'search_path' => 'public'
-			// */
+			
 		),
+		// */
 	),
 );
 
