@@ -70,6 +70,21 @@ abstract class ZoneModule {
 		}
 	}
 
+	public final function hasViews() {
+		if ($this instanceof Views) {
+			$views = $this->listViews();
+			if (is_array($views) && count($views) > 1) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+
 	/**
 	 * Get all records from all zones
 	 *

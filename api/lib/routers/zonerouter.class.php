@@ -143,11 +143,15 @@ class ZoneRouter extends RequestRouter {
 	}
 
 	function views() {
-		if ($this->zone->getModule() instanceof Views) {
-
-		} else {
-			return new stdClass();
+		$result = new stdClass();
+		if ($this->zone->getModule()->hasViews()) {
+			$result->success = true;
+			$result->views = $this->zone->getModule()->listViews();
 		}
+		else {
+			$result->success = false;
+		}
+		return $result;
 	}
 
 }
