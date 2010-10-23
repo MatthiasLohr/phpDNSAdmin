@@ -31,16 +31,32 @@
  */
 class BindDlzPdoZone extends ZoneModule {
 
-	protected function __construct($config) {
+	/** @var PDO */
+	private $db = null;
 
+	/** @var string */
+	private $table = 'dns_records';
+
+	protected function __construct($config) {
+		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
+
+		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
+			$this->db->query('SET search_path TO '.$this->db->quote($config['search_path']));
+		}
 	}
 
 	public function getFeatures() {
-
+		return array(
+			'rrtypes' => array(
+				'A', 'AAAA', 'AFSDB', 'CERT', 'CNAME', 'DNSKEY', 'DS', 'HINFO', 'KEY', 'LOC',
+				'MX', 'NAPTR', 'NS', 'NSEC', 'NSEC3', 'PTR', 'RP', 'RRSIG', 'SOA', 'SPF', 'SSHFP',
+				'SRV', 'TXT'
+			)
+		);
 	}
 
 	public static function getInstance($config) {
-		
+		return new BindDlzPdoZone($config);
 	}
 
 	public function getRecordById(Zone $zone,$recordid) {
@@ -52,15 +68,36 @@ class BindDlzPdoZone extends ZoneModule {
 	}
 
 	public function listZones() {
-
+		$stm = $this->db->query('SELECT DISTINCT zone FROM '.$this->table.' ORDER BY zone ASC');
+		$result = array();
+		while ($tmpzone = $stm->fetch()) {
+			$zone = new Zone($tmpzone['zone'],$this);
+			$result[$zone->getName()] = $zone;
+		}
+		return $result;
 	}
 
 	public function recordAdd(Zone $zone,ResourceRecord $record) {
+		$this->db->beginTransaction();
+		$this->db->query('INSERT INTO '.$this->table.' (zone,host,type,data,ttl) VALUES ('.$this->db->quote($zone->getName()).','.$this->db->quote($record->getName()).','.$this->db->quote($record->getType()).','.$this->db->quote(strval($record)).','.$this->db->quote($record->getTTL()).')');
+		$stm = $this->db->query('SELECT MAX(entry_id) FROM '.$this->table);
+		$tmp = $stm->fetch;
+		$recordid = $tmp[0];
+		// additional fields?
+		if ($record->getType() == 'SOA') {
 
+		}
+		elseif ($record->fieldExists('priority')) {
+			$this->db->query('UPDATE '.$this->table.' SET mx_priority = '.$this->db->quote($record->getField('priority')).' WHERE entry_id = '.$this->db->quote($recordid));
+		}
+		$this->db->commit();
+		return $recordid;
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
+		$this->db->beginTransaction();
 
+		$this->db->commit();
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
@@ -72,11 +109,14 @@ class BindDlzPdoZone extends ZoneModule {
 	}
 
 	public function zoneDelete(Zone $zone) {
-
+		$stm = $this->db->query('DELETE FROM '.$this->table.' WHERE zone = '.$this->db->quote($zone->getName()));
+		return ($stm->rowCount() > 0);
 	}
 
 	public function zoneExists(Zone $zone) {
-
+		$stm = $this->db->query('SELECT COUNT(*) FROM '.$this->table.' WHERE zone = '.$this->db->quote($zone->getName()));
+		$tmp = $stm->fetch();
+		return($tmp[0] > 0);
 	}
 }
 

@@ -54,6 +54,8 @@ $config = array(
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=bind',
 			'pdo_username' => 'bind',
 			'pdo_password' => 'bind',
+		  // PgSQL only:
+		  // 'search_path' => 'public',
 		),
 		// */
 
@@ -77,6 +79,8 @@ $config = array(
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=mydns',
 			'pdo_username' => 'mydns',
 			'pdo_password' => 'mydns',
+			// PgSQL only:
+		  // 'search_path' => 'public',
 		),
 		// */
 

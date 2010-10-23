@@ -37,7 +37,11 @@ class MydnsPdoZone extends ZoneModule {
 	private $zoneIds = null;
 
 	protected function __construct($config) {
-		
+		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
+
+		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
+			$this->db->query('SET search_path TO '.$this->db->quote($config['search_path']));
+		}
 	}
 
 	public function getFeatures() {

@@ -60,7 +60,7 @@ class PdnsPdoZone extends ZoneModule {
 
 	public function getFeatures() {
 		return array(
-			'dnssec',
+			'dnssec' => true,
 			'rrtypes' => array(
 				'A', 'AAAA', 'AFSDB', 'CERT', 'CNAME', 'DNSKEY', 'DS', 'HINFO', 'KEY', 'LOC',
 				'MX', 'NAPTR', 'NS', 'NSEC', 'NSEC3', 'PTR', 'RP', 'RRSIG', 'SOA', 'SPF', 'SSHFP',

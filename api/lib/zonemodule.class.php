@@ -43,6 +43,7 @@ abstract class ZoneModule {
 	 *
 	 * @param array $config
 	 * @return ZoneModule zone module instance
+	 * @throws ModuleConfigException on errors
 	 */
 	abstract public static function getInstance($config);
 
