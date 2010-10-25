@@ -208,15 +208,43 @@ class MultiServerViewZone extends ZoneModule implements Views {
 			$id = $this->moduleFindRecord($module->module,$zone,$record);
 			if ($id !== null) $module->module->recordDelete($zone,$id);
 		}
+		$this->db->query('DELETE FROM '.$this->table.' WHERE id = '.$this->db->quote($recordid));
 		return true;
 	}
 
-	public function recordSetViews(Zone $zone, $recordid, $views) {
-
+	public function recordSetViews(Zone $zone, $recordid, array $views) {
+		$record = $this->getRecordById($zone,$recordid);
+		if ($record === null) return false;
+		foreach ($this->modules as $module) {
+			if (isset($views[$module->sysname])) {
+				$mRecordid = $this->moduleFindRecord($module->module,$zone,$record);
+				if ($views[$module->sysname] && $mRecordid === null) {
+					$module->module->recordAdd($zone,$record);
+				}
+				elseif (!$views[$module->sysname] && $mRecordid !== null) {
+					$module->module->recordDelete($zone,$mRecordid);
+				}
+			}
+		}
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
-
+		$oldRecord = $this->getRecordById($zone,$recordid);
+		if ($oldRecord === null) return false;
+		$views = $oldRecord->getViewinfo();
+		foreach ($this->modules as $module) {
+			if (isset($views[$module->sysname]) && $views[$module->sysname]) {
+				$mRecordid = $this->moduleFindRecord($module->module,$zone,$oldRecord);
+				$module->module->recordUpdate($zone,$mRecordid);
+			}
+		}
+		$this->db->query('UPDATE '.$this->table.' SET name = '.$this->db->quote($record->getName())
+			.', type = '.$this->db->quote($record->getType())
+			.', content = '.$this->db->quote($record->getContentString())
+			.', ttl = '.$this->db->quote($record->getTTL())
+			.', prio = '.($record->fieldExists('priority')?$this->db->quote($record->getField('priority')):'NULL')
+			.' WHERE id = '.$this->db->quote($recordid).' AND zone = '.$this->db->quote($zone->getName()));
+		return true;
 	}
 
 	public function zoneCreate(Zone $zone) {

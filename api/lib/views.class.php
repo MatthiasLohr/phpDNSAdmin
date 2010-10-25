@@ -33,7 +33,7 @@ interface Views {
 
 	public function listViews();
 
-	public function recordSetViews(Zone $zone, $recordid, $views);
+	public function recordSetViews(Zone $zone, $recordid, array $views);
 
 }
 
