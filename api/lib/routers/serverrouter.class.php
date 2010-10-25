@@ -74,6 +74,10 @@ class ServerRouter extends RequestRouter {
 					$tmpzone = new stdClass();
 					$tmpzone->id = $zone->getName();
 					$tmpzone->name = $zone->getName();
+					// check for views
+					if ($this->zoneModule->hasViews()) {
+						$tmpzone->views = $this->zoneModule->listViews();
+					}
 					$result->zones[$zone->getName()] = $tmpzone;
 				}
 				return $result;

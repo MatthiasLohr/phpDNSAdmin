@@ -43,6 +43,7 @@ abstract class ZoneModule {
 	 *
 	 * @param array $config
 	 * @return ZoneModule zone module instance
+	 * @throws ModuleConfigException on errors
 	 */
 	abstract public static function getInstance($config);
 
@@ -67,6 +68,21 @@ abstract class ZoneModule {
 		}
 		else {
 			return null;
+		}
+	}
+
+	public final function hasViews() {
+		if ($this instanceof Views) {
+			$views = $this->listViews();
+			if (is_array($views) && count($views) > 1) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			return false;
 		}
 	}
 

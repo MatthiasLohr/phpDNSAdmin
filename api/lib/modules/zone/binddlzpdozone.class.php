@@ -29,12 +29,13 @@
  * @subpackage Zone
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class MydnsPdoZone extends ZoneModule {
+class BindDlzPdoZone extends ZoneModule {
 
 	/** @var PDO */
 	private $db = null;
-	/** @var int[] */
-	private $zoneIds = null;
+
+	/** @var string */
+	private $table = 'dns_records';
 
 	protected function __construct($config) {
 		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
@@ -47,39 +48,19 @@ class MydnsPdoZone extends ZoneModule {
 	public function getFeatures() {
 		return array(
 			'rrtypes' => array(
-				'A', 'AAAA', 'ALIAS', 'CNAME', 'HINFO', 'MX', 'NS', 'PTR', 'RP', 'SOA',
+				'A', 'AAAA', 'AFSDB', 'CERT', 'CNAME', 'DNSKEY', 'DS', 'HINFO', 'KEY', 'LOC',
+				'MX', 'NAPTR', 'NS', 'NSEC', 'NSEC3', 'PTR', 'RP', 'RRSIG', 'SOA', 'SPF', 'SSHFP',
 				'SRV', 'TXT'
 			)
 		);
 	}
 
 	public static function getInstance($config) {
-		return new MydnsPdoZone($config);
+		return new BindDlzPdoZone($config);
 	}
 
 	public function getRecordById(Zone $zone,$recordid) {
-		if ($recordid == -1) {
-			// SOA
-			$result = $this->db->query('SELECT origin,ns,mbox,serial,refresh,retry,expire,minimum,ttl FROM soa WHERE origin = '.$this->db->quote($zone->getName()));
-			$tmprecord = $result->fetch();
-			return new ResourceRecord(
-				'@',
-				array(
-					'primary'     => $tmprecord['ns'],
-					'hostmaster'  => $tmprecord['mbox'],
-					'serial'      => $tmprecord['serial'],
-					'refresh'     => $tmprecord['refresh'],
-					'retry'       => $tmprecord['retry'],
-					'expire'      => $tmprecord['expire'],
-					'negativettl' => $tmprecord['minimum'],
-				),
-				$tmprecord['ttl']
-			);
-		}
-		else {
-			// OTHER
-			
-		}
+
 	}
 
 	public function listRecordsByFilter(Zone $zone,array $filter = array()) {
@@ -87,42 +68,40 @@ class MydnsPdoZone extends ZoneModule {
 	}
 
 	public function listZones() {
-		$result = $this->db->query('SELECT id,origin FROM soa ORDER BY origin ASC');
-		$this->zoneIds = array();
-		$zones = array();
-		while ($tmpzone = $result->fetch()) {
-			$this->zoneIds[$tmpzone['origin']] = $tmpzone['id'];
-			$zones[] = new Zone($tmpzone['origin'],$this);
+		$stm = $this->db->query('SELECT DISTINCT zone FROM '.$this->table.' ORDER BY zone ASC');
+		$result = array();
+		while ($tmpzone = $stm->fetch()) {
+			$zone = new Zone($tmpzone['zone'],$this);
+			$result[$zone->getName()] = $zone;
 		}
-		return $zones;
+		return $result;
 	}
 
 	public function recordAdd(Zone $zone,ResourceRecord $record) {
-		if ($record->getType() == 'SOA') return false;
-		
+		$this->db->beginTransaction();
+		$this->db->query('INSERT INTO '.$this->table.' (zone,host,type,data,ttl) VALUES ('.$this->db->quote($zone->getName()).','.$this->db->quote($record->getName()).','.$this->db->quote($record->getType()).','.$this->db->quote(strval($record)).','.$this->db->quote($record->getTTL()).')');
+		$stm = $this->db->query('SELECT MAX(entry_id) FROM '.$this->table);
+		$tmp = $stm->fetch;
+		$recordid = $tmp[0];
+		// additional fields?
+		if ($record->getType() == 'SOA') {
+
+		}
+		elseif ($record->fieldExists('priority')) {
+			$this->db->query('UPDATE '.$this->table.' SET mx_priority = '.$this->db->quote($record->getField('priority')).' WHERE entry_id = '.$this->db->quote($recordid));
+		}
+		$this->db->commit();
+		return $recordid;
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
+		$this->db->beginTransaction();
 
+		$this->db->commit();
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
-		if ($record->getType() == 'SOA') {
-			$result = $this->db->query('UPDATE soa SET ns = '.$record->getField('primary')
-				.',mbox = '.$record->getField('hostmaster')
-				.',serial = '.$record->getField('serial')
-				.',refresh = '.$record->getField('refresh')
-				.',retry = '.$record->getField('retry')
-				.',expire = '.$record->getField('expire')
-				.',minimum = '.$record->getField('negativettl')
-				.',ttl = '.$record->getTTL()
-				.' WHERE origin = '.$this->db->quote($zone->getName())
-			);
-			return ($result->affectedRows() > 0);
-		}
-		else {
 
-		}
 	}
 
 	public function zoneCreate(Zone $zone) {
@@ -130,11 +109,14 @@ class MydnsPdoZone extends ZoneModule {
 	}
 
 	public function zoneDelete(Zone $zone) {
-
+		$stm = $this->db->query('DELETE FROM '.$this->table.' WHERE zone = '.$this->db->quote($zone->getName()));
+		return ($stm->rowCount() > 0);
 	}
 
 	public function zoneExists(Zone $zone) {
-
+		$stm = $this->db->query('SELECT COUNT(*) FROM '.$this->table.' WHERE zone = '.$this->db->quote($zone->getName()));
+		$tmp = $stm->fetch();
+		return($tmp[0] > 0);
 	}
 }
 

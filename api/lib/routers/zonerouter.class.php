@@ -42,13 +42,19 @@ class ZoneRouter extends RequestRouter {
 		return $this->records();
 	}
 
-	private function listRecords() {
+	private function listRecordsByFilter($overrideFilter = array()) {
 		$filter = array();
+		// take GET filters
 		if (isset($_GET['filter']) && is_array($_GET['filter'])) {
 			foreach ($_GET['filter'] as $key => $value) {
 				$filter[$key] = urldecode($value);
 			}
 		}
+		// take override filters
+		foreach ($overrideFilter as $filterName => $filterValue) {
+			$filter[$filterName] = $filterValue;
+		}
+		// list records
 		$records = $this->zone->listRecordsByFilter($filter);
 		foreach ($records as $recordid => $record) {
 			$records[$recordid] = $this->record2Json($recordid, $record);
@@ -77,10 +83,10 @@ class ZoneRouter extends RequestRouter {
 					$newid = $this->zone->recordAdd($record);
 					$result->success = true;
 					$result->newid = $newid;
-					$result->records = $this->listRecords();
+					$result->records = $this->listRecordsByFilter();
 				}
 			} else {
-				$result->records = $this->listRecords();
+				$result->records = $this->listRecordsByFilter();
 				$result->success = true;
 			}
 		} elseif ($this->endOfTracking() && $recordid !== null) {
@@ -102,11 +108,11 @@ class ZoneRouter extends RequestRouter {
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
 					$this->zone->recordUpdate($recordid, $record);
 					$result->success = true;
-					$result->records = $this->listRecords();
+					$result->records = $this->listRecordsByFilter();
 				}
 			} elseif ($this->getRequestType() == 'DELETE') {
 				$result->success = $this->zone->recordDelete($recordid);
-				$result->records = $this->listRecords();
+				$result->records = $this->listRecordsByFilter();
 			} else {
 				if ($record === null) {
 					$result->success = false;
@@ -142,12 +148,29 @@ class ZoneRouter extends RequestRouter {
 		return $result;
 	}
 
-	function views() {
-		if ($this->zone->getModule() instanceof Views) {
-
-		} else {
-			return new stdClass();
+	function views($view = null) {
+		$result = new stdClass();
+		if ($this->zone->getModule()->hasViews()) {
+			$views = $this->zone->getModule()->listViews();
 		}
+		else {
+			$views = null;
+		}
+		//
+		if ($view === null) { // list all views
+			if ($views !== null) {
+				$result->success = true;
+				$result->views = $views;
+			}
+			else {
+				$result->success = false;
+			}
+		}
+		else { // list records from one view
+			$result->records = $this->listRecordsByFilter(array('view' => $view));
+			$result->success = true;
+		}
+		return $result;
 	}
 
 }

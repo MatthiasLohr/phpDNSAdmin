@@ -32,6 +32,7 @@
 class MultiServerViewZone extends ZoneModule implements Views {
 
 	private $modules = array();
+	private $db;
 
 	protected function __construct($moduleConfig) {
 		if (!is_array($moduleConfig)) throw new ModuleConfigException('No module configuration found!');
@@ -106,6 +107,10 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
+
+	}
+
+	public function recordSetViews(Zone $zone, $recordid, $views) {
 
 	}
 
