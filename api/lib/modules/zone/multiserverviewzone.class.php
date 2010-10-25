@@ -235,7 +235,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		foreach ($this->modules as $module) {
 			if (isset($views[$module->sysname]) && $views[$module->sysname]) {
 				$mRecordid = $this->moduleFindRecord($module->module,$zone,$oldRecord);
-				$module->module->recordUpdate($zone,$mRecordid);
+				$module->module->recordUpdate($zone,$mRecordid,$record);
 			}
 		}
 		$this->db->query('UPDATE '.$this->table.' SET name = '.$this->db->quote($record->getName())
