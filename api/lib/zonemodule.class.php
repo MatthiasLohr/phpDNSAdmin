@@ -137,7 +137,7 @@ abstract class ZoneModule {
 	 *
 	 * @param Zone $zone zone to add record to
 	 * @param ResourceRecord $record record to add
-	 * @return boolean true on success, false otherwise?
+	 * @return false or id of new record
 	 */
 	abstract public function recordAdd(Zone $zone,ResourceRecord $record);
 

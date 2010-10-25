@@ -43,9 +43,9 @@ abstract class ResourceRecord {
 	/** @var array Array of field values */
 	private $fieldValues = array();
 
-	private $viewinfo = array();
+	private $viewinfo;
 
-	protected final function __construct($name,$content,$ttl,$priority = null,array $viewinfo = array()) {
+	protected final function __construct($name,$content,$ttl,$priority = null,array $viewinfo = null) {
 		if (!$this->setName($name)) {
 			throw new InvalidFieldDataException('No valid record name!');
 		}
