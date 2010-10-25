@@ -64,6 +64,11 @@ $config = array(
 			'_module' => 'MultiServerViewZone',
 			'_sysname' => 'server'.(++$zoneModCount),
 			'_name' => 'My DNS server',
+			'pdo_dsn' => 'pgsql:host=localhost;dbname=phpdnsadmin', // access to cache table
+			'pdo_username' => 'phpdnsadmin',
+			'pdo_password' => 'phpdnsadmin',
+			// PgSQL only:
+		  // 'search_path' => 'public',
 			'views' => array(
 				// paste here zone module configurations
 
