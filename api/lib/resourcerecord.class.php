@@ -76,11 +76,7 @@ abstract class ResourceRecord {
 	 * @return string string representation of record content
 	 */
 	public function __toString() {
-		$tmp = array();
-		foreach ($this->listFields() as $fieldname => $simpletype) {
-			$tmp[] = $this->getField($fieldname);
-		}
-		return implode(' ',$tmp);
+		return $this->getContentString();
 	}
 
 	/**
@@ -125,6 +121,14 @@ abstract class ResourceRecord {
 		else {
 			return null;
 		}
+	}
+
+	public function getContentString() {
+		$tmp = array();
+		foreach ($this->listFields() as $fieldname => $simpletype) {
+			$tmp[] = $this->getField($fieldname);
+		}
+		return implode(' ',$tmp);
 	}
 
 	/**
@@ -253,6 +257,10 @@ abstract class ResourceRecord {
 		if (!UInt::isValidValue($ttl)) return false;
 		$this->ttl = $ttl;
 		return true;
+	}
+
+	final public function setViewinfo($viewinfo) {
+		$this->viewinfo = $viewinfo;
 	}
 }
 

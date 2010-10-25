@@ -29,6 +29,10 @@
  */
 class MxRecord extends ResourceRecord {
 
+	public function getContentString() {
+		return $this->getField('target');
+	}
+
 	public static function listFields() {
 		return array(
 			'target' => 'Hostname',
