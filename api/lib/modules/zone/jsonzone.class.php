@@ -29,6 +29,10 @@
  * @subpackage Zone
  */
 class JsonZone extends ZoneModule {
+
+	private $apiBase = null;
+	private $server = null;
+
 	protected function __construct($config) {
 
 	}
@@ -45,11 +49,45 @@ class JsonZone extends ZoneModule {
 	}
 
 	public static function getInstance($config) {
-
+		try {
+			return new JsonZone($config);
+		}
+		catch (Exception $e) {
+			return null;
+		}
 	}
 
 	public function getRecordById(Zone $zone, $recordid) {
 
+	}
+
+	private function httpDelete($url, $args = array()) {
+		return $this->httpRequest('DELETE',$url,$args);
+	}
+
+	private function httpGet($url, $args = array()) {
+		return $this->httpRequest('GET',$url,$args);
+	}
+
+	private function httpPost($url, $args = array()) {
+		return $this->httpRequest('POST',$url,$args);
+	}
+
+	private function httpPut($url, $args = array()) {
+		return $this->httpRequest('PUT',$url,$args);
+	}
+
+	private function httpRequest($method, $url, $args) {
+		$cr = curl_init();
+		// init request
+		curl_setopt_array($this->curl,array(
+			'CURLOPT_URL' => $url,
+			'CURLOPT_RETURNTRANSFER' => true,
+			'CURLOPT_USERAGENT' => 'phpDNSAdmin Json Client',
+			'CURLOPT_CUSTOMREQUEST' => $method
+		));
+		$result = curl_exec($cr);
+		return json_decode($result);
 	}
 
 	public function listRecordsByFilter(Zone $zone, array $filter = array()) {
@@ -57,7 +95,8 @@ class JsonZone extends ZoneModule {
 	}
 
 	public function listZones() {
-
+		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones');
+		
 	}
 
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
