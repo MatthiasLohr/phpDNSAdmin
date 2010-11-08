@@ -76,6 +76,16 @@ $config = array(
 		),
 		// */
 
+		/* -- delete this line for enabling JsonZone --
+		array(
+			'_module' => 'JsonZone',
+			'_sysname' => 'server'.(++$zoneModCount),
+			'_name' => 'My DNS server',
+			'api_base' => 'http://localhost/phpdnsadmin/api/',
+			'server_sysname' => 'server0'
+		),
+		// */
+
 		/* -- delete this line for enabling MydnsPdoZone --
 		array(
 			'_module' => 'MydnsPdoZone',

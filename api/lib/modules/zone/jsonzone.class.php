@@ -34,7 +34,8 @@ class JsonZone extends ZoneModule {
 	private $server = null;
 
 	protected function __construct($config) {
-
+		$this->apiBase = $config['api_base'];
+		$this->server = $config['server_sysname'];
 	}
 
 	public function getFeatures() {
@@ -96,7 +97,17 @@ class JsonZone extends ZoneModule {
 
 	public function listZones() {
 		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones');
-		
+		if ($result->success) {
+			$zones = array();
+			foreach ($result->zones as $zoneName => $tmpZone) {
+				$zone = new Zone($zoneName,$this);
+				$zones[$zone->getName()] = $zone;
+			}
+			return $zones;
+		}
+		else {
+			return array();
+		}
 	}
 
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
@@ -116,11 +127,18 @@ class JsonZone extends ZoneModule {
 	}
 
 	public function zoneDelete(Zone $zone) {
-
+		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName());
+		
 	}
 
 	public function zoneExists(Zone $zone) {
-
+		$zones = $this->listZones();
+		if (isset($zones[$zone->getName()])) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 }
