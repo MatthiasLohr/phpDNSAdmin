@@ -59,7 +59,13 @@ class JsonZone extends ZoneModule {
 	}
 
 	public function getRecordById(Zone $zone, $recordid) {
-
+		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid);
+		if ($result->success) {
+			return ResourceRecord::getInstance($result->record->type,$result->record->name,$result->record->fields,$result->record->ttl,isset($result->record->fields->priority)?$result->record->priority:null);
+		}
+		else {
+			return null;
+		}
 	}
 
 	private function httpDelete($url, $args = array()) {
@@ -92,7 +98,19 @@ class JsonZone extends ZoneModule {
 	}
 
 	public function listRecordsByFilter(Zone $zone, array $filter = array()) {
-
+		$tmpFilter = array();
+		$tmpFilter['filter'] = $filter;
+		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records?'.http_build_query($tmpFilter));
+		if ($result->success) {
+			$records = array();
+			foreach ($result->records as $recordId => $tmpRecord) {
+				$records[$recordId] = ResourceRecord::getInstance($tmpRecord->type,$tmpRecord->name,$tmpRecord->fields,$tmpRecord->ttl,isset($tmpRecord->fields->priority)?$tmpRecord->priority:null);
+			}
+			return $records;
+		}
+		else {
+			return array();
+		}
 	}
 
 	public function listZones() {
@@ -111,24 +129,56 @@ class JsonZone extends ZoneModule {
 	}
 
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
-
+		$data = new stdClass();
+		$data->name = $record->getName();
+		$data->type = $record->getType();
+		$data->content = $record->getContentString();
+		$data->fields = array();
+		$classname = ResourceRecord::getClassByType($record->getType());
+		foreach (call_user_func(array($classname,'listFields')) as $fieldname => $simpletype) {
+			$data->fields[$fieldname] = $record->getField($fieldname);
+		}
+		$data->ttl = $record->getTTL();
+		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records',$data);
+		if ($result->success) {
+			return $result->record->id;
+		}
+		else {
+			return null;
+		}
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
-
+		$result = $this->httpDelete($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid);
+		return $result->success;
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
-
+		$data = new stdClass();
+		$data->name = $record->getName();
+		$data->type = $record->getType();
+		$data->content = $record->getContentString();
+		$data->fields = array();
+		$classname = ResourceRecord::getClassByType($record->getType());
+		foreach (call_user_func(array($classname,'listFields')) as $fieldname => $simpletype) {
+			$data->fields[$fieldname] = $record->getField($fieldname);
+		}
+		$data->ttl = $record->getTTL();
+		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
+		return $result->success;
 	}
 
 	public function zoneCreate(Zone $zone) {
-
+		if ($this->zoneExists($zone)) return false;
+		$data = array();
+		$data->name = $zone->getName();
+		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones',$data);
+		return $result->success;
 	}
 
 	public function zoneDelete(Zone $zone) {
-		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName());
-		
+		$result = $this->httpDelete($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName());
+		return $result->success;
 	}
 
 	public function zoneExists(Zone $zone) {
