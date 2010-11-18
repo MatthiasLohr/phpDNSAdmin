@@ -52,6 +52,6 @@ function includeIfExists($filename) {
 		}
 	}
 
-spl_autoload_register('pdaAutoload',true,true);
+spl_autoload_register('pdaAutoload',true);
 
 ?>
