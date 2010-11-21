@@ -63,18 +63,35 @@ function pdaGUI(api) {
 		var tab = zonetabs.findById('zonetab-'+serverkey+'-'+zone);
 		var store = tab.getStore();
 		store.removeAll();
+
 		//store.loadData(records);
 		for (recordid in records) {
 			record = records[recordid];
-			store.add(new store.recordType({
-				id: record.id,
-				name: record.name,
-				type: record.type,
-				content: record.content,
-				ttl: record.ttl,
-				fields: record.fields
+			if(record.views) {
+				recordType = new store.recordType({
+					id: record.id,
+					name: record.name,
+					type: record.type,
+					content: record.content,
+					ttl: record.ttl,
+					fields: record.fields,
+					views: record.views
+				});
+				for(view in record.views) {
+					recordType.data[view] = record.views[view];
+				}
+				store.add(recordType);
+			} else {
+				store.add(new store.recordType({
+					id: record.id,
+					name: record.name,
+					type: record.type,
+					content: record.content,
+					ttl: record.ttl,
+					fields: record.fields
+				}
+				));
 			}
-			));
 		}
 		tab.enable();
 	}
@@ -123,6 +140,10 @@ function pdaGUI(api) {
 		serverNode.removeAll(true);
 		for (id in zones) {
 			zone = zones[id];
+			if(zone.views == undefined) {
+				zone.views = false;
+			}
+
 			serverNode.appendChild({
 				allowChildren: false,
 				allowDrag: false,
@@ -131,6 +152,7 @@ function pdaGUI(api) {
 				expandable: false,
 				serverkey: serverkey,
 				zone: zone.name,
+				views: zone.views,
 				leaf: true,
 				text: zone.name,
 				listeners: {
@@ -138,14 +160,13 @@ function pdaGUI(api) {
 						// search for zone tab. if exists, show, else create
 						var tab = zonetabs.findById('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
 						if (tab == null) {
-							tab = new Ext.grid.GridPanel({
-								serverkey: node.attributes.serverkey,
-								zone: node.attributes.zone,
-								title: node.attributes.zone,
-								id: 'zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone,
-								closable: true,
-								selMode: new Ext.grid.CheckboxSelectionModel(),
-								colModel: new Ext.grid.ColumnModel({
+							newStore = null;
+							newColModel = null;
+							if(!node.attributes.views) {
+								newStore = new Ext.data.JsonStore({
+									fields: ['id', 'name', 'type', 'content', 'ttl']
+								});
+								newColModel = new Ext.grid.ColumnModel({
 									defaults: {
 										sortable: true,
 										menuDisabled: false
@@ -164,10 +185,62 @@ function pdaGUI(api) {
 										header: 'TTL',
 										dataIndex: 'ttl'
 									}]
-								}),
-								store: new Ext.data.JsonStore({
+								});
+							} else {
+								// Changed for Views
+								var newStore = new Ext.data.JsonStore({
 									fields: ['id', 'name', 'type', 'content', 'ttl']
-								}),
+								});
+
+								for(view in node.attributes.views) {
+									newStore.fields.add({
+										name: node.attributes.views[view],
+										type:'boolean'
+									});
+								}
+
+								var newColModel = new Ext.grid.ColumnModel({
+									defaults: {
+										sortable: true,
+										menuDisabled: false
+									},
+									columns: [{
+										header: 'name',
+										dataIndex: 'name'
+									}, {
+										header: 'type',
+										dataIndex: 'type'
+									}, {
+										header: 'content',
+										id: 'content',
+										dataIndex: 'content'
+									}, {
+										header: 'TTL',
+										dataIndex: 'ttl'
+									}]
+								});
+
+								var curColConfig = newColModel.config;
+
+								for(view in node.attributes.views) {
+									curColConfig.push({
+										xtype: 'checkcolumn',
+										header: view,
+										dataIndex: view
+									});
+								}
+								newColModel.setConfig(curColConfig);
+							}
+
+							tab = new Ext.grid.GridPanel({
+								serverkey: node.attributes.serverkey,
+								zone: node.attributes.zone,
+								title: node.attributes.zone,
+								id: 'zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone,
+								closable: true,
+								selMode: new Ext.grid.CheckboxSelectionModel(),
+								colModel: newColModel,
+								store: newStore,
 								autoExpandColumn: 'content',
 								listeners: {
 									dblclick: function(event) {
