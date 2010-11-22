@@ -87,11 +87,12 @@ class JsonZone extends ZoneModule {
 	private function httpRequest($method, $url, $args) {
 		$cr = curl_init();
 		// init request
-		curl_setopt_array($this->curl,array(
-			'CURLOPT_URL' => $url,
-			'CURLOPT_RETURNTRANSFER' => true,
-			'CURLOPT_USERAGENT' => 'phpDNSAdmin Json Client',
-			'CURLOPT_CUSTOMREQUEST' => $method
+		curl_setopt_array($cr,array(
+			CURLOPT_URL => $url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_USERAGENT => 'phpDNSAdmin Json Client',
+			CURLOPT_CUSTOMREQUEST => $method,
+			CURLOPT_POSTFIELDS => http_build_query($args)
 		));
 		$result = curl_exec($cr);
 		return json_decode($result);
