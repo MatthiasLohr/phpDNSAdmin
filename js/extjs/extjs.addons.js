@@ -69,27 +69,27 @@ var grid = new Ext.grid.EditorGridPanel({
  */
 Ext.ux.grid.CheckColumn = Ext.extend(Ext.grid.Column, {
 
-    /**
+	/**
      * @private
      * Process and refire events routed from the GridView's processEvent method.
      */
-    processEvent : function(name, e, grid, rowIndex, colIndex){
-        if (name == 'mousedown') {
-            var record = grid.store.getAt(rowIndex);
-            record.set(this.dataIndex, !record.data[this.dataIndex]);
-            return false; // Cancel row selection.
-        } else {
-            return Ext.grid.ActionColumn.superclass.processEvent.apply(this, arguments);
-        }
-    },
+	processEvent : function(name, e, grid, rowIndex, colIndex){
+		if (name == 'mousedown') {
+			var record = grid.store.getAt(rowIndex);
+			record.set(this.dataIndex, !record.data[this.dataIndex]);
+			return false; // Cancel row selection.
+		} else {
+			return Ext.grid.ActionColumn.superclass.processEvent.apply(this, arguments);
+		}
+	},
 
-    renderer : function(v, p, record){
-        p.css += ' x-grid3-check-col-td';
-        return String.format('<div class="x-grid3-check-col{0}">&#160;</div>', v ? '-on' : '');
-    },
+	renderer : function(v, p, record){
+		p.css += ' x-grid3-check-col-td';
+		return String.format('<div class="x-grid3-check-col{0}">&#160;</div>', v ? '-on' : '');
+	},
 
-    // Deprecate use as a plugin. Remove in 4.0
-    init: Ext.emptyFn
+	// Deprecate use as a plugin. Remove in 4.0
+	init: Ext.emptyFn
 });
 
 // register ptype. Deprecate. Remove in 4.0
@@ -100,3 +100,79 @@ Ext.grid.CheckColumn = Ext.ux.grid.CheckColumn;
 
 // register Column xtype
 Ext.grid.Column.types.checkcolumn = Ext.ux.grid.CheckColumn;
+
+
+/*!
+ * phpDNSAdmin
+ * Author: Andreas Litt
+ * http://phpdnsadmin.sourceforge.net/
+ */
+
+Ext.ux.grid.ContentColumn = Ext.extend(Ext.grid.Column, {
+	
+	value: null,
+	
+	processEvent : function(name, e, grid, rowIndex, colIndex){
+		return Ext.grid.ActionColumn.superclass.processEvent.apply(this, arguments);
+	},
+
+	renderer : function(v, p, record){
+		var value = '';
+		for(key in v) {
+			value += v[key].value;
+		}
+		value = Ext.util.Format.trim(value);
+		return value;
+	},
+	init: Ext.emptyFn
+});
+
+Ext.preg('contentcolumn', Ext.ux.grid.ContentColumn);
+Ext.grid.ContentColumn = Ext.ux.grid.ContentColumn;
+Ext.grid.Column.types.contentcolumn = Ext.ux.grid.ContentColumn;
+
+Ext.DNSContent = Ext.extend(Ext.BoxComponent, {
+
+	fields: null,
+
+	initComponent: function(){
+		Ext.DNSContent.superclass.initComponent.call(this);
+		this.addEvents();
+	},
+
+	setValue: function(value){
+		this.fields = value;
+		this.updateFields();
+	},
+
+	getValue: function(){
+		return this.fields;
+	},
+
+	updateFields: function() {
+		var childs = [];
+		for(field in this.fields) {
+			var child = '<span>'+field+'<input type="text" name="fields['+field+']" value="'+this.fields[field].value+'"/></span>';
+			childs.push(child);
+		}
+
+		this.el.innerHTML = childs.join('');
+	},
+
+	init: function(container, position) {
+		alert("test");
+		var el = document.createElement('div');
+		container.dom.insertBefore(el, position);
+
+		this.el = Ext.get(el);
+	},
+	
+	isValid: function() {
+		return true;
+	},
+	
+	beforeDestroy: function() {
+	}
+});
+
+Ext.reg('dnscontent', Ext.DNSContent);

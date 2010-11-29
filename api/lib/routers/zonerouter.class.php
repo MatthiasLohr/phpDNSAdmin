@@ -56,10 +56,11 @@ class ZoneRouter extends RequestRouter {
 		}
 		// list records
 		$records = $this->zone->listRecordsByFilter($filter);
+		$result = array();
 		foreach ($records as $recordid => $record) {
-			$records[$recordid] = $this->record2Json($recordid, $record);
+			$result[] = $this->record2Json($recordid, $record);
 		}
-		return $records;
+		return $result;
 	}
 
 	function records($recordid = null) {
@@ -117,8 +118,7 @@ class ZoneRouter extends RequestRouter {
 				if ($record === null) {
 					$result->success = false;
 					$result->error = 'No such record!';
-				}
-				else {
+				} else {
 					$result->success = true;
 					$result->record = $this->record2Json($recordid, $record);
 				}
@@ -152,8 +152,7 @@ class ZoneRouter extends RequestRouter {
 		$result = new stdClass();
 		if ($this->zone->getModule()->hasViews()) {
 			$views = $this->zone->getModule()->listViews();
-		}
-		else {
+		} else {
 			$views = null;
 		}
 		//
@@ -161,12 +160,10 @@ class ZoneRouter extends RequestRouter {
 			if ($views !== null) {
 				$result->success = true;
 				$result->views = $views;
-			}
-			else {
+			} else {
 				$result->success = false;
 			}
-		}
-		else { // list records from one view
+		} else { // list records from one view
 			$result->records = $this->listRecordsByFilter(array('view' => $view));
 			$result->success = true;
 		}

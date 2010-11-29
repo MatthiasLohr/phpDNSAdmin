@@ -18,11 +18,13 @@
 
 function pdaGUI(api) {
 
+	// Logo
 	var phpDNSAdminLogo = new Ext.ux.Image({
 		id: 'phpDNSAdminLogo',
 		url: 'css/logo.png'
 	});
 
+	// Context Menus
 	var contextMenuServer = new Ext.menu.Menu({
 		items: [{
 			id: 'create-zone',
@@ -58,43 +60,8 @@ function pdaGUI(api) {
 		}
 	});
 
-
-	function displayRecords(serverkey,zone,records) {
-		var tab = zonetabs.findById('zonetab-'+serverkey+'-'+zone);
-		var store = tab.getStore();
-		store.removeAll();
-
-		//store.loadData(records);
-		for (recordid in records) {
-			record = records[recordid];
-			if(record.views) {
-				recordType = new store.recordType({
-					id: record.id,
-					name: record.name,
-					type: record.type,
-					content: record.content,
-					ttl: record.ttl,
-					fields: record.fields,
-					views: record.views
-				});
-				for(view in record.views) {
-					recordType.data[view] = record.views[view];
-				}
-				store.add(recordType);
-			} else {
-				store.add(new store.recordType({
-					id: record.id,
-					name: record.name,
-					type: record.type,
-					content: record.content,
-					ttl: record.ttl,
-					fields: record.fields
-				}
-				));
-			}
-		}
-		tab.enable();
-	}
+	// Notify-System
+	var App = new Ext.App({});
 
 	function displayServers(servers) {
 		var rootNode = zonetree.root;
@@ -140,6 +107,8 @@ function pdaGUI(api) {
 		serverNode.removeAll(true);
 		for (id in zones) {
 			zone = zones[id];
+			
+			// added for view support
 			if(zone.views == undefined) {
 				zone.views = false;
 			}
@@ -160,77 +129,98 @@ function pdaGUI(api) {
 						// search for zone tab. if exists, show, else create
 						var tab = zonetabs.findById('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
 						if (tab == null) {
-							newStore = null;
-							newColModel = null;
-							if(!node.attributes.views) {
-								newStore = new Ext.data.JsonStore({
-									fields: ['id', 'name', 'type', 'content', 'ttl']
+							var RestURL = API.getURL() + '/servers/' + node.attributes.serverkey + '/zones/' + node.attributes.zone + '/records';
+							var newStore = new Ext.data.Store({
+								restful: true,
+								reader: new Ext.data.JsonReader({
+									fields: [{
+										name: 'id',
+										type: 'int'
+									}, 'name', 'type', 'content', {
+										name: 'ttl',
+										type: 'int'
+									}, 'fields'],
+									root: 'records',
+									successProperty: 'success'
+								}),
+								writer: new Ext.data.CleanWriter(),
+								proxy: new Ext.data.HttpProxy({
+									api: {
+										read: {
+											url: RestURL,
+											method: "GET"
+										},
+										create: {
+											url: RestURL,
+											method: "PUT"
+										},
+										update: {
+											url: RestURL,
+											method: "POST"
+										},
+										destroy: {
+											url: RestURL,
+											method: "DELETE"
+										}
+									}
+								})
+							});
+							var newColModel = new Ext.grid.ColumnModel({
+								defaults: {
+									sortable: true,
+									menuDisabled: false
+								},
+								columns: [{
+									header: 'name',
+									dataIndex: 'name',
+									editor: {
+										xtype : 'textfield',
+										allowBlank: false,
+										validator: function(value) {
+											return validValue(value, 'Hostname');
+										}
+									}
+								}, {
+									header: 'type',
+									dataIndex: 'type'
+								}, {
+									header: 'content',
+									id: 'content',
+									dataIndex: 'fields',
+									xtype: 'contentcolumn',
+									editor: new Ext.DNSContent()
+								}, {
+									header: 'TTL',
+									dataIndex: 'ttl',
+									editor: {
+										xtype : 'textfield',
+										allowBlank: false,
+										validator: function(value) {
+											return validValue(value, 'UInt');
+										}
+									}
+								}]
+							});
+							if(node.attributes.views) {
+								newStore.fields.add({
+									name: 'views'
 								});
-								newColModel = new Ext.grid.ColumnModel({
-									defaults: {
-										sortable: true,
-										menuDisabled: false
-									},
-									columns: [{
-										header: 'name',
-										dataIndex: 'name'
-									}, {
-										header: 'type',
-										dataIndex: 'type'
-									}, {
-										header: 'content',
-										id: 'content',
-										dataIndex: 'content'
-									}, {
-										header: 'TTL',
-										dataIndex: 'ttl'
-									}]
-								});
-							} else {
-								// Changed for Views
-								var newStore = new Ext.data.JsonStore({
-									fields: ['id', 'name', 'type', 'content', 'ttl']
-								});
-
-								for(view in node.attributes.views) {
-									newStore.fields.add({
-										name: node.attributes.views[view],
-										type:'boolean'
-									});
-								}
-
-								var newColModel = new Ext.grid.ColumnModel({
-									defaults: {
-										sortable: true,
-										menuDisabled: false
-									},
-									columns: [{
-										header: 'name',
-										dataIndex: 'name'
-									}, {
-										header: 'type',
-										dataIndex: 'type'
-									}, {
-										header: 'content',
-										id: 'content',
-										dataIndex: 'content'
-									}, {
-										header: 'TTL',
-										dataIndex: 'ttl'
-									}]
-								});
-
+								
 								var curColConfig = newColModel.config;
 
-								for(view in node.attributes.views) {
-									curColConfig.push({
-										xtype: 'checkcolumn',
-										header: view,
-										dataIndex: view
-									});
-								}
+								curColConfig.push({
+									header: 'Views',
+									dataIndex: 'views',
+									xtype: 'checkcolumn'
+								});
+								
 								newColModel.setConfig(curColConfig);
 							}
+
+							// use RowEditor for editing
+							var editor = new Ext.ux.grid.RowEditor({
+								errorSummary:false
+							});
 
 							tab = new Ext.grid.GridPanel({
 								serverkey: node.attributes.serverkey,
@@ -242,22 +232,41 @@ function pdaGUI(api) {
 								colModel: newColModel,
 								store: newStore,
 								autoExpandColumn: 'content',
-								listeners: {
-									dblclick: function(event) {
-										var selection = tab.getSelectionModel();
-										if(selection.getCount() == 1) {
-											record = selection.getSelected();
-											if(record.data.id != undefined && !Ext.getCmp(tab.serverkey+"-"+tab.zone+"-"+record.data.id)) {
-												changeRecordWindow(tab.serverkey, tab.zone, record.data);
-											}
-										}
+								plugins: [editor],
+								tbar: [{
+									text: 'Add Record',
+									handler: function(btn, ev) {
+										var u = new tab.store.recordType();
+										editor.stopEditing();
+										tab.store.insert(0, u);
+										editor.startEditing(0);
 									}
+								}, '-', {
+									text: 'Delete selected Records',
+									handler: function() {
+										var selection = tab.getSelectionModel();
+										var store = tab.getStore();
+										selection.each(function(record) {
+											if(record != null) {
+												store.remove(record);
+											}
+										});
+									}
+								}, '-'],
+								viewConfig: {
+									forceFit: true
 								}
 							});
 							zonetabs.add(tab);
-							// load record data
-							tab.disable();
-							API.listRecords(node.attributes.serverkey,node.attributes.zone,displayRecords);
+							newStore.on('beforeload', function() {
+								tab.disable();
+							});
+
+							newStore.on('load', function() {
+								tab.enable();
+							});
+
+							newStore.load();
 						}
 						zonetabs.setActiveTab('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
 					},
@@ -377,46 +386,46 @@ function pdaGUI(api) {
 		region: 'center',
 		title: 'Records',
 		items: [],
-		enableTabScroll: true,
-		buttons: [{
-			text: 'Add Record',
-			handler: function() {
-				var tab = zonetabs.getActiveTab();
-				if(tab != null) {
-					addRecordWindow(tab.serverkey, tab.zone);
-				}
-			}
-		}, {
-			text: 'Delete Selected Records',
-			handler: function() {
-				var tab = zonetabs.getActiveTab();
-				if(tab != null) {
-					var selection = tab.getSelectionModel();
-					if(selection.getCount() > 0) {
-						if(selection.getCount() == 1) {
-							msg = 'a Record';
-						} else {
-							msg = selection.getCount() + ' Records';
-						}
-
-						Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+msg+"?",
-							function(choice) {
-								if(choice== 'yes') {
-									selection.each(function(record) {
-										API.deleteRecord(tab.serverkey, tab.zone, record.data.id, function() {
-											var store = tab.getStore();
-											store.remove(record);
-											notifyMsg('Record deleted.');
-										}, function(error) {
-											notifyMsg(error, 'Error!');
-										});
-									});
-								}
-							});
-					}
-				}
-			}
-		}]
+		enableTabScroll: true /*,*/
+	//		buttons: [{
+	//			text: 'Add Record',
+	//			handler: function() {
+	//				var tab = zonetabs.getActiveTab();
+	//				if(tab != null) {
+	//					addRecordWindow(tab.serverkey, tab.zone);
+	//				}
+	//			}
+	//		}, {
+	//			text: 'Delete Selected Records',
+	//			handler: function() {
+	//				var tab = zonetabs.getActiveTab();
+	//				if(tab != null) {
+	//					var selection = tab.getSelectionModel();
+	//					if(selection.getCount() > 0) {
+	//						if(selection.getCount() == 1) {
+	//							msg = 'a Record';
+	//						} else {
+	//							msg = selection.getCount() + ' Records';
+	//						}
+	//
+	//						Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+msg+"?",
+	//							function(choice) {
+	//								if(choice== 'yes') {
+	//									selection.each(function(record) {
+	//										API.deleteRecord(tab.serverkey, tab.zone, record.data.id, function() {
+	//											var store = tab.getStore();
+	//											store.remove(record);
+	//											notifyMsg('Record deleted.');
+	//										}, function(error) {
+	//											notifyMsg(error, 'Error!');
+	//										});
+	//									});
+	//								}
+	//							});
+	//					}
+	//				}
+	//			}
+	//		}]
 	});
 
 	// Info Panel

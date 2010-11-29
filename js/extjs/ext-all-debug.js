@@ -39776,7 +39776,7 @@ Ext.form.TextField = Ext.extend(Ext.form.Field,  {
     
     initEvents : function(){
         Ext.form.TextField.superclass.initEvents.call(this);
-        if(this.validationEvent == 'keyup'){
+        if(this.validationEvent == 'keyup') {
             this.validationTask = new Ext.util.DelayedTask(this.validate, this);
             this.mon(this.el, 'keyup', this.filterValidation, this);
         }
