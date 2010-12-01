@@ -63,7 +63,20 @@ class ZoneRouter extends RequestRouter {
 		return $result;
 	}
 
-	function records($recordid = null) {
+	public function incserial() {
+		$result = new stdClass();
+		$tmp = $this->zone->getModule()->incrementSerial($this->zone);
+		if ($tmp === false) {
+			$result->success = false;
+		}
+		else {
+			$result->success = true;
+			$result->newserial = $tmp;
+		}
+		return $result;
+	}
+
+	public function records($recordid = null) {
 		$result = new stdClass();
 		if ($this->endOfTracking() && $recordid === null) {
 			if (RequestRouter::getRequestType() == 'PUT') {
@@ -148,7 +161,7 @@ class ZoneRouter extends RequestRouter {
 		return $result;
 	}
 
-	function views($view = null) {
+	public function views($view = null) {
 		$result = new stdClass();
 		if ($this->zone->getModule()->hasViews()) {
 			$views = $this->zone->getModule()->listViews();
