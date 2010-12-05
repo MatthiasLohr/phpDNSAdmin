@@ -116,7 +116,7 @@ Ext.ux.grid.ContentColumn = Ext.extend(Ext.grid.Column, {
 		return Ext.grid.ActionColumn.superclass.processEvent.apply(this, arguments);
 	},
 
-	renderer : function(v, p, record){
+	renderer : function(v, p, record) {
 		var value = '';
 		for(key in v) {
 			value += v[key].value;
@@ -131,40 +131,64 @@ Ext.preg('contentcolumn', Ext.ux.grid.ContentColumn);
 Ext.grid.ContentColumn = Ext.ux.grid.ContentColumn;
 Ext.grid.Column.types.contentcolumn = Ext.ux.grid.ContentColumn;
 
-Ext.DNSContent = Ext.extend(Ext.BoxComponent, {
 
+Ext.DNSContent = Ext.extend(Ext.form.Field, {
+	defaultAutoCreate : {
+		tag: "div"
+	},
 	fields: null,
+	elems: new Array(),
 
-	initComponent: function(){
+	initComponent: function() {
 		Ext.DNSContent.superclass.initComponent.call(this);
 		this.addEvents();
 	},
 
-	setValue: function(value){
+	setValue: function(value) {
+		Ext.DNSContent.superclass.setValue.apply(this, arguments);
 		this.fields = value;
 		this.updateFields();
+		return this;
 	},
 
-	getValue: function(){
+	getValue: function() {
 		return this.fields;
 	},
 
 	updateFields: function() {
-		var childs = [];
-		for(field in this.fields) {
-			var child = '<span>'+field+'<input type="text" name="fields['+field+']" value="'+this.fields[field].value+'"/></span>';
-			childs.push(child);
+		if(this.el) {
+			// remove all Childs
+			this.el.dom.innerHTML = '';
+			this.elems.length = 0;
 		}
 
-		this.el.innerHTML = childs.join('');
-	},
+		var recordForm = new Ext.FormPanel({
+			labelWidth: 80,
+			bodyBorder: false,
+			bodyCssClass: 'x-row-editor-body',
+			defaultType:'textfield',
+			monitorValid:true,
+			renderTo: this.el
+		});
 
-	init: function(container, position) {
-		alert("test");
-		var el = document.createElement('div');
-		container.dom.insertBefore(el, position);
-
-		this.el = Ext.get(el);
+		for(field in this.fields) {
+			var Txtfield = new Ext.form.TextField({
+				fieldLabel: field,
+				name: field,
+				value: this.fields[field].value,
+				rField: this.fields,
+				listeners: {
+					change: function(field, newValue, oldValue) {
+						if(String(newValue) !== String(oldValue)) {
+							field.rField[field.name].value = newValue;
+						}
+					}
+				}
+			});
+			recordForm.add(Txtfield);
+			this.elems.push(Txtfield);
+		}
+		recordForm.doLayout();
 	},
 	
 	isValid: function() {

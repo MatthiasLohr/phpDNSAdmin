@@ -139,11 +139,15 @@ function pdaGUI(api) {
 									}, 'name', 'type', 'content', {
 										name: 'ttl',
 										type: 'int'
-									}, 'fields'],
+									}, 'fields', {
+										name: 'customDirty',
+										type: 'boolean',
+										defaultValue:false
+									}],
 									root: 'records',
 									successProperty: 'success'
 								}),
-								writer: new Ext.data.CleanWriter(),
+								writer: new Ext.data.DnsWriter(),
 								proxy: new Ext.data.HttpProxy({
 									api: {
 										read: {
@@ -161,6 +165,33 @@ function pdaGUI(api) {
 										destroy: {
 											url: RestURL,
 											method: "DELETE"
+										}
+									},
+									listeners: {
+										write: function(proxy, action, data, response, rs, options) {
+											switch(action) {
+												case 'update':
+													if(response.success == true) {
+														App.setAlert("notice", 'Record was changed successful!');
+													} else {
+														App.setAlert("notice", 'Changing record failed!');
+													}
+													break;
+												case 'destroy':
+													if(response.success == true) {
+														App.setAlert("notice", 'Record was deleted successful!');
+													} else {
+														App.setAlert("notice", 'Deleting record failed!');
+													}
+													break;
+												case 'create':
+													if(response.success == true) {
+														App.setAlert("notice", 'Record was created successful!');
+													} else {
+														App.setAlert("notice", 'Creating record failed! ' + response.error);
+													}
+													break;
+											}
 										}
 									}
 								})
@@ -295,23 +326,6 @@ function pdaGUI(api) {
 		}
 	}
 
-	function notifyMsg(msg, title) {
-		if(title==null) {
-			Ext.ux.Growl.notify({
-				message: msg,
-				alignment: "tr-tr",
-				offset: [-10, 35]
-			});
-		} else {
-			Ext.ux.Growl.notify({
-				title: title,
-				message: msg,
-				alignment: "tr-tr",
-				offset: [-10, 35]
-			});
-		}
-	}
-
 	function createZone() {
 		var node = zonetree.getSelectionModel().getSelectedNode();
 		if(node != null) {
@@ -319,17 +333,17 @@ function pdaGUI(api) {
 				if(btn == 'ok') {
 					API.createZone(node.attributes.serverkey, text,
 						function(server) {
-							notifyMsg('Zone '+text+' was created!');
+							App.setAlert("ok", 'Zone '+text+' was created!');
 							API.listZones(server, displayZones);
 						},
 						function(error) {
 							// notify fail
-							notifyMsg(error);
+							App.setAlert("error", error);
 						});
 				}
 			});
 		} else {
-			notifyMsg('Please select server first!');
+			App.setAlert("notice", 'Please select server first!');
 		}
 	}
 
@@ -349,10 +363,10 @@ function pdaGUI(api) {
 							// refresh Tree
 							API.listZones(server, displayZones);
 							// notify success
-							notifyMsg("Zone "+node.attributes.zone+" was successfully deleted.");
+							App.setAlert("ok", "Zone "+node.attributes.zone+" was successfully deleted.");
 						}, function(error) {
 							// notify fail
-							notifyMsg(error);
+							App.setAlert("error", error);
 						});
 				}
 			});
@@ -386,46 +400,7 @@ function pdaGUI(api) {
 		region: 'center',
 		title: 'Records',
 		items: [],
-		enableTabScroll: true /*,*/
-	//		buttons: [{
-	//			text: 'Add Record',
-	//			handler: function() {
-	//				var tab = zonetabs.getActiveTab();
-	//				if(tab != null) {
-	//					addRecordWindow(tab.serverkey, tab.zone);
-	//				}
-	//			}
-	//		}, {
-	//			text: 'Delete Selected Records',
-	//			handler: function() {
-	//				var tab = zonetabs.getActiveTab();
-	//				if(tab != null) {
-	//					var selection = tab.getSelectionModel();
-	//					if(selection.getCount() > 0) {
-	//						if(selection.getCount() == 1) {
-	//							msg = 'a Record';
-	//						} else {
-	//							msg = selection.getCount() + ' Records';
-	//						}
-	//
-	//						Ext.MessageBox.confirm('Are you sure?', "Do you really want to delete "+msg+"?",
-	//							function(choice) {
-	//								if(choice== 'yes') {
-	//									selection.each(function(record) {
-	//										API.deleteRecord(tab.serverkey, tab.zone, record.data.id, function() {
-	//											var store = tab.getStore();
-	//											store.remove(record);
-	//											notifyMsg('Record deleted.');
-	//										}, function(error) {
-	//											notifyMsg(error, 'Error!');
-	//										});
-	//									});
-	//								}
-	//							});
-	//					}
-	//				}
-	//			}
-	//		}]
+		enableTabScroll: true
 	});
 
 	// Info Panel
@@ -493,18 +468,18 @@ function pdaGUI(api) {
 					waitMsg:'Sending data...',
 					success: function(form, action) {
 						updateLoginStatus(action.result.loggedIn, action.result.username);
-						notifyMsg('Logged in as '+action.result.username);
+						App.setAlert("pl", 'Logged in as '+action.result.username);
 					},
 					failure: function(form, action) {
 						switch (action.failureType) {
 							case Ext.form.Action.CLIENT_INVALID:
-								notifyMsg('Form fields may not be submitted with invalid values');
+								App.setAlert("error", 'Form fields may not be submitted with invalid values');
 								break;
 							case Ext.form.Action.CONNECT_FAILURE:
-								notifyMsg('Ajax communication failed');
+								App.setAlert("error", 'Ajax communication failed');
 								break;
 							case Ext.form.Action.SERVER_INVALID:
-								notifyMsg('Login failed!');
+								App.setAlert("error", 'Login failed!');
 						}
 						//loginForm.getForm().reset();
 						Ext.getCmp('loginUsername').focus(true, 10);
@@ -563,239 +538,7 @@ function pdaGUI(api) {
 				return true;
 		}
 	}
-
-	function changeRecordWindow(server, zone, record) {
-		var recordForm = new Ext.FormPanel({
-			id: server+"-"+zone+"-"+record.id,
-			frame: true,
-			defaultType:'textfield',
-			monitorValid:true,
-			url: URL+'/servers/'+server+'/zones/'+zone+'/records/'+record.id,
-			items: [{
-				xtype: "label",
-				fieldLabel: "Server",
-				text: zonetree.getNodeById('server-'+server).text
-			}, {
-				xtype: "label",
-				fieldLabel: "Zone",
-				text: zone
-			}, {
-				xtype: "label",
-				fieldLabel: "Id",
-				text: record.id
-			}, {
-				xtype: "label",
-				fieldLabel: "Type",
-				text: record.type
-			}, {
-				xtype: "hidden",
-				name: "type",
-				value: record.type
-			}, {
-				xtype: "textfield",
-				width: 170,
-				fieldLabel: "Name",
-				name: "name",
-				value: record.name,
-				validator: function(value) {
-					return validValue(value, 'Hostname');
-				}
-			}, {
-				xtype: "textfield",
-				width: 170,
-				fieldLabel: "TTL",
-				name: "ttl",
-				value: record.ttl,
-				validator: function(value) {
-					return validValue(value, 'UInt');
-				}
-			}],
-			buttons: [{
-				text: 'Change Record',
-				formBind: true,
-				handler: function() {
-					recordForm.getForm().submit({
-						method:'POST',
-						waitTitle:'Connecting',
-						waitMsg:'Sending data...',
-						success: function(form, action) {
-							displayRecords(server, zone, action.result.records);
-							notifyMsg('Record successfully changed!');
-							recordWindow.hide();
-							recordWindow.destroy();
-						},
-						failure: function(form, action) {
-							switch (action.failureType) {
-								case Ext.form.Action.CLIENT_INVALID:
-									notifyMsg('Form fields may not be submitted with invalid values');
-									break;
-								case Ext.form.Action.CONNECT_FAILURE:
-									notifyMsg('Ajax communication failed');
-									break;
-								case Ext.form.Action.SERVER_INVALID:
-									data = Ext.util.JSON.decode(action.response.responseText);
-									notifyMsg(data.error, 'Change record failed!');
-							}
-						}
-					});
-				}
-			}]
-		});
-
-		// add fields
-		for(key in record.fields) {
-			recordForm.add({
-				name: 'fields['+key+']',
-				fieldLabel: key,
-				width: 170,
-				value: record.fields[key].value,
-				validType: record.fields[key].type,
-				validator: function(value) {
-					return validValue(value, this.validType);
-				}
-			});
-		}
-		recordForm.doLayout();
-
-		var recordWindow = new Ext.Window({
-			title: 'Change record',
-			layout: 'anchor',
-			closable: true,
-			resizeable: false,
-			autoHeight: true,
-			autoScroll: true,
-			width: 320,
-			items: [recordForm]
-		});
-
-		recordWindow.show();
-	}
-
-	// add record window
-	function addRecordWindow(server, zone) {
-		var recordForm = new Ext.FormPanel({
-			frame: true,
-			defaultType:'textfield',
-			monitorValid:true,
-			url: URL+'/servers/'+server+'/zones/'+zone+'/records/',
-
-			items: [{
-				xtype: "label",
-				fieldLabel: "Server",
-				text: zonetree.getNodeById('server-'+server).text
-			}, {
-				xtype: "label",
-				fieldLabel: "Zone",
-				text: zone
-			}, {
-				xtype: "combo",
-				name: "type",
-				fieldLabel: "Type",
-				editable: false,
-				width: 170,
-				height: 40,
-				mode: 'remote',
-				triggerAction: 'all',
-				emptyText: 'Please select first.',
-				displayField: 'type',
-				valueField: 'type',
-				store: new Ext.data.JsonStore({
-					url: URL+'/servers/'+server+'/rrtypes',
-					root: 'rrtypes',
-					fields: ['type', 'fields']
-				}),
-				listeners:{
-					// add Boxes on select
-					'select': function(combo, record, index) {
-
-						// first delete old Boxes
-						var children = recordForm.findByType('textfield');
-
-						for(i=0;i<children.length;i++) {
-							if(children[i].name != 'name' && children[i].name != 'type' && children[i].name != 'ttl') {
-								recordForm.remove(children[i]);
-							}
-						}
-
-						for(key in record.data.fields) {
-							recordForm.add({
-								name: 'fields['+key+']',
-								fieldLabel: key,
-								width: 170,
-								validType: record.data.fields[key],
-								validator: function(value) {
-									return validValue(value, this.validType);
-								}
-							});
-						}
-						recordForm.doLayout();
-					}
-				}
-			}, {
-				fieldLabel: 'Name',
-				name: 'name',
-				inputType: 'textfield',
-				allowBlank:false,
-				width: 170,
-				validator: function(value) {
-					return validValue(value, 'Hostname');
-				}
-			}, {
-				fieldLabel: 'TTL',
-				name: 'ttl',
-				inputType: 'textfield',
-				allowBlank:false,
-				width: 170,
-				validator: function(value) {
-					return validValue(value, 'UInt');
-				}
-			}],
-			buttons: [{
-				text: 'Add Record',
-				formBind: true,
-				handler: function() {
-					recordForm.getForm().submit({
-						method:'PUT',
-						waitTitle:'Connecting',
-						waitMsg:'Sending data...',
-						success: function(form, action) {
-							displayRecords(server, zone, action.result.records);
-							notifyMsg('Record successfully added! (New Id: '+action.result.newid+')');
-							recordWindow.hide();
-							recordWindow.destroy();
-						},
-						failure: function(form, action) {
-							switch (action.failureType) {
-								case Ext.form.Action.CLIENT_INVALID:
-									notifyMsg('Form fields may not be submitted with invalid values');
-									break;
-								case Ext.form.Action.CONNECT_FAILURE:
-									notifyMsg('Ajax communication failed');
-									break;
-								case Ext.form.Action.SERVER_INVALID:
-									data = Ext.util.JSON.decode(action.response.responseText);
-									notifyMsg(data.error, 'Add record failed!');
-							}
-						}
-					});
-				}
-			}]
-		});
-
-		var recordWindow = new Ext.Window({
-			title: 'Add record',
-			layout: 'anchor',
-			closable: true,
-			resizeable: false,
-			autoHeight: true,
-			autoScroll: true,
-			width: 320,
-			items: [recordForm]
-		});
-		
-		recordWindow.show();
-	}
-
+	
 	// init viewport
 	var viewport = new Ext.Viewport({
 		layout: 'fit',
@@ -804,6 +547,4 @@ function pdaGUI(api) {
 	
 	// check login status
 	API.checkLoginStatus(updateLoginStatus);
-
-
 }

@@ -207,11 +207,18 @@ Ext.ux.grid.RowEditor = Ext.extend(Ext.Panel, {
 			if(!cm.isHidden(i)){
 				var dindex = cm.getDataIndex(i);
 				if(!Ext.isEmpty(dindex)){
-					var oldValue = r.data[dindex],
-					value = this.postEditValue(fields[i].getValue(), oldValue, r, dindex);
-					if(String(oldValue) !== String(value)){
-						changes[dindex] = value;
+					// Changed for DNS compatibility
+					if(typeof fields[i].getValue() == 'object') {
+						changes[dindex] = fields[i].getValue();
+						changes['customDirty'] = true;
 						hasChange = true;
+					} else {
+						var oldValue = r.data[dindex];
+						value = this.postEditValue(fields[i].getValue(), oldValue, r, dindex);
+						if(String(oldValue) !== String(value)){
+							changes[dindex] = value;
+							hasChange = true;
+						}
 					}
 				}
 			}
