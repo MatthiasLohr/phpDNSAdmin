@@ -267,10 +267,11 @@ function pdaGUI(api) {
 								tbar: [{
 									text: 'Add Record',
 									handler: function(btn, ev) {
-										var u = new tab.store.recordType();
-										editor.stopEditing();
-										tab.store.insert(0, u);
-										editor.startEditing(0);
+										//										var u = new tab.store.recordType();
+										//										editor.stopEditing();
+										//										tab.store.insert(0, u);
+										//										editor.startEditing(0);
+										addRecordWindow(node.attributes.serverkey, node.attributes.zone);
 									}
 								}, '-', {
 									text: 'Delete selected Records',
@@ -538,7 +539,119 @@ function pdaGUI(api) {
 				return true;
 		}
 	}
-	
+	// add record window
+	function addRecordWindow(server, zone) {
+		var recordForm = new Ext.FormPanel({
+			frame: true,
+			defaultType:'textfield',
+			monitorValid:true,
+			url: URL+'/servers/'+server+'/zones/'+zone+'/records/',
+
+			items: [{
+				xtype: "label",
+				fieldLabel: "Server",
+				text: zonetree.getNodeById('server-'+server).text
+			}, {
+				xtype: "label",
+				fieldLabel: "Zone",
+				text: zone
+			}, {
+				xtype: "combo",
+				name: "type",
+				fieldLabel: "Type",
+				editable: false,
+				width: 170,
+				height: 40,
+				mode: 'remote',
+				triggerAction: 'all',
+				emptyText: 'Please select first.',
+				displayField: 'type',
+				valueField: 'type',
+				store: new Ext.data.JsonStore({
+					url: URL+'/servers/'+server+'/rrtypes',
+					root: 'rrtypes',
+					fields: ['type', 'fields']
+				}),
+				listeners:{
+					// add Boxes on select
+					'select': function(combo, record, index) {
+
+						// first delete old Boxes
+						var children = recordForm.findByType('textfield');
+
+						for(i=0;i<children.length;i++) {
+							if(children[i].name != 'name' && children[i].name != 'type' && children[i].name != 'ttl') {
+								recordForm.remove(children[i]);
+							}
+						}
+
+						for(key in record.data.fields) {
+							recordForm.add({
+								name: 'fields['+key+']',
+								fieldLabel: key,
+								width: 170,
+								validType: record.data.fields[key],
+								validator: function(value) {
+									return validValue(value, this.validType);
+								}
+							});
+						}
+						recordForm.doLayout();
+					}
+				}
+			}, {
+				fieldLabel: 'Name',
+				name: 'name',
+				inputType: 'textfield',
+				allowBlank:false,
+				width: 170,
+				validator: function(value) {
+					return validValue(value, 'Hostname');
+				}
+			}, {
+				fieldLabel: 'TTL',
+				name: 'ttl',
+				inputType: 'textfield',
+				allowBlank:false,
+				width: 170,
+				validator: function(value) {
+					return validValue(value, 'UInt');
+				}
+			}],
+			buttons: [{
+				text: 'Add Record',
+				formBind: true,
+				handler: function() {
+					recordForm.getForm().submit({
+						method:'PUT',
+						waitTitle:'Connecting',
+						waitMsg:'Sending data...',
+						success: function(form, action) {
+							App.setAlert("ok", 'Record successfully added! (New Id: '+action.result.newid+')');
+							recordWindow.hide();
+							recordWindow.destroy();
+						},
+						failure: function(form, action) {
+							App.setAlert("error", 'Error: ' + action.result.error);
+						}
+					});
+				}
+			}]
+		});
+
+		var recordWindow = new Ext.Window({
+			title: 'Add record',
+			layout: 'anchor',
+			closable: true,
+			resizeable: false,
+			autoHeight: true,
+			autoScroll: true,
+			width: 320,
+			items: [recordForm]
+		});
+
+		recordWindow.show();
+	}
 	// init viewport
 	var viewport = new Ext.Viewport({
 		layout: 'fit',
