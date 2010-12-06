@@ -67,6 +67,7 @@ $config = array(
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=phpdnsadmin', // access to cache table
 			'pdo_username' => 'phpdnsadmin',
 			'pdo_password' => 'phpdnsadmin',
+		  'tableprefix' => '',
 			// PgSQL only:
 		  // 'search_path' => 'public',
 			'views' => array(

@@ -36,7 +36,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	/** @var PDO */
 	private $db;
 	/** @var string */
-	private $table = 'pda_records';
+	private $table = 'records';
 
 	protected function __construct($config) {
 		// load modules
@@ -66,6 +66,11 @@ class MultiServerViewZone extends ZoneModule implements Views {
 				$this->modules[$moduleIndex]->name = (isset($localConfig['_name'])?$localConfig['_name']:'Server '.$moduleIndex);
 			}
 		}
+
+		if (isset($config['tableprefix'])) {
+			$this->table = $config['tableprefix'].$this->table;
+		}
+
 		// connect to cache db
 		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
 		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
