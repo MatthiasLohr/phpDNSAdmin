@@ -140,6 +140,9 @@ function pdaGUI(api) {
 										name: 'ttl',
 										type: 'int'
 									}, 'fields', {
+										name: 'views',
+										defaultValue:false
+								  }, {
 										name: 'customDirty',
 										type: 'boolean',
 										defaultValue:false
@@ -196,56 +199,87 @@ function pdaGUI(api) {
 									}
 								})
 							});
-							var newColModel = new Ext.grid.ColumnModel({
-								defaults: {
-									sortable: true,
-									menuDisabled: false
-								},
-								columns: [{
-									header: 'name',
-									dataIndex: 'name',
-									editor: {
-										xtype : 'textfield',
-										allowBlank: false,
-										validator: function(value) {
-											return validValue(value, 'Hostname');
+							var newColModel = null;
+							// Code reuse is here not possible... I promise
+							if(!node.attributes.views) {
+								newColModel = new Ext.grid.ColumnModel({
+									defaults: {
+										sortable: true,
+										menuDisabled: false
+									},
+									columns: [{
+										header: 'name',
+										dataIndex: 'name',
+										editor: {
+											xtype : 'textfield',
+											allowBlank: false,
+											validator: function(value) {
+												return validValue(value, 'Hostname');
+											}
 										}
-									}
-								}, {
-									header: 'type',
-									dataIndex: 'type'
-								}, {
-									header: 'content',
-									id: 'content',
-									dataIndex: 'fields',
-									xtype: 'contentcolumn',
-									editor: new Ext.DNSContent()
-								}, {
-									header: 'TTL',
-									dataIndex: 'ttl',
-									editor: {
-										xtype : 'textfield',
-										allowBlank: false,
-										validator: function(value) {
-											return validValue(value, 'UInt');
+									}, {
+										header: 'type',
+										dataIndex: 'type'
+									}, {
+										header: 'content',
+										id: 'content',
+										dataIndex: 'fields',
+										xtype: 'contentcolumn',
+										editor: new Ext.DNSContent()
+									}, {
+										header: 'TTL',
+										dataIndex: 'ttl',
+										editor: {
+											xtype : 'textfield',
+											allowBlank: false,
+											validator: function(value) {
+												return validValue(value, 'UInt');
+											}
 										}
-									}
+									}]
+								});
+							} else {
+								newColModel = new Ext.grid.ColumnModel({
+									defaults: {
+										sortable: true,
+										menuDisabled: false
+									},
+									columns: [{
+										header: 'name',
+										dataIndex: 'name',
+										editor: {
+											xtype : 'textfield',
+											allowBlank: false,
+											validator: function(value) {
+												return validValue(value, 'Hostname');
+											}
+										}
+									}, {
+										header: 'type',
+										dataIndex: 'type'
+									}, {
+										header: 'content',
+										id: 'content',
+										dataIndex: 'fields',
+										xtype: 'contentcolumn',
+										editor: new Ext.DNSContent()
+									}, {
+										header: 'TTL',
+										dataIndex: 'ttl',
+										editor: {
+											xtype : 'textfield',
+											allowBlank: false,
+											validator: function(value) {
+												return validValue(value, 'UInt');
+											}
+										}
+									}, {
+										header: 'Views',
+										dataIndex: 'views',
+										xtype: 'multicheckcolumn',
+										editor: new Ext.ViewEditor()
 								}]
-							});
-							if(node.attributes.views) {
-								newStore.fields.add({
-									name: 'views'
 								});
-								
-								var curColConfig = newColModel.config;
-
-								curColConfig.push({
-									header: 'Views',
-									dataIndex: 'views',
-									xtype: 'checkcolumn'
-								});
-								
-								newColModel.setConfig(curColConfig);
 							}
 
 							// use RowEditor for editing
@@ -284,10 +318,7 @@ function pdaGUI(api) {
 											}
 										});
 									}
-								}, '-'],
-								viewConfig: {
-									forceFit: true
-								}
+								}, '-']
 							});
 							zonetabs.add(tab);
 							newStore.on('beforeload', function() {

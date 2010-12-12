@@ -11,7 +11,11 @@ Ext.data.DnsWriter = Ext.extend(Ext.data.DataWriter, {
 		for(key in data){
 			if(typeof data[key] == 'object') {
 				for(skey in data[key]) {
-					params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+					if(data[key][skey].value == undefined) {
+						params[key+"\x5B"+skey+"\x5D"] = data[key][skey];
+					} else {
+						params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+					}
 				}
 			} else {
 				params[key] = data[key];
@@ -27,7 +31,11 @@ Ext.data.DnsWriter = Ext.extend(Ext.data.DataWriter, {
 		for(key in data){
 			if(typeof data[key] == 'object') {
 				for(skey in data[key]) {
-					params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+					if(data[key][skey].value == undefined) {
+						params[key+"\x5B"+skey+"\x5D"] = data[key][skey];
+					} else {
+						params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+					}
 				}
 			} else {
 				params[key] = data[key];
