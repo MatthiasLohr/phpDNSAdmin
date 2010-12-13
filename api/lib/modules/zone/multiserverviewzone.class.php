@@ -37,6 +37,10 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	private $db;
 	/** @var string */
 	private $table = 'records';
+	/** @var string */
+	private $recordsSequence = 'records_id_seq';
+	/** @var string */
+	private $tablePrefix = '';
 
 	protected function __construct($config) {
 		// load modules
@@ -67,9 +71,9 @@ class MultiServerViewZone extends ZoneModule implements Views {
 			}
 		}
 
-		if (isset($config['tableprefix'])) {
-			$this->table = $config['tableprefix'].$this->table;
-		}
+		if (isset($config['records_sequence'])) $this->recordsSequence = $config['records_sequence'];
+
+		if (isset($config['tableprefix'])) $this->tablePrefix = $config['tableprefix'];
 
 		// connect to cache db
 		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
@@ -101,7 +105,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	}
 
 	public function getRecordById(Zone $zone, $recordid) {
-		$stm = $this->db->query('SELECT name,type,content,ttl,prio FROM '.$this->table.' WHERE id = '.$this->db->quote($recordid).' AND zone = '.$this->db->quote($zone->getName()));
+		$stm = $this->db->query('SELECT name,type,content,ttl,prio FROM '.$this->tablePrefix.$this->table.' WHERE id = '.$this->db->quote($recordid).' AND zone = '.$this->db->quote($zone->getName()));
 		$row = $stm->fetch();
 		if (!$row) return null;
 		$record = ResourceRecord::getInstance($row['type'],$row['name'],$row['content'],$row['ttl'],$row['prio']);
@@ -115,7 +119,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	public function listRecordsByFilter(Zone $zone, array $filter = array()) {
 		$this->zoneAssureExistence($zone);
-		$query = 'SELECT id,name,type,content,ttl,prio FROM '.$this->table.' WHERE zone = ' . $this->db->quote($zone->getName());
+		$query = 'SELECT id,name,type,content,ttl,prio FROM '.$this->tablePrefix.$this->table.' WHERE zone = ' . $this->db->quote($zone->getName());
 		// apply filters
 		if (isset($filter['id'])) {
 			$query .= ' AND id = ' . $this->db->quote($filter['id']);
@@ -194,14 +198,20 @@ class MultiServerViewZone extends ZoneModule implements Views {
 			}
 		}
 		if ($success) {
-			$this->db->query('INSERT INTO '.$this->table.' (zone,name,type,content,ttl,prio) VALUES ('
+			$this->db->query('INSERT INTO '.$this->tablePrefix.$this->table.' (zone,name,type,content,ttl,prio) VALUES ('
 				.$this->db->quote($zone->getName()).','
 				.$this->db->quote($record->getName()).','
 				.$this->db->quote($record->getType()).','
 				.$this->db->quote($record->getContentString()).','
 				.$this->db->quote($record->getTTL()).','
 				.($record->fieldExists('priority')?$this->db->quote($record->getField('priority')):'NULL').')');
-			return true;
+			
+			switch ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
+			case 'pgsql':
+				return $this->db->lastInsertId($this->recordsSequence);
+			default:
+				return $this->db->lastInsertId();
+			}
 		}
 		return false;
 	}
@@ -213,7 +223,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 			$id = $this->moduleFindRecord($module->module,$zone,$record);
 			if ($id !== null) $module->module->recordDelete($zone,$id);
 		}
-		$this->db->query('DELETE FROM '.$this->table.' WHERE id = '.$this->db->quote($recordid));
+		$this->db->query('DELETE FROM '.$this->tablePrefix.$this->table.' WHERE id = '.$this->db->quote($recordid));
 		return true;
 	}
 
@@ -243,7 +253,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 				$module->module->recordUpdate($zone,$mRecordid,$record);
 			}
 		}
-		$this->db->query('UPDATE '.$this->table.' SET name = '.$this->db->quote($record->getName())
+		$this->db->query('UPDATE '.$this->tablePrefix.$this->table.' SET name = '.$this->db->quote($record->getName())
 			.', type = '.$this->db->quote($record->getType())
 			.', content = '.$this->db->quote($record->getContentString())
 			.', ttl = '.$this->db->quote($record->getTTL())
@@ -264,7 +274,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		foreach ($this->modules as $module) {
 			$module->module->zoneDelete($zone);
 		}
-		$this->db->query('DELETE FROM '.$this->table.' WHERE zone = '.$this->db->quote($zone->getName()));
+		$this->db->query('DELETE FROM '.$this->tablePrefix.$this->table.' WHERE zone = '.$this->db->quote($zone->getName()));
 		return true;
 	}
 
