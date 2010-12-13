@@ -69,6 +69,7 @@ $config = array(
 			'pdo_password' => 'phpdnsadmin',
 		  'tableprefix' => '',
 			// PgSQL only:
+		  // 'records_sequence' => 'records_id_seq',
 		  // 'search_path' => 'public',
 			'views' => array(
 				// paste here zone module configurations
