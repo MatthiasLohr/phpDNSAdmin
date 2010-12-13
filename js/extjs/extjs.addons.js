@@ -211,7 +211,7 @@ Ext.ViewEditor = Ext.extend(Ext.form.Field, {
 			var Checkbox = new Ext.form.Checkbox({
 				fieldLabel: view,
 				name: view,
-				value: this.views[view],
+				checked: this.views[view],
 				rViews: this.views,
 				listeners: {
 					check: function(field, checked) {
