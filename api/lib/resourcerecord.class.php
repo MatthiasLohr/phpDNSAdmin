@@ -142,10 +142,10 @@ abstract class ResourceRecord {
 		return $this->fieldValues[$fieldname];
 	}
 
-	final public static function getInstance($type,$name,$content,$ttl,$priority = null) {
+	final public static function getInstance($type,$name,$content,$ttl,$priority = null, array $viewinfo = null) {
 		$className = self::getClassByType($type);
 		if ($className === null) throw new NotSupportedException('RRType '.$type.' is not supported yet!');
-		$record = new $className($name,$content,$ttl,$priority);
+		$record = new $className($name,$content,$ttl,$priority,$viewinfo);
 		return $record;
 	}
 

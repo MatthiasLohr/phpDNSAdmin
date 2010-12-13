@@ -247,6 +247,10 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		$oldRecord = $this->getRecordById($zone,$recordid);
 		if ($oldRecord === null) return false;
 		$views = $oldRecord->getViewinfo();
+		// Update views
+		$newViews = $record->getViewinfo();
+		$this->recordSetViews($zone, $recordid, $newViews);
+		
 		foreach ($this->modules as $module) {
 			if (isset($views[$module->sysname]) && $views[$module->sysname]) {
 				$mRecordid = $this->moduleFindRecord($module->module,$zone,$oldRecord);

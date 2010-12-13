@@ -119,7 +119,16 @@ class ZoneRouter extends RequestRouter {
 				} else {
 					// workaround to avoid php warnings
 					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
-					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
+					if(isset($data['views'])) {
+						// format views
+						foreach($data['views'] as $view => $value ) {
+							$views[$view] = $value === "true" ? 1:0;
+						}
+					} else {
+						$views = null;
+					}
+					
+					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $views);
 					$this->zone->recordUpdate($recordid, $record);
 					$result->success = true;
 					$result->records = $this->listRecordsByFilter();
