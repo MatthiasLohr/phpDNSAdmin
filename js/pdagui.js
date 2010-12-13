@@ -142,11 +142,7 @@ function pdaGUI(api) {
 									}, 'fields', {
 										name: 'views',
 										defaultValue:false
-								  }, {
-										name: 'customDirty',
-										type: 'boolean',
-										defaultValue:false
-									}],
+								  }],
 									root: 'records',
 									successProperty: 'success'
 								}),
@@ -287,6 +283,17 @@ function pdaGUI(api) {
 								errorSummary:false
 							});
 
+							editor.on("afteredit",function(roweditor,changes,record,index){
+								var del = true;
+								for(view in changes.views) {
+									del = !changes.views[view];
+								}
+								if(del) {
+									// remove from grid
+									roweditor.grid.getStore().load();
+								}
+							});
+							
 							tab = new Ext.grid.GridPanel({
 								serverkey: node.attributes.serverkey,
 								zone: node.attributes.zone,
@@ -301,11 +308,7 @@ function pdaGUI(api) {
 								tbar: [{
 									text: 'Add Record',
 									handler: function(btn, ev) {
-										//										var u = new tab.store.recordType();
-										//										editor.stopEditing();
-										//										tab.store.insert(0, u);
-										//										editor.startEditing(0);
-										addRecordWindow(node.attributes.serverkey, node.attributes.zone);
+										addRecordWindow(node.attributes.serverkey, node.attributes.zone, tab.store);
 									}
 								}, '-', {
 									text: 'Delete selected Records',
@@ -570,8 +573,11 @@ function pdaGUI(api) {
 				return true;
 		}
 	}
+
+	var rrStore = null;
+
 	// add record window
-	function addRecordWindow(server, zone) {
+	function addRecordWindow(server, zone, store) {
 		var recordForm = new Ext.FormPanel({
 			frame: true,
 			defaultType:'textfield',
@@ -653,6 +659,13 @@ function pdaGUI(api) {
 				text: 'Add Record',
 				formBind: true,
 				handler: function() {
+//					Maybe use this? idk...
+//					var u = new store.recordType();
+
+//					editor.stopEditing();
+//					tab.store.insert(0, u);
+//					editor.startEditing(0);
+
 					recordForm.getForm().submit({
 						method:'PUT',
 						waitTitle:'Connecting',
@@ -661,6 +674,7 @@ function pdaGUI(api) {
 							App.setAlert("ok", 'Record successfully added! (New Id: '+action.result.newid+')');
 							recordWindow.hide();
 							recordWindow.destroy();
+							store.load();
 						},
 						failure: function(form, action) {
 							App.setAlert("error", 'Error: ' + action.result.error);

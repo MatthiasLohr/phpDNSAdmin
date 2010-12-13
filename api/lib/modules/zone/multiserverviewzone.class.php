@@ -241,6 +241,13 @@ class MultiServerViewZone extends ZoneModule implements Views {
 				}
 			}
 		}
+		$del = true;
+		foreach($views as $key => $value) {
+			$del = !$value;
+		}
+		if($del) {
+			$this->recordDelete($zone, $recordid);
+		}
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {

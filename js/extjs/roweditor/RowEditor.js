@@ -210,7 +210,6 @@ Ext.ux.grid.RowEditor = Ext.extend(Ext.Panel, {
 					// Changed for DNS compatibility
 					if(typeof fields[i].getValue() == 'object') {
 						changes[dindex] = fields[i].getValue();
-						changes['customDirty'] = true;
 						hasChange = true;
 					} else {
 						var oldValue = r.data[dindex];
@@ -228,6 +227,7 @@ Ext.ux.grid.RowEditor = Ext.extend(Ext.Panel, {
 			Ext.iterate(changes, function(name, value){
 				r.set(name, value);
 			});
+			r.markDirty();	// always mark as dirty... need better solution...
 			r.endEdit();
 			this.fireEvent('afteredit', this, changes, r, this.rowIndex);
 		}
