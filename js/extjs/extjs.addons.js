@@ -85,7 +85,7 @@ Ext.ux.grid.ContentColumn = Ext.extend(Ext.grid.Column, {
 	renderer : function(v, p, record) {
 		var value = '';
 		for(key in v) {
-			value += v[key].value;
+			value += ' ' + v[key].value;
 		}
 		value = Ext.util.Format.trim(value);
 		return value;
