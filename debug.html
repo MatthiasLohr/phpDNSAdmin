@@ -18,7 +18,7 @@
         // Check for next free Number (max. 100)
         for(i=0;i<100;i++) {
           if(!($("#field_"+i).length > 0)) {
-            // Feld erstellen
+            // create Fields
             html =  "<tr id=\"field_"+i+"\">";
             html += " <td>"+(i+1)+"</td>";
             html += " <td style=\"text-align:center\">";
@@ -116,34 +116,41 @@
 
         // Clicked the Button
         $("#doIt").click(function() {
-          $("#doIt").val("loading...");
-          // Generate Field Data
-          i = 0;
-          while(($("#field_"+i).length > 0)) {
-            key = $("#field_key_"+i).val();
-            // nur volle Keys
-            if(key != '') {
-              value = $("#field_value_"+i).val();
-              other = $("#hiddenData").val();
-              if(other == '') {
-                other = key + "=" + value;
-              } else {
-                other = other + "&" + key + "=" + value;
-              }
-              $("#hiddenData").val(other);
-            }
-            i++;
-          }
-
           $.ajax({
             url: $("#url").val(),
             type: $("#method").val(),
             data: $("#hiddenData").val(),
+						beforeSend: function(request, settings) {
+							$("#doIt").attr('disabled', 'disabled');
+							$("#doIt").val("loading...");
+							// Generate Field Data
+							i = 0;
+							other = '';
+							while(($("#field_"+i).length > 0)) {
+								key = $("#field_key_"+i).val();
+								// only existing keys
+								if(key != '') {
+									value = $("#field_value_"+i).val();
+									if(other == '') {
+										other = key + "=" + value;
+									} else {
+										other = other + "&" + key + "=" + value;
+									}
+								}
+								i++;
+							}
+							settings.data = other;
+						},
+						complete: function(request, textStatus) {
+							$("#doIt").val('Send');
+							$("#doIt").attr('disabled', '');
+						},
             success: function(data) {
               $('#output').html(data);
-              $("#doIt").val('Send');
-              $("#hiddenData").val('');
-            }
+            },
+						error: function(request, textStatus, error) {
+							$('#output').html('<span style="color:red">'+textStatus+': '+error+'</span>');
+						}
           });
         });
 
@@ -238,6 +245,5 @@
         </tr>
       </tbody>
     </table>
-    <input id="hiddenData" type="hidden" />
   </body>
 </html>
