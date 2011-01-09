@@ -215,7 +215,7 @@ Ext.ViewEditor = Ext.extend(Ext.form.Field, {
 				rViews: this.views,
 				listeners: {
 					check: function(field, checked) {
-						field.rViews[field.name] = checked;
+						field.rViews[field.name] = checked?1:0;
 					}
 				}
 			});

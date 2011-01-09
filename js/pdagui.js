@@ -284,14 +284,14 @@ function pdaGUI(api) {
 							});
 
 							editor.on("afteredit",function(roweditor,changes,record,index){
-								var del = true;
-								for(view in changes.views) {
-									del = !changes.views[view];
-								}
-								if(del) {
-									// remove from grid
-									roweditor.grid.getStore().load();
-								}
+//								var del = true;
+//								for(view in changes.views) {
+//									del = !changes.views[view];
+//								}
+//								if(del) {
+//									// remove from grid
+//									roweditor.grid.getStore().load();
+//								}
 							});
 							
 							tab = new Ext.grid.GridPanel({

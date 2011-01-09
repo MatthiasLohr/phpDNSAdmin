@@ -122,7 +122,7 @@ class ZoneRouter extends RequestRouter {
 					if(isset($data['views'])) {
 						// format views
 						foreach($data['views'] as $view => $value ) {
-							$views[$view] = $value === "true" ? 1:0;
+							$views[$view] = $value;
 						}
 					} else {
 						$views = null;
