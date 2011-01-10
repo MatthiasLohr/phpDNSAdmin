@@ -40,6 +40,24 @@ class SoaRecord extends ResourceRecord {
 			'negativettl' => 'UInt'
 		);
 	}
+
+	public function getContentString() {
+		$tmp = array();
+		foreach ($this->listFields() as $fieldname => $simpletype) {
+			if ($fieldname == "hostmaster") {
+				$tmp[] = Email::convertToDNS($this->getField($fieldname));
+			} else {
+				$tmp[] = $this->getField($fieldname);
+			}
+		}
+		return implode(' ',$tmp);
+	}
+
+	protected function parseContent($content) {
+		$result = parent::parseContent($content);
+		$result['hostmaster'] = Email::convertFromDNS($result['hostmaster']);
+		return $result;
+	}
 }
 
 ?>

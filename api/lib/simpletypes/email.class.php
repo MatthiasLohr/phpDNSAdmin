@@ -47,6 +47,23 @@ class Email extends SimpleType {
     return $tmp[0] . '@' . Hostname::normalizeValue($tmp[1]);
   }
 
+	public static function convertFromDNS($string) {
+		//<em>\.<ail>.<rest> => <em>.<ail>@<rest>
+		return preg_replace('/\\\./', '.', preg_replace('/([^\\\\])\./', '$1@', $string, 1));
+	}
+
+	public static function convertToDNS($string) {
+		//<em>.<ail>@<rest> => <em>\.<ail>.<rest>
+		// <first>@<second>
+		$parts = explode('@', $string);
+
+		$first = $parts[0];
+		$second = $parts[1];
+
+		$first_replaced = preg_replace('/\./g', '\\.', $first);
+
+		return $first_replaced.'.'.$second;
+	}
 }
 
 ?>
