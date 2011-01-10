@@ -66,7 +66,9 @@ catch (RequestRoutingException $e) {
 catch (Exception $e) {
 	$result = new stdClass();
 	$result->success = false;
-	$result->error = $e->getMessage();
+	$result->error = get_class($e);
+	$result->location = $e->getFile().':'.$e->getLine();
+	$result->stacktrace = $e->getTrace();
 	echo(json_encode($result));
 }
 
