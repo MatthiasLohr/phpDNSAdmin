@@ -34,7 +34,8 @@ class Hostname extends SimpleType {
       $tmp = array(0 => $string);
     else
       $tmp = explode('.', $string);
-    foreach ($tmp as $label) {
+    foreach ($tmp as $index => $label) {
+			if ($label == '' && $index == count($tmp)-1) return true;
       if (strlen($label) < 1 || strlen($label) > 63) return false;
       for ($i = 0; $i < strlen($label); $i++)
         if (false === strpos('abcdefghijklmnopqrstuvwxyz0123456789-', $label[$i]))
