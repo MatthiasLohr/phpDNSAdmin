@@ -38,7 +38,7 @@ class Hostname extends SimpleType {
 			if ($label == '' && $index == count($tmp)-1) return true;
       if (strlen($label) < 1 || strlen($label) > 63) return false;
       for ($i = 0; $i < strlen($label); $i++)
-        if (false === strpos('abcdefghijklmnopqrstuvwxyz0123456789-_', $label[$i]))
+        if (false === strpos('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_', $label[$i]))
           return false;
       if ($label[0] == '-' || $label[strlen($label) - 1] == '-')
         return false;
