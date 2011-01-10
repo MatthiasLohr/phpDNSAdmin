@@ -60,7 +60,7 @@ class Email extends SimpleType {
 		$first = $parts[0];
 		$second = $parts[1];
 
-		$first_replaced = preg_replace('/\./g', '\\.', $first);
+		$first_replaced = preg_replace('/\./', '\\.', $first);
 
 		return $first_replaced.'.'.$second;
 	}
