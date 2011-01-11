@@ -55,7 +55,21 @@ class ZoneRouter extends RequestRouter {
 			$filter[$filterName] = $filterValue;
 		}
 		// list records
-		$records = $this->zone->listRecordsByFilter($filter);
+		$limit = 0;
+		$start = 0;
+		if (isset($_GET['limit'])) {
+			$limit = intval($_GET['limit'].'');
+
+			if ($limit < 0) {
+				$limit *= -1;
+			}
+		}
+
+		if (isset($_GET['start'])) {
+			$start = intval($_GET['start'].'');
+		}
+
+		$records = $this->zone->listRecordsByFilter($filter, $limit, $start);
 		$result = array();
 		foreach ($records as $recordid => $record) {
 			$result[] = $this->record2Json($recordid, $record);

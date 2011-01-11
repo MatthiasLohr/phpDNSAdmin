@@ -119,7 +119,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		return $record;
 	}
 
-	public function listRecordsByFilter(Zone $zone, array $filter = array()) {
+	public function listRecordsByFilter(Zone $zone, array $filter = array(), $limit = 0, $start = 0) {
 		$this->zoneAssureExistence($zone);
 		$query = 'SELECT id FROM '.$this->tablePrefix.'records WHERE zone = ' . $this->db->quote($zone->getName());
 		// apply filters
@@ -137,6 +137,10 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		}
 		if (isset($filter['ttl'])) {
 			$query .= ' AND ttl = ' . $this->db->quote($filter['ttl']);
+		}
+
+		if($limit > 0) {
+			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($start);
 		}
 		// execute query
 		$result = array();
