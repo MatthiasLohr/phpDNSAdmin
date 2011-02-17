@@ -129,6 +129,11 @@ class JsonZone extends ZoneModule {
 		}
 	}
 
+	public function incrementSerial(Zone $zone) {
+		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/incserial');
+		return $result->success;
+	}
+
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
 		$data = new stdClass();
 		$data->name = $record->getName();
