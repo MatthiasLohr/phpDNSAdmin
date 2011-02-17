@@ -111,8 +111,8 @@ abstract class ZoneModule {
 	 *
 	 * @return ResourceRecord[] the records
 	 */
-	public function listRecords(Zone $zone) {
-		return $this->listRecordsByFilter($zone);
+	public function listRecords(Zone $zone, $offset = 0, $limit = null) {
+		return $this->listRecordsByFilter($zone,$offset,$limit);
 	}
 
 	/**
@@ -122,7 +122,7 @@ abstract class ZoneModule {
 	 * @param array $filter filter criteria
 	 * @return ResourceRecord[] array with resource records
 	 */
-	abstract public function listRecordsByFilter(Zone $zone,array $filter = array());
+	abstract public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null);
 
 	/**
 	 * Give all records with a specified name
@@ -131,8 +131,8 @@ abstract class ZoneModule {
 	 * @param string $name name to search for
 	 * @return ResourceRecord[] array with resource records
 	 */
-	public function listRecordsByname(Zone $zone,$name) {
-		return $this->listRecordsByFilter($zone,array('name' => $name));
+	public function listRecordsByname(Zone $zone,$name, $offset = 0, $limit = null) {
+		return $this->listRecordsByFilter($zone,array('name' => $name),$offset,$limit);
 	}
 
 	/**
@@ -141,8 +141,8 @@ abstract class ZoneModule {
 	 * @param string $type record type to search for
 	 * @return ResourceRecord[] matching records
 	 */
-	public function listRecordsByType(Zone $zone,$type) {
-		return $this->listRecordsByFilter($zone,array('type' => $type));
+	public function listRecordsByType(Zone $zone,$type, $offset = 0, $limit = null) {
+		return $this->listRecordsByFilter($zone,array('type' => $type),$offset,$limit);
 	}
 
 	/**

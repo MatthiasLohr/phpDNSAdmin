@@ -82,7 +82,7 @@ class MydnsPdoZone extends ZoneModule {
 		}
 	}
 
-	public function listRecordsByFilter(Zone $zone,array $filter = array()) {
+	public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null) {
 
 	}
 

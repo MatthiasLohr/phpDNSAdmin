@@ -98,9 +98,11 @@ class JsonZone extends ZoneModule {
 		return json_decode($result);
 	}
 
-	public function listRecordsByFilter(Zone $zone, array $filter = array()) {
+	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null) {
 		$tmpFilter = array();
 		$tmpFilter['filter'] = $filter;
+		if (is_numeric($offset) && $offset > 0) $tmpFilter['offset'] = $offset;
+		if (is_numeric($limit) && $limit > 0) $tmpFilter['limit'] = $limit;
 		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records?'.http_build_query($tmpFilter));
 		if ($result->success) {
 			$records = array();

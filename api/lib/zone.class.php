@@ -122,8 +122,8 @@ class Zone {
 	 * @param array $filter filter criteria
 	 * @return ResourceRecord[] list of zone records
 	 */
-	public function listRecordsByFilter($filter, $limit = 0, $start = 0) {
-		return $this->module->listRecordsByFilter($this,$filter, $limit, $start);
+	public function listRecordsByFilter($filter, $offset = 0, $limit = null) {
+		return $this->module->listRecordsByFilter($this,$filter,$offset,$limit);
 	}
 
 	/**

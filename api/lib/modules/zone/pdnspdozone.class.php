@@ -99,7 +99,7 @@ class PdnsPdoZone extends ZoneModule {
 		}
 	}
 
-	public function listRecordsByFilter(Zone $zone, array $filter = array(), $limit = 0, $start = 0) {
+	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null) {
 		$this->zoneAssureExistence($zone);
 		$query = 'SELECT id,name,type,content,ttl,prio FROM records WHERE ' . $this->tablePrefix . 'domain_id = ' . $this->db->quote($this->zoneIds[$zone->getName()]);
 		// apply filters
@@ -120,7 +120,7 @@ class PdnsPdoZone extends ZoneModule {
 		}
 
 		if($limit > 0) {
-			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $start;
+			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
 		}
 		// execute query
 		$result = array();

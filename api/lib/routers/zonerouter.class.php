@@ -54,22 +54,18 @@ class ZoneRouter extends RequestRouter {
 		foreach ($overrideFilter as $filterName => $filterValue) {
 			$filter[$filterName] = $filterValue;
 		}
-		// list records
-		$limit = 0;
-		$start = 0;
-		if (isset($_GET['limit'])) {
-			$limit = intval($_GET['limit'].'');
 
-			if ($limit < 0) {
-				$limit *= -1;
-			}
+		// limit+offset
+		$offset = 0;
+		$limit = null;
+		if (isset($_GET['offset']) && is_numeric($_GET['offset']) && $_GET['offset'] >= 0) {
+			$offset = $_GET['offset'];
+		}
+		if (isset($_GET['limit']) && is_numeric($_GET['limit']) && $_GET['limit'] > 0) {
+			$limit = $_GET['limit'];
 		}
 
-		if (isset($_GET['start'])) {
-			$start = intval($_GET['start'].'');
-		}
-
-		$records = $this->zone->listRecordsByFilter($filter, $limit, $start);
+		$records = $this->zone->listRecordsByFilter($filter,$offset,$limit);
 		$result = array();
 		foreach ($records as $recordid => $record) {
 			$result[] = $this->record2Json($recordid, $record);
