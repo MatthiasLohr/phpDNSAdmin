@@ -58,6 +58,34 @@ class PdnsPdoZone extends ZoneModule {
 		$this->listZones();
 	}
 
+	public function countRecordsByFilter(Zone $zone, array $filter = array()) {
+		$this->zoneAssureExistence($zone);
+		$query = 'SELECT id,name,type,content,ttl,prio FROM records WHERE ' . $this->tablePrefix . 'domain_id = ' . $this->db->quote($this->zoneIds[$zone->getName()]);
+		// apply filters
+		if (isset($filter['id'])) {
+			$query .= ' AND id = ' . $this->db->quote($filter['id']);
+		}
+		if (isset($filter['name'])) {
+			$query .= ' AND name = ' . $this->db->quote($filter['name'].'.'.$zone->getName());
+		}
+		if (isset($filter['type'])) {
+			$query .= ' AND type = ' . $this->db->quote($filter['type']);
+		}
+		if (isset($filter['content'])) {
+			$query .= ' AND content = ' . $this->db->quote($filter['content']);
+		}
+		if (isset($filter['ttl'])) {
+			$query .= ' AND ttl = ' . $this->db->quote($filter['ttl']);
+		}
+
+		if($limit > 0) {
+			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
+		}
+
+		$stm = $this->db->query($query);
+		return $stm->rowCount();
+	}
+
 	public function getFeatures() {
 		return array(
 			'dnssec' => true,

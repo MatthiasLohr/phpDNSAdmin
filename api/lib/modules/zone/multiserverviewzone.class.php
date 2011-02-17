@@ -80,6 +80,30 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		}
 	}
 
+	public function countRecordsByFilter(Zone $zone, array $filter = array()) {
+		$this->zoneAssureExistence($zone);
+		$query = 'SELECT id FROM '.$this->tablePrefix.'records WHERE zone = ' . $this->db->quote($zone->getName());
+		// apply filters
+		if (isset($filter['id'])) {
+			$query .= ' AND id = ' . $this->db->quote($filter['id']);
+		}
+		if (isset($filter['name'])) {
+			$query .= ' AND name = ' . $this->db->quote($filter['name'].'.'.$zone->getName());
+		}
+		if (isset($filter['type'])) {
+			$query .= ' AND type = ' . $this->db->quote($filter['type']);
+		}
+		if (isset($filter['content'])) {
+			$query .= ' AND content = ' . $this->db->quote($filter['content']);
+		}
+		if (isset($filter['ttl'])) {
+			$query .= ' AND ttl = ' . $this->db->quote($filter['ttl']);
+		}
+
+		$stm = $this->db->query($query);
+		return $stm->rowCount();
+	}
+
 	public function getFeatures() {
 		$features = array(
 			'dnssec' => false,
