@@ -216,7 +216,7 @@ class ZoneRouter extends RequestRouter {
 			}
 		} else { // list records from one view
 			$result->records = $this->listRecordsByFilter(array('view' => $view));
-			$result->totalCount = $this->countRecordsByFilter();
+			$result->totalCount = $this->countRecordsByFilter(array('view' => $view));
 			$result->success = true;
 		}
 		return $result;
