@@ -53,6 +53,16 @@ class Zone {
 	}
 
 	/**
+	 * Return record count for the specified filter criteria
+	 * 
+	 * @param array $filter filter criteria
+	 * @return amount of records matching the filter criterias
+	 */
+	public function countRecordsByFilter($filter) {
+		return $this->module->countRecordsByFilter($this,$filter);
+	}
+
+	/**
 	 * Create this zone in the zone module
 	 *
 	 * @return boolean true on success, false otherwise

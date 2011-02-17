@@ -32,6 +32,23 @@
 abstract class ZoneModule {
 
 	/**
+	 * Return record count for the specified filter criteria
+	 * 
+	 * @param Zone $zone zone object
+	 * @param array $filter filter criteria
+	 * @return amount of records matching the filter criterias
+	 */
+	public function countRecordsByFilter(Zone $zone,array $filter = array()) {
+		$result = $this->listRecordsByFilter($zone,$filter);
+		if (is_array($result)) {
+			return count($result);
+		}
+		else {
+			return 0;
+		}
+	}
+
+	/**
 	 * Return an array with feature information
 	 *
 	 * @return array feature list
@@ -109,6 +126,8 @@ abstract class ZoneModule {
 	/**
 	 * Get all records from all zones
 	 *
+	 * @param int $offset where to start
+	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] the records
 	 */
 	public function listRecords(Zone $zone, $offset = 0, $limit = null) {
@@ -120,6 +139,8 @@ abstract class ZoneModule {
 	 *
 	 * @param Zone $zone zone object
 	 * @param array $filter filter criteria
+	 * @param int $offset where to start
+	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
 	abstract public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null);
@@ -129,6 +150,8 @@ abstract class ZoneModule {
 	 *
 	 * @param Zone $zone zone object
 	 * @param string $name name to search for
+	 * @param int $offset where to start
+	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
 	public function listRecordsByname(Zone $zone,$name, $offset = 0, $limit = null) {
@@ -139,6 +162,8 @@ abstract class ZoneModule {
 	 * Get records of a specific type from all zones
 	 *
 	 * @param string $type record type to search for
+	 * @param int $offset where to start
+	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] matching records
 	 */
 	public function listRecordsByType(Zone $zone,$type, $offset = 0, $limit = null) {

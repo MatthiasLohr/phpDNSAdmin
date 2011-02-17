@@ -42,6 +42,21 @@ class ZoneRouter extends RequestRouter {
 		return $this->records();
 	}
 
+	private function countRecordsByFilter($overrideFilter = array()) {
+		$filter = array();
+		// take GET filters
+		if (isset($_GET['filter']) && is_array($_GET['filter'])) {
+			foreach ($_GET['filter'] as $key => $value) {
+				$filter[$key] = urldecode($value);
+			}
+		}
+		// take override filters
+		foreach ($overrideFilter as $filterName => $filterValue) {
+			$filter[$filterName] = $filterValue;
+		}
+		return $this->zone->countRecordsByFilter($filter);
+	}
+
 	private function listRecordsByFilter($overrideFilter = array()) {
 		$filter = array();
 		// take GET filters
@@ -108,9 +123,11 @@ class ZoneRouter extends RequestRouter {
 					$result->success = true;
 					$result->newid = $newid;
 					$result->records = $this->listRecordsByFilter();
+					$result->totalCount = $this->countRecordsByFilter();
 				}
 			} else {
 				$result->records = $this->listRecordsByFilter();
+				$result->totalCount = $this->countRecordsByFilter();
 				$result->success = true;
 			}
 		} elseif ($this->endOfTracking() && $recordid !== null) {
@@ -142,10 +159,12 @@ class ZoneRouter extends RequestRouter {
 					$this->zone->recordUpdate($recordid, $record);
 					$result->success = true;
 					$result->records = $this->listRecordsByFilter();
+					$result->totalCount = $this->countRecordsByFilter();
 				}
 			} elseif ($this->getRequestType() == 'DELETE') {
 				$result->success = $this->zone->recordDelete($recordid);
 				$result->records = $this->listRecordsByFilter();
+				$result->totalCount = $this->countRecordsByFilter();
 			} else {
 				if ($record === null) {
 					$result->success = false;
@@ -197,6 +216,7 @@ class ZoneRouter extends RequestRouter {
 			}
 		} else { // list records from one view
 			$result->records = $this->listRecordsByFilter(array('view' => $view));
+			$result->totalCount = $this->countRecordsByFilter();
 			$result->success = true;
 		}
 		return $result;
