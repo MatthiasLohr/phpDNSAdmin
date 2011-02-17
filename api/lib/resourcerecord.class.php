@@ -233,7 +233,6 @@ abstract class ResourceRecord {
 	 *
 	 * @param string $name (host)name
 	 * @return true on success, false otherwise
-	 * @todo implement type check
 	 */
 	final public function setName($name) {
 		if (!(
@@ -251,7 +250,6 @@ abstract class ResourceRecord {
 	 *
 	 * @param int $ttl Time-to-live
 	 * @return true on success, false otherwise
-	 * @todo implement type check
 	 */
 	final public function setTTL($ttl) {
 		if (!UInt::isValidValue($ttl)) return false;
