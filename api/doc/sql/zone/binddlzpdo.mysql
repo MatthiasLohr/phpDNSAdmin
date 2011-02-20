@@ -1,0 +1,20 @@
+CREATE TABLE `dns_records` (
+  `entry_id` bigint(20) unsigned NOT NULL auto_increment,
+  `zone` text,
+  `host` text,
+  `type` text,
+  `data` text NOT NULL,
+  `ttl` int(11) default NULL,
+  `mx_priority` text,
+  `refresh` int(11) default NULL,
+  `retry` int(11) default NULL,
+  `expire` int(11) default NULL,
+  `minimum` int(11) default NULL,
+  `serial` bigint(20) default NULL,
+  `resp_person` text,
+  `primary_ns` text,
+  PRIMARY KEY  (`entry_id`),
+  KEY `host_index` (`host`(20)),
+  KEY `zone_index` (`zone`(30)),
+  KEY `type_index` (`type`(8))
+);
