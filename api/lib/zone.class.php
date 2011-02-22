@@ -123,7 +123,7 @@ class Zone {
 	 * @return ResourceRecord[] list of zone records
 	 */
 	public function listRecords() {
-		return $this->module->listRecords($this);
+		return $this->listRecordsByFilter();
 	}
 
 	/**
@@ -132,7 +132,7 @@ class Zone {
 	 * @param array $filter filter criteria
 	 * @return ResourceRecord[] list of zone records
 	 */
-	public function listRecordsByFilter($filter, $offset = 0, $limit = null) {
+	public function listRecordsByFilter($filter = array(), $offset = 0, $limit = null) {
 		return $this->module->listRecordsByFilter($this,$filter,$offset,$limit);
 	}
 
