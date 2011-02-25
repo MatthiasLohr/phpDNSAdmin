@@ -149,7 +149,7 @@ class JsonZone extends ZoneModule {
 		$data->ttl = $record->getTTL();
 		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records',$data);
 		if ($result->success) {
-			return $result->record->id;
+			return $result->newid;
 		}
 		else {
 			return null;
