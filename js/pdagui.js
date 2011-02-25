@@ -132,6 +132,7 @@ function pdaGUI(api) {
 							var RestURL = API.getURL() + '/servers/' + node.attributes.serverkey + '/zones/' + node.attributes.zone + '/records';
 							var newStore = new Ext.data.Store({
 								restful: true,
+								paramNames: { start: 'offset', limit: 'limit', sort: 'sort', dir: 'dir' },
 								reader: new Ext.data.JsonReader({
 									fields: [{
 										name: 'id',
@@ -144,7 +145,8 @@ function pdaGUI(api) {
 										defaultValue:false
 								  }],
 									root: 'records',
-									successProperty: 'success'
+									successProperty: 'success',
+									totalProperty: 'totalCount'
 								}),
 								writer: new Ext.data.DnsWriter(),
 								proxy: new Ext.data.HttpProxy({
@@ -321,7 +323,14 @@ function pdaGUI(api) {
 											}
 										});
 									}
-								}, '-']
+								}, '-'],
+								bbar: new Ext.PagingToolbar({
+									pageSize: 30,
+									displayInfo: true,
+									emptyMsg: 'No data found',
+									store: newStore,
+									plugins: [new Ext.ux.PageSizePlugin()]
+								})
 							});
 							zonetabs.add(tab);
 							newStore.on('beforeload', function() {
@@ -332,7 +341,7 @@ function pdaGUI(api) {
 								tab.enable();
 							});
 
-							newStore.load();
+							newStore.load({params:{start:0,limit:30}});
 						}
 						zonetabs.setActiveTab('zonetab-'+node.attributes.serverkey+'-'+node.attributes.zone);
 					},

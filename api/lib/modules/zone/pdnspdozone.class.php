@@ -78,9 +78,9 @@ class PdnsPdoZone extends ZoneModule {
 			$query .= ' AND ttl = ' . $this->db->quote($filter['ttl']);
 		}
 
-		if($limit > 0) {
-			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
-		}
+//		if($limit > 0) {
+//			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
+//		}
 
 		$stm = $this->db->query($query);
 		return $stm->rowCount();
