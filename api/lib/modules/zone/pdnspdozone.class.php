@@ -159,7 +159,7 @@ class PdnsPdoZone extends ZoneModule {
 					$colname = $col;
 					$order = 'ASC';
 				}
-				if (in_array($colname,array('id','name','content','ttl','priority'))) {
+				if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
 					if ($firstcol) {
 						$firstcol = false;
 						$query .= ' ORDER BY '.$colname.' '.$order;

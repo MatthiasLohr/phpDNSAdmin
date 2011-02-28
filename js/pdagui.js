@@ -132,7 +132,9 @@ function pdaGUI(api) {
 							var RestURL = API.getURL() + '/servers/' + node.attributes.serverkey + '/zones/' + node.attributes.zone + '/records';
 							var newStore = new Ext.data.Store({
 								restful: true,
-								paramNames: { start: 'offset', limit: 'limit', sort: 'sort', dir: 'dir' },
+								paramNames: { start: 'offset', limit: 'limit', sort: 'sortby', dir: 'sortorder' },
+								sortInfo: { field: 'name', direction: 'ASC' },
+								remoteSort: true,
 								reader: new Ext.data.JsonReader({
 									fields: [{
 										name: 'id',
@@ -140,7 +142,7 @@ function pdaGUI(api) {
 									}, 'name', 'type', 'content', {
 										name: 'ttl',
 										type: 'int'
-									}, 'fields', {
+									}, { name: 'content', mapping: 'fields' }, {
 										name: 'views',
 										defaultValue:false
 								  }],
@@ -221,7 +223,7 @@ function pdaGUI(api) {
 									}, {
 										header: 'content',
 										id: 'content',
-										dataIndex: 'fields',
+										dataIndex: 'content',
 										xtype: 'contentcolumn',
 										editor: new Ext.DNSContent()
 									}, {
@@ -258,7 +260,7 @@ function pdaGUI(api) {
 									}, {
 										header: 'content',
 										id: 'content',
-										dataIndex: 'fields',
+										dataIndex: 'content',
 										xtype: 'contentcolumn',
 										editor: new Ext.DNSContent()
 									}, {

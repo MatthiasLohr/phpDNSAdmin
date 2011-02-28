@@ -114,7 +114,7 @@ class JsonZone extends ZoneModule {
 				$colname = $cols[0];
 				$order = 'ASC';
 			}
-			if (in_array($colname,array('id','name','content','ttl','priority'))) {
+			if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
 				$tmpFilter['sortby'] = $colname;
 				$tmpFilter['sortorder'] = $order;
 			}
