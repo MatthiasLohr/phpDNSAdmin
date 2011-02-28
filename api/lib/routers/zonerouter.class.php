@@ -129,7 +129,7 @@ class ZoneRouter extends RequestRouter {
 					$newid = $this->zone->recordAdd($record);
 					$result->success = true;
 					$result->newid = $newid;
-					$result->records = $this->listRecordsByFilter();
+					//$result->records = $this->listRecordsByFilter();
 					$result->totalCount = $this->countRecordsByFilter();
 				}
 			} else {
@@ -165,12 +165,12 @@ class ZoneRouter extends RequestRouter {
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $views);
 					$this->zone->recordUpdate($recordid, $record);
 					$result->success = true;
-					$result->records = $this->listRecordsByFilter();
+					//$result->records = $this->listRecordsByFilter();
 					$result->totalCount = $this->countRecordsByFilter();
 				}
 			} elseif ($this->getRequestType() == 'DELETE') {
 				$result->success = $this->zone->recordDelete($recordid);
-				$result->records = $this->listRecordsByFilter();
+				//$result->records = $this->listRecordsByFilter();
 				$result->totalCount = $this->countRecordsByFilter();
 			} else {
 				if ($record === null) {
