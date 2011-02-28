@@ -122,8 +122,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] the records
 	 */
-	public function listRecords(Zone $zone, $offset = 0, $limit = null) {
-		return $this->listRecordsByFilter($zone,$offset,$limit);
+	public function listRecords(Zone $zone, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone,$offset,$limit,$sortoptions);
 	}
 
 	/**
@@ -135,7 +135,7 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
-	abstract public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null);
+	abstract public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null, $sortoptions = '');
 
 	/**
 	 * Give all records with a specified name
@@ -146,8 +146,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
-	public function listRecordsByname(Zone $zone,$name, $offset = 0, $limit = null) {
-		return $this->listRecordsByFilter($zone,array('name' => $name),$offset,$limit);
+	public function listRecordsByname(Zone $zone,$name, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone,array('name' => $name),$offset,$limit,$sortoptions);
 	}
 
 	/**
@@ -158,8 +158,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] matching records
 	 */
-	public function listRecordsByType(Zone $zone,$type, $offset = 0, $limit = null) {
-		return $this->listRecordsByFilter($zone,array('type' => $type),$offset,$limit);
+	public function listRecordsByType(Zone $zone,$type, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone,array('type' => $type),$offset,$limit,$sortoptions);
 	}
 
 	/**

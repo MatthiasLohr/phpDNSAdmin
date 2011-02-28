@@ -69,7 +69,14 @@ class ZoneRouter extends RequestRouter {
 		foreach ($overrideFilter as $filterName => $filterValue) {
 			$filter[$filterName] = $filterValue;
 		}
-
+		// sort options
+		$sortoptions = '';
+		if (isset($_GET['sortby'])) {
+			$sortoptions = strval($_GET['sortby']);
+			if (isset($_GET['sortorder']) && $_GET['sortorder'] == 'DESC') {
+				$sortoptions = '-'.$sortoptions;
+			}
+		}
 		// limit+offset
 		$offset = 0;
 		$limit = null;
@@ -80,7 +87,7 @@ class ZoneRouter extends RequestRouter {
 			$limit = $_GET['limit'];
 		}
 
-		$records = $this->zone->listRecordsByFilter($filter,$offset,$limit);
+		$records = $this->zone->listRecordsByFilter($filter,$offset,$limit,$sortoptions);
 		$result = array();
 		foreach ($records as $recordid => $record) {
 			$result[] = $this->record2Json($recordid, $record);
