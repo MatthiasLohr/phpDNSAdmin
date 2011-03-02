@@ -104,23 +104,15 @@ abstract class ZoneModule {
 	}
 
 	public function incrementSerial(Zone $zone) {
+		$success = true;
 		$records = $this->listRecordsByType($zone,'SOA');
-		if (is_array($records) && count($records) > 0) {
-			$recordId = key($records);
-			$soa = $records[$recordId];
+		foreach ($records as $recordId => $soa) {
 			$aSerial = intval(date('Ymd00'));
 			$newSerial = max((intval($soa->getField('serial'))+1),$aSerial);
 			$soa->setField('serial',$newSerial);
-			if ($this->recordUpdate($zone,$recordId,$soa)) {
-				return $newSerial;
-			}
-			else {
-				return false;
-			}
+			$success = $this->recordUpdate($zone,$recordId,$soa) && $success;
 		}
-		else {
-			return false;
-		}
+		return $success;
 	}
 
 	/**
@@ -130,8 +122,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] the records
 	 */
-	public function listRecords(Zone $zone, $offset = 0, $limit = null) {
-		return $this->listRecordsByFilter($zone,$offset,$limit);
+	public function listRecords(Zone $zone, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone,$offset,$limit,$sortoptions);
 	}
 
 	/**
@@ -143,7 +135,7 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
-	abstract public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null);
+	abstract public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null, $sortoptions = '');
 
 	/**
 	 * Give all records with a specified name
@@ -154,8 +146,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
-	public function listRecordsByname(Zone $zone,$name, $offset = 0, $limit = null) {
-		return $this->listRecordsByFilter($zone,array('name' => $name),$offset,$limit);
+	public function listRecordsByname(Zone $zone,$name, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone,array('name' => $name),$offset,$limit,$sortoptions);
 	}
 
 	/**
@@ -166,8 +158,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] matching records
 	 */
-	public function listRecordsByType(Zone $zone,$type, $offset = 0, $limit = null) {
-		return $this->listRecordsByFilter($zone,array('type' => $type),$offset,$limit);
+	public function listRecordsByType(Zone $zone,$type, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone,array('type' => $type),$offset,$limit,$sortoptions);
 	}
 
 	/**

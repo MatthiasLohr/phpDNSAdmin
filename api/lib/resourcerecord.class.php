@@ -60,7 +60,9 @@ abstract class ResourceRecord {
 		foreach ($this->listFields() as $fieldname => $simpletype) {
 			if (!isset($this->fieldValues[$fieldname])) throw new InvalidFieldDataException('Field '.$fieldname.' is empty!');
 			$value = new $simpletype($this->fieldValues[$fieldname]);
-			if (!$value->isValid()) throw new InvalidFieldDataException('No valid data for field '.$fieldname.' ('.$simpletype.')');
+			if (!$value->isValid()) {
+				throw new InvalidFieldDataException('No valid data for field '.$fieldname.' ('.$simpletype.')');
+			}
 			$this->fieldValues[$fieldname] = $value->normalize();
 		}
 		// do the rest

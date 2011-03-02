@@ -78,9 +78,9 @@ class PdnsPdoZone extends ZoneModule {
 			$query .= ' AND ttl = ' . $this->db->quote($filter['ttl']);
 		}
 
-		if($limit > 0) {
-			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
-		}
+//		if($limit > 0) {
+//			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
+//		}
 
 		$stm = $this->db->query($query);
 		return $stm->rowCount();
@@ -127,10 +127,10 @@ class PdnsPdoZone extends ZoneModule {
 		}
 	}
 
-	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null) {
+	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
 		$this->zoneAssureExistence($zone);
 		$query = 'SELECT id,name,type,content,ttl,prio FROM records WHERE ' . $this->tablePrefix . 'domain_id = ' . $this->db->quote($this->zoneIds[$zone->getName()]);
-		// apply filters
+		// where conditions (apply filters)
 		if (isset($filter['id'])) {
 			$query .= ' AND id = ' . $this->db->quote($filter['id']);
 		}
@@ -146,7 +146,31 @@ class PdnsPdoZone extends ZoneModule {
 		if (isset($filter['ttl'])) {
 			$query .= ' AND ttl = ' . $this->db->quote($filter['ttl']);
 		}
-
+		// sort options
+		if (strlen($sortoptions) > 0) {
+			$firstcol = true;
+			$cols = explode(',',$sortoptions);
+			foreach ($cols as $col) {
+				if (substr($col,0,1) == '-') {
+					$colname = substr($col,1);
+					$order = 'DESC';
+				}
+				else {
+					$colname = $col;
+					$order = 'ASC';
+				}
+				if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
+					if ($firstcol) {
+						$firstcol = false;
+						$query .= ' ORDER BY '.$colname.' '.$order;
+					}
+					else {
+						$query .= ','.$colname.' '.$order;
+					}
+				}
+			}
+		}
+		// limit/offset
 		if($limit > 0) {
 			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
 		}
