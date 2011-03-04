@@ -127,8 +127,13 @@ class ZoneRouter extends RequestRouter {
 					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
 					$newid = $this->zone->recordAdd($record);
-					$result->success = true;
-					$result->newid = $newid;
+					if ($newid === false) {
+						$result->success = false;
+					}
+					else {
+						$result->success = true;
+						$result->newid = $newid;
+					}
 					//$result->records = $this->listRecordsByFilter();
 					$result->totalCount = $this->countRecordsByFilter();
 				}
