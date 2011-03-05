@@ -12,9 +12,17 @@ Ext.data.DnsWriter = Ext.extend(Ext.data.DataWriter, {
 			if(typeof data[key] == 'object') {
 				for(skey in data[key]) {
 					if(data[key][skey].value == undefined) {
-						params[key+"\x5B"+skey+"\x5D"] = data[key][skey];
+						if(key == "content") {
+							params["fields\x5B"+skey+"\x5D"] = data[key][skey];
+						} else {
+							params[key+"\x5B"+skey+"\x5D"] = data[key][skey];
+						}
 					} else {
-						params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+						if(key == "content") {
+							params["fields\x5B"+skey+"\x5D"] = data[key][skey].value;
+						} else {
+							params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+						}
 					}
 				}
 			} else {
@@ -32,13 +40,23 @@ Ext.data.DnsWriter = Ext.extend(Ext.data.DataWriter, {
 			if(typeof data[key] == 'object') {
 				for(skey in data[key]) {
 					if(data[key][skey].value == undefined) {
-						params[key+"\x5B"+skey+"\x5D"] = data[key][skey];
+						if(key == "content") {
+							params["fields\x5B"+skey+"\x5D"] = data[key][skey];
+						} else {
+							params[key+"\x5B"+skey+"\x5D"] = data[key][skey];
+						}
 					} else {
-						params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+						if(key == "content") {
+							params["fields\x5B"+skey+"\x5D"] = data[key][skey].value;
+						} else {
+							params[key+"\x5B"+skey+"\x5D"] = data[key][skey].value;
+						}
 					}
 				}
 			} else {
-				params[key] = data[key];
+				if(key != 'views' && data[key] != false) {
+					params[key] = data[key];
+				}
 			}
 		}
 

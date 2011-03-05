@@ -1,3 +1,43 @@
+/*
+ * Simple Validator "Class" with static validValue Function
+ * Author: Andreas Litt
+ * http://phpdnsadmin.sourceforge.net/
+ */
+function DNSValidator() {
+	
+}
+
+DNSValidator.validValue = function(value, mode) {
+	switch(mode) {
+		case 'IPv4':
+			return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(value);
+		case 'IPv6':
+			return /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/.test(value);
+		case 'Hostname':
+			return /^(_?[0-9a-z]+([0-9a-z\-]*[0-9a-z]+)?(\._?[0-9a-z]+([0-9a-z\-]*[0-9a-z]+)?)*)|@$/.test(value);
+		case 'UInt16':
+			return (/^[0-9]+$/.test(value) && value >= 0 && value <= 65535);
+		case 'UInt8':
+			return (/^[0-9]+$/.test(value) && value >= 0 && value <= 255);
+		case 'UInt':
+			return /^[0-9]+$/.test(value);
+		case 'DnskeyProtocol':
+			return (value == 3);
+		case 'Base64Content':
+			return /^[a-zA-Z0-9\/+\r\n]+[=]{0,2}$/.test(value);
+		case 'StringNoSpaces':
+			return !(/\s/g.test(value));
+		case 'String':
+			return /^.+$/.test(value);
+		case 'Email':
+			return /^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.(([0-9]{1,3})|([a-zA-Z]{2,3})|(aero|coop|info|museum|name))$/.test(value);
+		case 'SpfContent':
+			return true;
+		default:
+			return true;
+	}
+}
+
 Ext.ux.Image = Ext.extend(Ext.BoxComponent, {
 	url  : Ext.BLANK_IMAGE_URL,
 
@@ -142,7 +182,11 @@ Ext.DNSContent = Ext.extend(Ext.form.Field, {
 				fieldLabel: field,
 				name: field,
 				value: this.fields[field].value,
+				validType: this.fields[field].type,
 				rField: this.fields,
+				validator: function(value) {
+					return DNSValidator.validValue(value, this.validType);
+				},
 				listeners: {
 					change: function(field, newValue, oldValue) {
 						if(String(newValue) !== String(oldValue)) {
@@ -158,6 +202,11 @@ Ext.DNSContent = Ext.extend(Ext.form.Field, {
 	},
 	
 	isValid: function() {
+		for(var i = 0; i < this.elems.length; i++) {
+			if(!this.elems[i].isValid()) {
+				return false;
+			}
+		}
 		return true;
 	},
 	
@@ -260,9 +309,9 @@ Ext.extend(Ext.ux.PageSizePlugin, Ext.form.ComboBox, {
 
 	onInitView: function(paging) {
 		paging.add('-',
-			this,
-			'Items per page'
-			);
+		this,
+		'Items per page'
+	);
 		this.setValue(paging.pageSize);
 		this.on('select', this.onPageSizeChanged, paging);
 	},

@@ -74,12 +74,18 @@ function pdaGUI(api) {
 				editable: false,
 				expandable: true,
 				serverkey: serverkey,
+				rrStore: new Ext.data.JsonStore({
+					url: URL+'/servers/'+serverkey+'/rrtypes',
+					root: 'rrtypes',
+					fields: ['type', 'fields']
+				}),
 				id: 'server-'+serverkey,
 				leaf:false,
 				text: servers[serverkey].name,
 				listeners: {
 					beforeexpand: function(node, deep, anim) {
 						if (!node.hasChildNodes()) {
+							node.attributes.rrStore.load();
 							API.listZones(node.attributes.serverkey,displayZones);
 							return false;
 						}
@@ -105,6 +111,7 @@ function pdaGUI(api) {
 	function displayZones(serverkey,zones) {
 		var serverNode = zonetree.root.findChild('id','server-'+serverkey,1);
 		serverNode.removeAll(true);
+
 		for (id in zones) {
 			zone = zones[id];
 			
@@ -124,6 +131,7 @@ function pdaGUI(api) {
 				views: zone.views,
 				leaf: true,
 				text: zone.name,
+				rrStore: serverNode.attributes.rrStore,
 				listeners: {
 					click: function(node, event) {
 						// search for zone tab. if exists, show, else create
@@ -175,23 +183,23 @@ function pdaGUI(api) {
 											switch(action) {
 												case 'update':
 													if(response.success == true) {
-														App.setAlert("notice", 'Record was changed successful!');
+														App.setAlert("Notice", 'Record was changed successful!');
 													} else {
-														App.setAlert("notice", 'Changing record failed!');
+														App.setAlert("Error", 'Changing record failed!');
 													}
 													break;
 												case 'destroy':
 													if(response.success == true) {
-														App.setAlert("notice", 'Record was deleted successful!');
+														App.setAlert("Notice", 'Record was deleted successful!');
 													} else {
-														App.setAlert("notice", 'Deleting record failed!');
+														App.setAlert("Error", 'Deleting record failed!');
 													}
 													break;
 												case 'create':
 													if(response.success == true) {
-														App.setAlert("notice", 'Record was created successful!');
+														App.setAlert("Notice", 'Record was created successful!');
 													} else {
-														App.setAlert("notice", 'Creating record failed! ' + response.error);
+														App.setAlert("Error", 'Creating record failed! ' + response.error);
 													}
 													break;
 											}
@@ -214,7 +222,7 @@ function pdaGUI(api) {
 											xtype : 'textfield',
 											allowBlank: false,
 											validator: function(value) {
-												return validValue(value, 'Hostname');
+												return DNSValidator.validValue(value, 'Hostname');
 											}
 										}
 									}, {
@@ -233,7 +241,7 @@ function pdaGUI(api) {
 											xtype : 'textfield',
 											allowBlank: false,
 											validator: function(value) {
-												return validValue(value, 'UInt');
+												return DNSValidator.validValue(value, 'UInt');
 											}
 										}
 									}]
@@ -251,7 +259,7 @@ function pdaGUI(api) {
 											xtype : 'textfield',
 											allowBlank: false,
 											validator: function(value) {
-												return validValue(value, 'Hostname');
+												return DNSValidator.validValue(value, 'Hostname');
 											}
 										}
 									}, {
@@ -270,7 +278,7 @@ function pdaGUI(api) {
 											xtype : 'textfield',
 											allowBlank: false,
 											validator: function(value) {
-												return validValue(value, 'UInt');
+												return DNSValidator.validValue(value, 'UInt');
 											}
 										}
 									}, {
@@ -312,7 +320,7 @@ function pdaGUI(api) {
 								tbar: [{
 									text: 'Add Record',
 									handler: function(btn, ev) {
-										addRecordWindow(node.attributes.serverkey, node.attributes.zone, tab.store);
+										addRecordWindow(node.attributes.serverkey, node.attributes.zone, tab.store, node.attributes.rrStore);
 									}
 								}, '-', {
 									text: 'Delete selected Records',
@@ -389,7 +397,7 @@ function pdaGUI(api) {
 				}
 			});
 		} else {
-			App.setAlert("notice", 'Please select server first!');
+			App.setAlert("Notice", 'Please select server first!');
 		}
 	}
 
@@ -514,7 +522,7 @@ function pdaGUI(api) {
 					waitMsg:'Sending data...',
 					success: function(form, action) {
 						updateLoginStatus(action.result.loggedIn, action.result.username);
-						App.setAlert("pl", 'Logged in as '+action.result.username);
+						App.setAlert("Notice", 'Logged in as '+action.result.username);
 					},
 					failure: function(form, action) {
 						switch (action.failureType) {
@@ -552,43 +560,10 @@ function pdaGUI(api) {
 			}
 		}
 	});
-
-	// Valid Values with Mode
-	function validValue(value, mode) {
-		switch(mode) {
-			case 'IPv4':
-				return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(value);
-			case 'IPv6':
-				return /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/.test(value);
-			case 'Hostname':
-				return /^(_?[0-9a-z]+([0-9a-z\-]*[0-9a-z]+)?(\._?[0-9a-z]+([0-9a-z\-]*[0-9a-z]+)?)*)|@$/.test(value);
-			case 'UInt16':
-				return (/^[0-9]+$/.test(value) && value >= 0 && value <= 65535);
-			case 'UInt8':
-				return (/^[0-9]+$/.test(value) && value >= 0 && value <= 255);
-			case 'UInt':
-				return /^[0-9]+$/.test(value);
-			case 'DnskeyProtocol':
-				return (value == 3);
-			case 'Base64Content':
-				return /^[a-zA-Z0-9\/+\r\n]+[=]{0,2}$/.test(value);
-			case 'StringNoSpaces':
-				return !(/\s/g.test(value));
-			case 'String':
-				return /^.+$/.test(value);
-			case 'Email':
-				return /^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.(([0-9]{1,3})|([a-zA-Z]{2,3})|(aero|coop|info|museum|name))$/.test(value);
-			case 'SpfContent':
-				return true;
-			default:
-				return true;
-		}
-	}
-
-	var rrStore = null;
-
+	
 	// add record window
-	function addRecordWindow(server, zone, store) {
+	function addRecordWindow(server, zone, store, rrStore) {
+		
 		var recordForm = new Ext.FormPanel({
 			frame: true,
 			defaultType:'textfield',
@@ -610,20 +585,14 @@ function pdaGUI(api) {
 				editable: false,
 				width: 170,
 				height: 40,
-				mode: 'remote',
-				triggerAction: 'all',
+				mode: 'local',
 				emptyText: 'Please select first.',
 				displayField: 'type',
 				valueField: 'type',
-				store: new Ext.data.JsonStore({
-					url: URL+'/servers/'+server+'/rrtypes',
-					root: 'rrtypes',
-					fields: ['type', 'fields']
-				}),
+				store: rrStore,
 				listeners:{
 					// add Boxes on select
 					'select': function(combo, record, index) {
-
 						// first delete old Boxes
 						var children = recordForm.findByType('textfield');
 
@@ -640,7 +609,7 @@ function pdaGUI(api) {
 								width: 170,
 								validType: record.data.fields[key],
 								validator: function(value) {
-									return validValue(value, this.validType);
+									return DNSValidator.validValue(value, this.validType);
 								}
 							});
 						}
@@ -654,7 +623,7 @@ function pdaGUI(api) {
 				allowBlank:false,
 				width: 170,
 				validator: function(value) {
-					return validValue(value, 'Hostname');
+					return DNSValidator.validValue(value, 'Hostname');
 				}
 			}, {
 				fieldLabel: 'TTL',
@@ -663,7 +632,7 @@ function pdaGUI(api) {
 				allowBlank:false,
 				width: 170,
 				validator: function(value) {
-					return validValue(value, 'UInt');
+					return DNSValidator.validValue(value, 'UInt');
 				}
 			}],
 			buttons: [{
@@ -682,13 +651,13 @@ function pdaGUI(api) {
 						waitTitle:'Connecting',
 						waitMsg:'Sending data...',
 						success: function(form, action) {
-							App.setAlert("ok", 'Record successfully added! (New Id: '+action.result.newid+')');
+							App.setAlert("Ok", 'Record successfully added! (New Id: '+action.result.newid+')');
 							recordWindow.hide();
 							recordWindow.destroy();
 							store.load();
 						},
 						failure: function(form, action) {
-							App.setAlert("error", 'Error: ' + action.result.error);
+							App.setAlert("Error", 'Error: ' + action.result.error);
 						}
 					});
 				}
