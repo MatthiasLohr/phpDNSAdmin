@@ -45,7 +45,7 @@ abstract class AuthenticationModule {
 	 * @throws NotSupportedException If this module doesn't support user listings (e.g. for big LDAP directories)
 	 */
 	public function listUsers() {
-		throw new NotSupportedException("Can't list users!");
+		throw new NotSupportedException('Can\'t list users!');
 	}
 
 	/**
@@ -55,9 +55,9 @@ abstract class AuthenticationModule {
 	 * @param string $pasword unencrypted password for the new user, optional but needed if the user should be able to login
 	 * @return bool true on success, false otherwise
 	 */
-	
-	
-	abstract public function userAdd(User $user, $password = null);
+	public function userAdd(User $user, $password = null) {
+		throw new NotSupportedException('Can\'t create new users!');
+	}
 
 	/**
 	 * Check a user's login data
@@ -74,7 +74,9 @@ abstract class AuthenticationModule {
 	 * @param User $user user to delete
 	 * @return bool true on success, false otherwise
 	 */
-	abstract public function userDelete(User $user);
+	public function userDelete(User $user) {
+		throw new NotSupportedException('Can\'t delete users!');
+	}
 
 	/**
 	 * Check if a user exists
@@ -91,7 +93,9 @@ abstract class AuthenticationModule {
 	 * @param string $pasword new unencrypted password for the user, not null
 	 * @return bool true on success, false otherwise
 	 */
-	abstract public function userSetPassword(User $user, $password);
+	public function userSetPassword(User $user, $password) {
+		throw new NotSupportedException('Can\'t set user passwords!');
+	}
 
 }
 

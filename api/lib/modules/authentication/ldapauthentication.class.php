@@ -39,19 +39,7 @@ class LdapAuthentication extends AuthenticationModule {
 
 	}
 
-	public function listUsers() {
-
-	}
-
-	public function userAdd(User $user, $password = null) {
-
-	}
-
 	public function userCheckPassword(User $user,$password) {
-
-	}
-
-	public function userDelete(User $user) {
 
 	}
 
@@ -59,9 +47,6 @@ class LdapAuthentication extends AuthenticationModule {
 
 	}
 
-	public function userSetPassword(User $user, $password) {
-
-	}
 }
 
 ?>
