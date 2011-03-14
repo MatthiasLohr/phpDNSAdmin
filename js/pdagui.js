@@ -142,8 +142,8 @@ function pdaGUI(api) {
 							var RestURL = API.getURL() + '/servers/' + node.attributes.serverkey + '/zones/' + node.attributes.zone + '/records';
 							var newStore = new Ext.data.Store({
 								restful: true,
-								paramNames: { start: 'offset', limit: 'limit', sort: 'sortby', dir: 'sortorder' },
-								sortInfo: { field: 'name', direction: 'ASC' },
+								paramNames: {start: 'offset', limit: 'limit', sort: 'sortby', dir: 'sortorder'},
+								sortInfo: {field: 'name', direction: 'ASC'},
 								remoteSort: true,
 								reader: new Ext.data.JsonReader({
 									fields: [{
@@ -152,7 +152,7 @@ function pdaGUI(api) {
 									}, 'name', 'type', 'content', {
 										name: 'ttl',
 										type: 'int'
-									}, { name: 'content', mapping: 'fields' }, {
+									}, {name: 'content', mapping: 'fields'}, {
 										name: 'views',
 										defaultValue:false
 								  }],
@@ -224,7 +224,7 @@ function pdaGUI(api) {
 											xtype : 'textfield',
 											allowBlank: false,
 											validator: function(value) {
-												return DNSValidator.validValue(value, 'Hostname');
+												return DNSValidator.validValue(value, 'Name');
 											}
 										}
 									}, {
