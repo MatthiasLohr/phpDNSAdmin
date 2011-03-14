@@ -72,9 +72,14 @@ class ZoneRouter extends RequestRouter {
 		// sort options
 		$sortoptions = '';
 		if (isset($_GET['sortby'])) {
-			$sortoptions = strval($_GET['sortby']);
-			if (isset($_GET['sortorder']) && $_GET['sortorder'] == 'DESC') {
-				$sortoptions = '-'.$sortoptions;
+			if (in_array(strval($_GET['sortby']),array('id','name','type','content','ttl','priority'))) {
+				$sortoptions = strval($_GET['sortby']);
+				if (isset($_GET['sortorder']) && $_GET['sortorder'] == 'DESC') {
+					$sortoptions = '-'.$sortoptions;
+				}
+			}
+			else {
+				$sortoptions = 'name';
 			}
 		}
 		// limit+offset
