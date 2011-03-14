@@ -23,8 +23,9 @@
 		<link rel="stylesheet" type="text/css" href="js/extjs/resources/css/ext-all.css" />
 		<link rel="stylesheet" type="text/css" href="js/extjs/growl/css/ext/ux/Growl.css" />
 		<link rel="stylesheet" type="text/css" href="js/extjs/roweditor/css/RowEditor.css" />
+		<link rel="stylesheet" type="text/css" href="css/pdastyle.css" />
 		<script type="text/javascript" src="js/extjs/adapter/ext/ext-base.js"></script>
-		<script type="text/javascript" src="js/extjs/ext-all-debug.js"></script>
+		<script type="text/javascript" src="js/extjs/ext-all.js"></script>
 		<script type="text/javascript" src="js/extjs/growl/Growl.js"></script>
 		<script type="text/javascript" src="js/extjs/extjs.addons.js"></script>
 		<script type="text/javascript" src="js/extjs/roweditor/RowEditor.js"></script>

@@ -68,6 +68,8 @@ function pdaGUI(api) {
 		rootNode.removeAll(true);
 		for (serverkey in servers) {
 			rootNode.appendChild(new Ext.tree.TreeNode({
+				iconCls: 'server-icon',
+				icon: '',
 				allowChildren: true,
 				allowDrag: false,
 				allowDrop: false,
@@ -227,7 +229,8 @@ function pdaGUI(api) {
 										}
 									}, {
 										header: 'type',
-										dataIndex: 'type'
+										dataIndex: 'type',
+										displayEditor: new Ext.form.DisplayField({cls: 'editor-display-field'})
 									}, {
 										header: 'content',
 										id: 'content',
