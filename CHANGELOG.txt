@@ -1,3 +1,4 @@
+* Fixed some usability Bugs
 * added support for MyDNS
 
 == 2011-03-14 ==

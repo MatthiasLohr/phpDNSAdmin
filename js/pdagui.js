@@ -323,6 +323,8 @@ function pdaGUI(api) {
 								tbar: [{
 									text: 'Add Record',
 									handler: function(btn, ev) {
+										//stop editing if RowEditor is open
+										tab.plugins[0].stopEditing(false);
 										addRecordWindow(node.attributes.serverkey, node.attributes.zone, tab.store, node.attributes.rrStore);
 									}
 								}, '-', {
@@ -593,6 +595,8 @@ function pdaGUI(api) {
 				displayField: 'type',
 				valueField: 'type',
 				store: rrStore,
+				triggerAction: 'all',
+				lastQuery: '',
 				listeners:{
 					// add Boxes on select
 					'select': function(combo, record, index) {
@@ -642,13 +646,6 @@ function pdaGUI(api) {
 				text: 'Add Record',
 				formBind: true,
 				handler: function() {
-//					Maybe use this? idk...
-//					var u = new store.recordType();
-
-//					editor.stopEditing();
-//					tab.store.insert(0, u);
-//					editor.startEditing(0);
-
 					recordForm.getForm().submit({
 						method:'PUT',
 						waitTitle:'Connecting',
