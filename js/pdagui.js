@@ -626,7 +626,7 @@ function pdaGUI(api) {
 				allowBlank:false,
 				width: 170,
 				validator: function(value) {
-					return DNSValidator.validValue(value, 'Hostname');
+					return DNSValidator.validValue(value, 'Name');
 				}
 			}, {
 				fieldLabel: 'TTL',
