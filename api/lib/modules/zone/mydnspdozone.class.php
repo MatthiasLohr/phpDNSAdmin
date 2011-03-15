@@ -103,7 +103,7 @@ class MydnsPdoZone extends ZoneModule {
 		// initial query with join for including SOA record in filter/sort options
 		$query = 'SELECT * FROM ((SELECT id,name,type,data AS content,aux,ttl FROM rr WHERE zone = '
 			.$this->db->quote($this->zoneIds[$zone->getName()]).') UNION ALL'
-			.' (SELECT 0 AS id, origin AS name, \'SOA\' AS type, CONCAT_WS(\' \',ns,mbox,serial,refresh,retry,expire,minimum) AS content, NULL AS aux, ttl FROM soa WHERE id = '.$this->db->quote($this->zoneIds[$zone->getName()]).'))'
+			.' (SELECT 0 AS id, CONCAT(origin,\'.\') AS name, \'SOA\' AS type, CONCAT_WS(\' \',ns,mbox,serial,refresh,retry,expire,minimum) AS content, NULL AS aux, ttl FROM soa WHERE id = '.$this->db->quote($this->zoneIds[$zone->getName()]).'))'
 			.' AS tmptbl WHERE TRUE';
 		// where conditions (apply filters)
 		if (isset($filter['id'])) {
@@ -154,9 +154,20 @@ class MydnsPdoZone extends ZoneModule {
 		$records = array();
 		while ($tmpRecord = $stm->fetch()) {
 			if ($tmpRecord['id'] == 0) $tmpRecord['id'] = -1;
+			if (substr($tmpRecord['name'],-1) == '.') {
+				if (substr($tmpRecord['name'],0,-1) == $zone->getName()) {
+					$name = '@';
+				}
+				else {
+					$name = substr($tmpRecord['name'],0,-strlen($zone->getName())-2);
+				}
+			}
+			else {
+				$name = $tmpRecord['name'];
+			}
 			$records[$tmpRecord['id']] = ResourceRecord::getInstance(
 				$tmpRecord['type'],
-				(substr($tmpRecord['name'],-1) == '.')?substr($tmpRecord['name'],0,-strlen($zone->getName())-2):$tmpRecord['name'],
+				$name,
 				$tmpRecord['content'],
 				$tmpRecord['ttl'],
 				($tmpRecord['aux'] == 0?null:$tmpRecord['aux'])
@@ -223,7 +234,7 @@ class MydnsPdoZone extends ZoneModule {
 			return ($result->rowCount() > 0);
 		}
 		else {
-			$stm = $this->db->query('UPDATE rr SET name = '.$this->db->quote($record->getName() == '@'?$zone->getName():$record->getName().'.'.$zone->getName().'.')
+			$stm = $this->db->query('UPDATE rr SET name = '.$this->db->quote($record->getName() == '@'?$zone->getName().'.':$record->getName().'.'.$zone->getName().'.')
 				.', data = '.$this->db->quote($record->getContentString())
 				.', aux = '.$this->db->quote(($record->fieldExists('priority')?$record->getField('priority'):'0'))
 				.', ttl = '.$this->db->quote($record->getTTL())
