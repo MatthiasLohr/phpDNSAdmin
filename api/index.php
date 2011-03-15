@@ -69,6 +69,7 @@ catch (Exception $e) {
 	$result->error = get_class($e);
 	$result->location = $e->getFile().':'.$e->getLine();
 	$result->stacktrace = $e->getTrace();
+	$result->message = $e->getMessage();
 	echo(json_encode($result));
 }
 
