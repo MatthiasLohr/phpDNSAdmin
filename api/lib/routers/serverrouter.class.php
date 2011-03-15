@@ -62,9 +62,8 @@ class ServerRouter extends RequestRouter {
 				if ($this->getRequestType() == 'PUT') {
 					$data = RequestRouter::getRequestData();
 					$zone = new Zone($data['zonename'], $this->zoneModule);
-					$this->zoneModule->zoneCreate($zone);
 					$result = new stdClass();
-					$result->success = true;
+					$result->success = $this->zoneModule->zoneCreate($zone);
 					return $result;
 				}
 				// list zones

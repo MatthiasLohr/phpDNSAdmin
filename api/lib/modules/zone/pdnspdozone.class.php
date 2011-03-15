@@ -270,7 +270,8 @@ class PdnsPdoZone extends ZoneModule {
 	public function zoneCreate(Zone $zone) {
 		if ($this->zoneExists($zone))
 			throw new ZoneExistsException('Zone \''.$zone->getName().'\' already exists.!');
-		$this->db->query('INSERT INTO ' . $this->tablePrefix . 'domains (name,last_check,type,notified_serial) VALUES (' . $this->db->quote($zone->getName()) . ',0,\'MASTER\',0)');
+		$stm = $this->db->query('INSERT INTO ' . $this->tablePrefix . 'domains (name,last_check,type,notified_serial) VALUES (' . $this->db->quote($zone->getName()) . ',0,\'MASTER\',0)');
+		return ($stm->rowCount() > 0);
 	}
 
 	public function zoneDelete(Zone $zone) {
