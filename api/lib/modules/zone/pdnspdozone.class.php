@@ -206,7 +206,7 @@ class PdnsPdoZone extends ZoneModule {
 		$domainid = $this->zoneIds[$zone->getName()];
 		try {
 			$priority = $record->getField('priority');
-			$this->db->query(
+			$res = $this->db->query(
 				'INSERT INTO ' . $this->tablePrefix . 'records (domain_id,name,type,content,ttl,prio) VALUES ('
 				. $this->db->quote($domainid) . ','
 				. $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
@@ -225,11 +225,16 @@ class PdnsPdoZone extends ZoneModule {
 				. $this->db->quote($record->getTTL()) . ')'
 			);
 		}
-		switch ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
-			case 'pgsql':
-				return $this->db->lastInsertId($this->recordsSequence);
-			default:
-				return $this->db->lastInsertId();
+		if ($res->rowCount() > 0) {
+			switch ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
+				case 'pgsql':
+					return $this->db->lastInsertId($this->recordsSequence);
+				default:
+					return $this->db->lastInsertId();
+			}
+		}
+		else {
+			return false;
 		}
 	}
 
