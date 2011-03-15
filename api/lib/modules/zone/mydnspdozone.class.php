@@ -57,16 +57,20 @@ class MydnsPdoZone extends ZoneModule {
 		return new MydnsPdoZone($config);
 	}
 
+	/**
+	 * @todo implement
+	 */
 	public function getRecordById(Zone $zone,$recordid) {
-		if ($recordid == -1) {
-			// SOA
+		$this->zoneAssureExistence($zone);
+		if ($recordid == -1) { // recordid == -1: SOA record from soa table
+			// SOA record (stored in soa table)
 			$result = $this->db->query('SELECT origin,ns,mbox,serial,refresh,retry,expire,minimum,ttl FROM soa WHERE origin = '.$this->db->quote($zone->getName()));
 			$tmprecord = $result->fetch();
-			return new ResourceRecord(
+			return ResourceRecord::getInstance('SOA',
 				'@',
 				array(
 					'primary'     => $tmprecord['ns'],
-					'hostmaster'  => $tmprecord['mbox'],
+					'hostmaster'  => Email::convertFromDNS($tmprecord['mbox']),
 					'serial'      => $tmprecord['serial'],
 					'refresh'     => $tmprecord['refresh'],
 					'retry'       => $tmprecord['retry'],
@@ -77,13 +81,88 @@ class MydnsPdoZone extends ZoneModule {
 			);
 		}
 		else {
-			// OTHER
-			
+			// other records (stored in rr table)
+			$stm = $this->db->query('SELECT name,type,data,aux,ttl FROM rr WHERE id = '.$this->db->quote($recordid).' AND zone = '.$this->db->quote($this->zoneIds[$zone->getName()]));
+			$tmprecord = $stm->fetch();
+			if (!$tmprecord) return null;
+			return ResourceRecord::getInstance(
+				$tmprecord['type'],
+				(substr($tmprecord['name'],-1) == '.')?substr($tmprecord['name'],0,-strlen($zone->getName())-2):$tmprecord['name'],
+				$tmprecord['data'],
+				$tmprecord['ttl'],
+				($tmprecord['aux'] == 0?null:$tmprecord['aux'])
+			);
 		}
 	}
 
+	/**
+	 * @todo implement
+	 */
 	public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
-
+		$this->zoneAssureExistence($zone);
+		// initial query with join for including SOA record in filter/sort options
+		$query = 'SELECT * FROM ((SELECT id,name,type,data AS content,aux,ttl FROM rr WHERE zone = '
+			.$this->db->quote($this->zoneIds[$zone->getName()]).') UNION ALL'
+			.' (SELECT 0 AS id, origin AS name, \'SOA\' AS type, CONCAT_WS(\' \',ns,mbox,serial,refresh,retry,expire,minimum) AS content, NULL AS aux, ttl FROM soa WHERE id = '.$this->db->quote($this->zoneIds[$zone->getName()]).'))'
+			.' AS tmptbl WHERE TRUE';
+		// where conditions (apply filters)
+		if (isset($filter['id'])) {
+			$query .= ' AND id = ' . $this->db->quote($filter['id'] == -1?0:$filter['id']);
+		}
+		if (isset($filter['name'])) {
+			$query .= ' AND name = ' . $this->db->quote($filter['name'].'.'.$zone->getName().'.');
+		}
+		if (isset($filter['type'])) {
+			$query .= ' AND type = ' . $this->db->quote($filter['type']);
+		}
+		if (isset($filter['content'])) {
+			$query .= ' AND content = ' . $this->db->quote($filter['content']);
+		}
+		if (isset($filter['ttl'])) {
+			$query .= ' AND ttl = ' . $this->db->quote($filter['ttl']);
+		}
+		// sort options
+		if (strlen($sortoptions) > 0) {
+			$firstcol = true;
+			$cols = explode(',',$sortoptions);
+			foreach ($cols as $col) {
+				if (substr($col,0,1) == '-') {
+					$colname = substr($col,1);
+					$order = 'DESC';
+				}
+				else {
+					$colname = $col;
+					$order = 'ASC';
+				}
+				if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
+					if ($firstcol) {
+						$firstcol = false;
+						$query .= ' ORDER BY '.$colname.' '.$order;
+					}
+					else {
+						$query .= ','.$colname.' '.$order;
+					}
+				}
+			}
+		}
+		// limit/offset
+		if($limit > 0) {
+			$query .= ' LIMIT ' . intval($limit) . ' OFFSET ' . intval($offset);
+		}
+		// execute query
+		$stm = $this->db->query($query);
+		$records = array();
+		while ($tmpRecord = $stm->fetch()) {
+			if ($tmpRecord['id'] == 0) $tmpRecord['id'] = -1;
+			$records[$tmpRecord['id']] = ResourceRecord::getInstance(
+				$tmpRecord['type'],
+				(substr($tmpRecord['name'],-1) == '.')?substr($tmpRecord['name'],0,-strlen($zone->getName())-2):$tmpRecord['name'],
+				$tmpRecord['content'],
+				$tmpRecord['ttl'],
+				($tmpRecord['aux'] == 0?null:$tmpRecord['aux'])
+			);
+		}
+		return $records;
 	}
 
 	public function listZones() {
@@ -98,43 +177,97 @@ class MydnsPdoZone extends ZoneModule {
 	}
 
 	public function recordAdd(Zone $zone,ResourceRecord $record) {
-		if ($record->getType() == 'SOA') return false;
-		
+		$this->zoneAssureExistence($zone);
+		if ($record->getType() == 'SOA') return false; // SOAs are only in the soa table, one for each zone
+		$stm = $this->db->query('INSERT INTO rr (zone,name,type,data,aux,ttl) VALUES ('
+			.$this->db->quote($this->zoneIds[$zone->getName()]).','
+			.$this->db->quote($record->getName() == '@'?$zone->getName():$record->getName().'.'.$zone->getName().'.').','
+			.$this->db->quote($record->getType()).','
+			.$this->db->quote($record->getContentString()).','
+			.$this->db->quote(($record->fieldExists('priority')?$record->getField('priority'):'0')).','
+			.$this->db->quote($record->getTTL()).')'
+		);
+		if ($stm->rowCount() > 0) {
+			switch ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
+				case 'pgsql':
+					return $this->db->lastInsertId($this->recordsSequence);
+				default:
+					return $this->db->lastInsertId();
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
-
+		$this->zoneAssureExistence($zone);
+		if ($recordid == -1) return false; // recordid == -1 is the SOA record from the soa table
+		$stm = $this->db->query('DELETE FROM rr WHERE id = '.$this->db->quote($recordid).' AND zone = '.$this->db->quote($this->zoneIds[$zone->getName()]));
+		return ($stm->rowCount() > 0);
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
+		$this->zoneAssureExistence($zone);
 		if ($record->getType() == 'SOA') {
-			$result = $this->db->query('UPDATE soa SET ns = '.$record->getField('primary')
-				.',mbox = '.$record->getField('hostmaster')
-				.',serial = '.$record->getField('serial')
-				.',refresh = '.$record->getField('refresh')
-				.',retry = '.$record->getField('retry')
-				.',expire = '.$record->getField('expire')
-				.',minimum = '.$record->getField('negativettl')
-				.',ttl = '.$record->getTTL()
+			$result = $this->db->query('UPDATE soa SET ns = '.$this->db->quote($record->getField('primary'))
+				.',mbox = '.$this->db->quote(Email::convertToDNS($record->getField('hostmaster')))
+				.',serial = '.$this->db->quote($record->getField('serial'))
+				.',refresh = '.$this->db->quote($record->getField('refresh'))
+				.',retry = '.$this->db->quote($record->getField('retry'))
+				.',expire = '.$this->db->quote($record->getField('expire'))
+				.',minimum = '.$this->db->quote($record->getField('negativettl'))
+				.',ttl = '.$this->db->quote($record->getTTL())
 				.' WHERE origin = '.$this->db->quote($zone->getName())
 			);
-			return ($result->affectedRows() > 0);
+			return ($result->rowCount() > 0);
 		}
 		else {
-
+			$stm = $this->db->query('UPDATE rr SET name = '.$this->db->quote($record->getName() == '@'?$zone->getName():$record->getName().'.'.$zone->getName().'.')
+				.', data = '.$this->db->quote($record->getContentString())
+				.', aux = '.$this->db->quote(($record->fieldExists('priority')?$record->getField('priority'):'0'))
+				.', ttl = '.$this->db->quote($record->getTTL())
+				.' WHERE id = '.$this->db->quote($recordid)
+				.' AND zone = '.$this->db->quote($this->zoneIds[$zone->getName()])
+				.' AND type = '.$this->db->quote($record->getType())
+			);
+			return ($stm->rowCount() > 0);
 		}
 	}
 
 	public function zoneCreate(Zone $zone) {
-
+		if ($this->zoneExists($zone)) throw new ZoneExistsException('Zone \''.$zone->getName().'\' already exists.!');
+		$stm = $this->db->query('INSERT INTO soa (origin,ns,mbox,serial) VALUES ('
+			.$this->db->quote($zone->getName()).','
+			.$this->db->quote('ns1.'.$zone->getName()).','
+			.$this->db->quote('hostmaster.'.$zone->getName()).','
+			.$this->db->quote(gmdate('Ymd00')).')'
+		);
+		return ($stm->rowCount() > 0);
 	}
 
 	public function zoneDelete(Zone $zone) {
-
+		$this->zoneAssureExistence($zone);
+		$stm = $this->db->query('SELECT id FROM soa WHERE origin = '.$this->db->quote($zone->getName()));
+		$tmpZone = $stm->fetch();
+		$zoneId = $tmpZone['id'];
+		$this->db->query('DELETE FROM rr WHERE zone = '.$this->db->quote($zoneId));
+		$stm = $this->db->query('DELETE FROM soa WHERE id = '.$this->db->quote($zoneId));
+		unset($this->zoneIds[$zone->getName()]);
+		return true;
 	}
 
 	public function zoneExists(Zone $zone) {
-
+		$stm = $this->db->query('SELECT id FROM soa WHERE origin = '.$this->db->quote($zone->getName()));
+		if ($stm->rowCount() > 0) {
+			$tmp = $stm->fetch();
+			$this->zoneIds[$zone->getName()] = $tmp['id'];
+			return true;
+		}
+		else {
+			unset($this->zoneIds[$zone->getName()]);
+			return false;
+		}
 	}
 }
 

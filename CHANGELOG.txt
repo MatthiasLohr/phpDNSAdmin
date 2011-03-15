@@ -1,3 +1,5 @@
+* added support for MyDNS
+
 == 2011-03-14 ==
 Too much to explain here. Let's say: We made it better.
 
