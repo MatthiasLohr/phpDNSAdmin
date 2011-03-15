@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS `rr` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `zone` int(10) unsigned NOT NULL,
+  `name` char(64) COLLATE utf8_unicode_ci NOT NULL,
+  `type` enum('A','AAAA','CNAME','HINFO','MX','NAPTR','NS','PTR','RP','SRV','TXT') COLLATE utf8_unicode_ci DEFAULT NULL,
+  `data` char(128) COLLATE utf8_unicode_ci NOT NULL,
+  `aux` int(10) unsigned NOT NULL,
+  `ttl` int(10) unsigned NOT NULL DEFAULT '86400',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `rr` (`zone`,`name`,`type`,`data`),
+  KEY `zone` (`zone`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `soa` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `origin` char(255) COLLATE utf8_unicode_ci NOT NULL,
+  `ns` char(255) COLLATE utf8_unicode_ci NOT NULL,
+  `mbox` char(255) COLLATE utf8_unicode_ci NOT NULL,
+  `serial` int(10) unsigned NOT NULL DEFAULT '1',
+  `refresh` int(10) unsigned NOT NULL DEFAULT '28800',
+  `retry` int(10) unsigned NOT NULL DEFAULT '7200',
+  `expire` int(10) unsigned NOT NULL DEFAULT '604800',
+  `minimum` int(10) unsigned NOT NULL DEFAULT '86400',
+  `ttl` int(10) unsigned NOT NULL DEFAULT '86400',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `origin` (`origin`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
