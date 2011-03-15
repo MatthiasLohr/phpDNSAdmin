@@ -172,7 +172,7 @@ class PdnsPdoZone extends ZoneModule {
 		}
 		// limit/offset
 		if($limit > 0) {
-			$query .= ' LIMIT ' . $this->db->quote($limit) . ' OFFSET ' . $this->db->quote($offset);
+			$query .= ' LIMIT ' . intval($limit) . ' OFFSET ' . intval($offset);
 		}
 		// execute query
 		$result = array();
