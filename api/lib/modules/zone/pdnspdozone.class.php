@@ -42,7 +42,13 @@ class PdnsPdoZone extends ZoneModule {
 	private $tablePrefix = '';
 
 	protected function __construct($config) {
-		$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
+		try {
+			$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
+		}
+		catch (PDOException $e) {
+			$config['pdo_password'] = 'xxxxxx';
+			throw new ModuleConfigException('Could not connect to database!');
+		}
 
 		if (isset($config['domains_sequence'])) $this->domainsSequence = $config['domains_sequence'];
 		if (isset($config['records_sequence'])) $this->recordsSequence = $config['records_sequence'];

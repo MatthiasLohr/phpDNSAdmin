@@ -74,7 +74,13 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		if (isset($config['tableprefix'])) $this->tablePrefix = $config['tableprefix'];
 
 		// connect to cache db
-		$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
+		try {
+			$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
+		}
+		catch (PDOException $e) {
+			$config['pdo_password'] = 'xxxxxx';
+			throw new ModuleConfigException('Could not connect to database!');
+		}
 		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
 			$this->db->query('SET search_path TO '.$this->db->quote($config['search_path']));
 		}

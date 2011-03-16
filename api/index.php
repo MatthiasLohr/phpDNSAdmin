@@ -32,14 +32,13 @@ else {
 
 $configuration = Configuration::getInstance();
 
-// initialize module managers
-AuthenticationManager::initialize($configuration->getAuthenticationConfig());
-AuthorizationManager::initialize($configuration->getAuthorizationConfig());
-AutologinManager::initialize($configuration->getAutologinConfig());
-ZoneManager::initialize($configuration->getZoneConfig());
-
-// prepare path and start script execution
 try {
+	// initialize module managers
+	AuthenticationManager::initialize($configuration->getAuthenticationConfig());
+	AuthorizationManager::initialize($configuration->getAuthorizationConfig());
+	AutologinManager::initialize($configuration->getAutologinConfig());
+	ZoneManager::initialize($configuration->getZoneConfig());
+	// prepare path and start script execution
 	$router = new MainRouter();
 	if (isset($_GET['pda_request_path']) && strlen($_GET['pda_request_path']) > 0) {
 		if (substr($_GET['pda_request_path'],-1) == '/') {
@@ -57,6 +56,24 @@ try {
 	}
 	echo(json_encode($result));
 }
+catch (ModuleConfigException $e) {
+	$result = new stdClass();
+	$result->success = false;
+	$result->error = get_class($e);
+	$result->location = $e->getFile().':'.$e->getLine();
+	if ($configuration->debugMode()) $result->stacktrace = $e->getTrace();
+	$result->message = $e->getMessage();
+	echo(json_encode($result));
+}
+catch (ModuleRuntimeException $e) {
+	$result = new stdClass();
+	$result->success = false;
+	$result->error = get_class($e);
+	$result->location = $e->getFile().':'.$e->getLine();
+	if ($configuration->debugMode()) $result->stacktrace = $e->getTrace();
+	$result->message = $e->getMessage();
+	echo(json_encode($result));
+}
 catch (RequestRoutingException $e) {
 	$result = new stdClass();
 	$result->success = false;
@@ -68,7 +85,7 @@ catch (Exception $e) {
 	$result->success = false;
 	$result->error = get_class($e);
 	$result->location = $e->getFile().':'.$e->getLine();
-	$result->stacktrace = $e->getTrace();
+	if ($configuration->debugMode()) $result->stacktrace = $e->getTrace();
 	$result->message = $e->getMessage();
 	echo(json_encode($result));
 }

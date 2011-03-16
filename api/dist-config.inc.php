@@ -119,6 +119,11 @@ $config = array(
 		),
 		// */
 	),
+
+	// internal phpDNSAdmin configuration
+	'internal' => array(
+		'debug' => false, // shows strack traces on exepctions. DANGER! maybe shows passwords!!!
+	)
 );
 
 ?>

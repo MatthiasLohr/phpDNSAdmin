@@ -39,6 +39,10 @@ class Configuration {
 		$this->config = $configuration;
 	}
 
+	public function debugMode() {
+		return $this->config['internal']['debug'];
+	}
+
 	public function getAuthenticationConfig() {
 		return $this->config['authentication'];
 	}
