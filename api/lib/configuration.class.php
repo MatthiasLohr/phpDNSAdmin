@@ -40,7 +40,8 @@ class Configuration {
 	}
 
 	public function debugMode() {
-		return $this->config['internal']['debug'];
+		if (isset($this->config['internal']) && isset($this->config['internal']['debug'])) return $this->config['internal']['debug'];
+		return false;
 	}
 
 	public function getAuthenticationConfig() {
