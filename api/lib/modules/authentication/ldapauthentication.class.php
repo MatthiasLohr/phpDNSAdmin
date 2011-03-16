@@ -31,20 +31,83 @@
  */
 class LdapAuthentication extends AuthenticationModule {
 
-	protected function __construct($config) {
+	var $lc = null;
 
+	var $binddn;
+	var $password;
+	var $basedn;
+	var $filter;
+
+	protected function __construct($config) {
+		$this->lc = ldap_connect($config['server']);
+		$this->binddn = $config['binddn'];
+		$this->password = $config['password'];
+		$this->basedn = $config['basedn'];
+		$this->filter = $config['filter'];
+	}
+
+	public function  __destruct() {
+	 ldap_unbind($this->lc);
 	}
 
 	public static function getInstance($config) {
+		return new LdapAuthentication($config);
+	}
 
+	private function ldapBind($bindDN = '',$password = '') {
+		if ($bindDN == '') { // anonymous bind
+			$result = @ldap_bind($this->lc);
+		}
+		else {
+			if ($password == '') return false;
+			$result = @ldap_bind($this->lc,$bindDN,$password);
+		}
+		if ($result === true) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private function ldapCountEntries($searchResource) {
+		return ldap_count_entries($this->lc,$searchResource);
+	}
+
+	private function ldapEscapeFilter($string) {
+		return str_replace(array('*','(',')'),array('\*','\(','\)'),$string);
+	}
+
+	private function ldapFirstEntry($searchResource) {
+		return ldap_first_entry($this->lc,$searchResource);
+	}
+
+	private function ldapGetDN($entryResource) {
+		return ldap_get_dn($this->lc,$entryResource);
+	}
+
+	private function ldapSearch($baseDN,$filter) {
+		return ldap_search($this->lc,$baseDN,$filter);
 	}
 
 	public function userCheckPassword(User $user,$password) {
-
+		if ($password == '') return false; // password must not be empty
+		$this->ldapBind($this->binddn,$this->password);
+		$sr = $this->ldapSearch($this->basedn,sprintf($this->filter,$this->ldapEscapeFilter($user->getUsername())));
+		if ($this->ldapCountEntries($sr) > 0) {
+			$ldapUser = $this->ldapFirstEntry($sr);
+			// try to rebind with new user
+			return $this->ldapBind($this->ldapGetDN($ldapUser),$password);
+		}
+		else {
+			return false;
+		}
 	}
 
 	public function userExists(User $user) {
-
+		$this->ldapBind($this->binddn,$this->password);
+		$sr = $this->ldapSearch($this->basedn,sprintf($this->filter,$this->ldapEscapeFilter($user->getUsername())));
+		return ($this->ldapCountEntries($sr) > 0);
 	}
 
 }
