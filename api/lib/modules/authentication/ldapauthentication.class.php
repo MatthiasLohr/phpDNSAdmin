@@ -31,19 +31,40 @@
  */
 class LdapAuthentication extends AuthenticationModule {
 
+	/** @var resource LDAP connection resource */
 	var $lc = null;
 
-	var $binddn;
-	var $password;
+	/** @var string bindDN */
+	var $binddn = '';
+	/** @var string password for bindDN */
+	var $password = '';
+	/** @var string baseDN for users */
 	var $basedn;
+	/** @var string filter for users */
 	var $filter;
 
+	/** @var string[] array of allowed users */
+	var $whitelist = null;
+	/** @var string[] array of forbidden users */
+	var $blacklist = array();
+
 	protected function __construct($config) {
+		if (!isset($config['server'])) throw new ModuleConfigException('You have to give me a LDAP server!');
+		if (!isset($config['basedn'])) throw new ModuleConfigException('You have to give me a BaseDN!');
+		if (!isset($config['filter'])) throw new ModuleConfigException('You have to give me a filter string!');
+
 		$this->lc = ldap_connect($config['server']);
-		$this->binddn = $config['binddn'];
-		$this->password = $config['password'];
+
+		if (isset($config['binddn'])) {
+			$this->binddn = $config['binddn'];
+			if (isset($config['password'])) $this->password = $config['password'];
+		}
+
 		$this->basedn = $config['basedn'];
 		$this->filter = $config['filter'];
+
+		if (isset($config['whitelist']) && is_array($config['whitelist'])) $this->whitelist = $config['whitelist'];
+		if (isset($config['blacklist']) && is_array($config['blacklist'])) $this->blacklist = $config['blacklist'];
 	}
 
 	public function  __destruct() {
@@ -92,6 +113,8 @@ class LdapAuthentication extends AuthenticationModule {
 
 	public function userCheckPassword(User $user,$password) {
 		if ($password == '') return false; // password must not be empty
+		if (is_array($this->whitelist) && !in_array($user->getUsername(),$this->whitelist)) return false;
+		if (in_array($user->getUsername(),$this->blacklist)) return false;
 		$this->ldapBind($this->binddn,$this->password);
 		$sr = $this->ldapSearch($this->basedn,sprintf($this->filter,$this->ldapEscapeFilter($user->getUsername())));
 		if ($this->ldapCountEntries($sr) > 0) {

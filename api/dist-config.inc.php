@@ -29,6 +29,23 @@ $config = array(
 			'filename' => '/var/www/phpdnsadmin/.htpasswd'
 		),
 		// */
+
+		/* -- delete this line for enabling LdapAuthentication --
+		array (
+			'_module' => 'LdapAuthentication',
+			'server' => 'localhost',
+			'binddn' => 'cn=admin,cn=Users,dc=domain,dc=tld',
+			'password' => 'admin',
+			'basedn' => 'CN=Users,DC=domain,DC=tld',
+			'filter' => '(&(sAMAccountName=%s)(objectclass=user))',
+
+			// optional: user whitelist
+			//'whitelist' => array('admin'),
+
+			// optional: user blacklist
+			//'blacklist' => array('guest'),
+		),
+		// */
 	),
 
 	// autologin modules
