@@ -18,7 +18,7 @@
 
 function pdaAPI(url) {
 
-	this.logout = function(callback) {
+	this.logout = function(successCallback, errorCallback) {
 		data = {username: ''};
 		Ext.Ajax.request({
 			url: URL+'/status',
@@ -26,17 +26,25 @@ function pdaAPI(url) {
 			params: data,
 			success: function(response,options) {
 				var data = Ext.decode(response.responseText);
-				callback(data.loggedIn);
+				if (data.success == false) {
+					 errorCallback(data.error, data.message);
+				} else {
+					successCallback(data.loggedIn);
+				}
 			}
 		});
 	}
-	this.checkLoginStatus = function(callback,options) {
+	this.checkLoginStatus = function(successCallback, errorCallback, options) {
 		Ext.Ajax.request({
 			url: URL+'/status',
 			method: 'GET',
 			success: function(response,options) {
 				var data = Ext.decode(response.responseText);
-				callback(data.loggedIn, data.username);
+				if(data.success == false) {
+					errorCallback(data.error, data.message, true);
+				} else {
+					successCallback(data.loggedIn, data.username);
+				}
 			}
 		});
 	}

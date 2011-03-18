@@ -63,6 +63,19 @@ function pdaGUI(api) {
 	// Notify-System
 	var App = new Ext.App({});
 
+	function displayError(title, message, askReload) {
+		if(askReload) {
+			Ext.Msg.confirm(title, message + "<br />Reload page?", function(btn) {
+				if (btn == 'yes') {
+					// reload page
+					window.location.reload();
+				}
+			});
+		} else {
+			Ext.Msg.alert(title, message);
+		}
+	}
+
 	function displayServers(servers) {
 		var rootNode = zonetree.root;
 		rootNode.removeAll(true);
@@ -308,7 +321,18 @@ function pdaGUI(api) {
 //									roweditor.grid.getStore().load();
 //								}
 							});
-							
+
+							// GridFilter
+							var gridfilter = new Ext.ux.grid.GridFilters({
+								local: false,
+								encode: true,
+								filters : [{
+
+								}, {
+
+								}]
+							});
+
 							tab = new Ext.grid.GridPanel({
 								serverkey: node.attributes.serverkey,
 								zone: node.attributes.zone,
@@ -480,7 +504,7 @@ function pdaGUI(api) {
 			id: 'logout-button',
 			disabled: true,
 			handler: function() {
-				API.logout(updateLoginStatus);
+				API.logout(updateLoginStatus, displayError);
 			}
 		}
 		]
@@ -684,5 +708,5 @@ function pdaGUI(api) {
 	});
 	
 	// check login status
-	API.checkLoginStatus(updateLoginStatus);
+	API.checkLoginStatus(updateLoginStatus, displayError);
 }
