@@ -322,17 +322,6 @@ function pdaGUI(api) {
 //								}
 							});
 
-							// GridFilter
-							var gridfilter = new Ext.ux.grid.GridFilters({
-								local: false,
-								encode: true,
-								filters : [{
-
-								}, {
-
-								}]
-							});
-
 							tab = new Ext.grid.GridPanel({
 								serverkey: node.attributes.serverkey,
 								zone: node.attributes.zone,
