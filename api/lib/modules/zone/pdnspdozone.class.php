@@ -141,7 +141,12 @@ class PdnsPdoZone extends ZoneModule {
 			$query .= ' AND id = ' . $this->db->quote($filter['id']);
 		}
 		if (isset($filter['name'])) {
-			$query .= ' AND name = ' . $this->db->quote($filter['name'].'.'.$zone->getName());
+			if ($filter['name'] == '@') {
+				$query .= ' AND name = ' . $this->db->quote($zone->getName());
+			}
+			else {
+				$query .= ' AND name = ' . $this->db->quote($filter['name'].'.'.$zone->getName());
+			}
 		}
 		if (isset($filter['type'])) {
 			$query .= ' AND type = ' . $this->db->quote($filter['type']);
