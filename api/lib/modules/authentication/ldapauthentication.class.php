@@ -32,21 +32,21 @@
 class LdapAuthentication extends AuthenticationModule {
 
 	/** @var resource LDAP connection resource */
-	var $lc = null;
+	private $lc = null;
 
 	/** @var string bindDN */
-	var $binddn = '';
+	private $binddn = '';
 	/** @var string password for bindDN */
-	var $password = '';
+	private $password = '';
 	/** @var string baseDN for users */
-	var $basedn;
+	private $basedn;
 	/** @var string filter for users */
-	var $filter;
+	private $filter;
 
 	/** @var string[] array of allowed users */
-	var $whitelist = null;
+	private $whitelist = null;
 	/** @var string[] array of forbidden users */
-	var $blacklist = array();
+	private $blacklist = array();
 
 	protected function __construct($config) {
 		if (!isset($config['server'])) throw new ModuleConfigException('You have to give me a LDAP server!');
