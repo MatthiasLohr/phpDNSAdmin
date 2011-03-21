@@ -132,8 +132,19 @@ class MainRouter extends RequestRouter {
 						if ($authentication->userCheckPassword($user,$data['password'])) {
 							$autologin->notifyLogin($user);
 						}
+						else {
+							$result = new stdClass();
+							$result->loggedIn = false;
+							$result->success = false;
+							return $result;
+						}
 					}
-					catch (NoSuchUserException $e) {}
+					catch (NoSuchUserException $e) {
+						$result = new stdClass();
+						$result->loggedIn = false;
+						$result->success = false;
+						return $result;
+					}
 				}
 			case 'GET':
 				$user = $autologin->getUser();
