@@ -95,8 +95,22 @@ class LdapAuthentication extends AuthenticationModule {
 		return ldap_count_entries($this->lc,$searchResource);
 	}
 
-	private function ldapEscapeFilter($string) {
-		return str_replace(array('*','(',')'),array('\*','\(','\)'),$string);
+	private function ldapEscape($string, $dn = false) {
+		$string = strval($string);
+		$dn = (bool)$dn;
+
+		if($dn) {
+			$metaChars = array(',','=', '+', '<','>',';', '\\', '"', '#');
+		}
+		else {
+			$metaChars = array('*', '(', ')', '\\', chr(0));
+		}
+		$quotedMetaChars = array();
+		foreach ($metaChars as $key=>$value) {
+			$quotedMetaChars[$key]='\\'.str_pad(dechex(ord($value)), 2, '0');
+		}
+		$string = str_replace($metaChars,$quotedMetaChars,$string);
+		return ($string);
 	}
 
 	private function ldapFirstEntry($searchResource) {
@@ -116,7 +130,7 @@ class LdapAuthentication extends AuthenticationModule {
 		if (is_array($this->whitelist) && !in_array($user->getUsername(),$this->whitelist)) return false;
 		if (in_array($user->getUsername(),$this->blacklist)) return false;
 		$this->ldapBind($this->binddn,$this->password);
-		$sr = $this->ldapSearch($this->basedn,sprintf($this->filter,$this->ldapEscapeFilter($user->getUsername())));
+		$sr = $this->ldapSearch($this->basedn,sprintf($this->filter,$this->ldapEscape($user->getUsername())));
 		if ($this->ldapCountEntries($sr) > 0) {
 			$ldapUser = $this->ldapFirstEntry($sr);
 			// try to rebind with new user
