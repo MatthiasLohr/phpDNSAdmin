@@ -46,6 +46,23 @@ $config = array(
 			//'blacklist' => array('guest'),
 		),
 		// */
+
+		/* -- delete this line for enabling PdoGenericAuthentication -- */
+		array(
+			'_module' => 'PdoGenericAuthentication',
+			'pdo_dsn' => 'pgsql:host=localhost;dbname=phpdnsadmin',
+			'pdo_username' => 'phpdnsadmin',
+			'pdo_password' => 'phpdnsadmin',
+
+			'password_encryption' => 'plain', // valid values: plain|md5|sha1|crypt
+			// optional configuration:
+			//'tablename' => 'users',
+			//'col_username' => 'username',
+			//'col_password' => 'password',
+		  // PgSQL only:
+		  // 'search_path' => 'public',
+		),
+		// */
 	),
 
 	// autologin modules
