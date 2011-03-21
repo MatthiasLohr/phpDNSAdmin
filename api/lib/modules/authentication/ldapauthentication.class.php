@@ -20,13 +20,13 @@
 
 /**
  * @package phpDNSAdmin
- * @subpackage Autologin
+ * @subpackage Authentication
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 
 /**
  * @package phpDNSAdmin
- * @subpackage Autologin
+ * @subpackage Authentication
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 class LdapAuthentication extends AuthenticationModule {
