@@ -131,19 +131,17 @@ class MainRouter extends RequestRouter {
 					try {
 						if ($authentication->userCheckPassword($user,$data['password'])) {
 							$autologin->notifyLogin($user);
+							$result->loggedIn = true;
+							$result->success = true;
 						}
 						else {
-							$result = new stdClass();
 							$result->loggedIn = false;
 							$result->success = false;
-							return $result;
 						}
 					}
 					catch (NoSuchUserException $e) {
-						$result = new stdClass();
 						$result->loggedIn = false;
 						$result->success = false;
-						return $result;
 					}
 				}
 			case 'GET':
