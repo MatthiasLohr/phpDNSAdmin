@@ -31,6 +31,7 @@
  */
 class ServerRouter extends RequestRouter {
 
+	/** @var ZoneModule according zone module */
 	private $zoneModule = null;
 
 	public function __construct(ZoneModule $zoneModule) {
@@ -52,6 +53,18 @@ class ServerRouter extends RequestRouter {
 			$rrtype->fields = call_user_func(array($className, 'listFields'));
 
 			$result->rrtypes[] = $rrtype;
+		}
+		return $result;
+	}
+
+	public function views() {
+		$result = new stdClass();
+		if ($this->zoneModule->hasViews()) {
+			$result->success = true;
+			$result->views = $this->zoneModule->listViews();
+		}
+		else {
+			$result->success = false;
 		}
 		return $result;
 	}

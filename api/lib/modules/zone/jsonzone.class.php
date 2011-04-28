@@ -28,7 +28,7 @@
  * @package phpDNSAdmin
  * @subpackage Zone
  */
-class JsonZone extends ZoneModule {
+class JsonZone extends ZoneModule implements Views {
 
 	private $apiBase = null;
 	private $server = null;
@@ -133,6 +133,16 @@ class JsonZone extends ZoneModule {
 		}
 	}
 
+	public function listViews() {
+		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/views');
+		if ($result->success && is_array($result->views)) {
+			return $result->views;
+		}
+		else {
+			return false;
+		}
+	}
+
 	public function listZones() {
 		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones');
 		if ($result->success) {
@@ -175,6 +185,21 @@ class JsonZone extends ZoneModule {
 
 	public function recordDelete(Zone $zone, $recordid) {
 		$result = $this->httpDelete($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid);
+		return $result->success;
+	}
+
+	public function recordSetViews(Zone $zone, $recordid, array $views) {
+		$record = $this->getRecordById($zone,$recordid);
+		$data = new stdClass();
+		$data->type = $record->getType();
+		$data->name = $record->getName();
+		$data->ttl = $record->getTTL();
+		$data->fields = array();
+		foreach ($record->listFields as $fieldname => $simpletype) {
+			$data->fields[$fieldname] = $record->getField($fieldname);
+		}
+		$data->views = $views;
+		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
 		return $result->success;
 	}
 
