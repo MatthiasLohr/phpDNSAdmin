@@ -174,6 +174,7 @@ class JsonZone extends ZoneModule implements Views {
 			$data->fields[$fieldname] = $record->getField($fieldname);
 		}
 		$data->ttl = $record->getTTL();
+		$data->views = $record->getViewinfo();
 		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records',$data);
 		if ($result->success) {
 			return $result->newid;
