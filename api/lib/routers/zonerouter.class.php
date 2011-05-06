@@ -139,7 +139,7 @@ class ZoneRouter extends RequestRouter {
 					} else {
 						$views = null;
 					}
-					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $ciews);
+					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $views);
 					$newid = $this->zone->recordAdd($record);
 					if ($newid === false) {
 						$result->success = false;
