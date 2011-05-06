@@ -130,7 +130,16 @@ class ZoneRouter extends RequestRouter {
 				} else {
 					// workaround to avoid php warnings
 					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
-					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio);
+					// views
+					if(isset($data['views'])) {
+						$views = array();
+						foreach($data['views'] as $view => $value ) {
+							$views[$view] = $value;
+						}
+					} else {
+						$views = null;
+					}
+					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $ciews);
 					$newid = $this->zone->recordAdd($record);
 					if ($newid === false) {
 						$result->success = false;
@@ -163,8 +172,9 @@ class ZoneRouter extends RequestRouter {
 				} else {
 					// workaround to avoid php warnings
 					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
+					// views
 					if(isset($data['views'])) {
-						// format views
+						$views = array();
 						foreach($data['views'] as $view => $value ) {
 							$views[$view] = $value;
 						}
