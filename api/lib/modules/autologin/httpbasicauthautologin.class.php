@@ -36,17 +36,10 @@ class HttpBasicAuthAutologin extends AutologinModule {
 	}
 
 	public function getUser() {
-		$authentication = AuthenticationManager::getInstance();
-		try {
-			$user = new User($_SERVER['PHP_AUTH_USER']);
-			if ($authentication->userCheckPassword($user,$_SERVER['PHP_AUTH_PW'])) {
-				return $user;
-			}
-			else {
-				return null;
-			}
+		if (isset($_SERVER['PHP_AUTH_USER']) && strlen($_SERVER['PHP_AUTH_USER') > 0) {
+			return new User($_SERVER['PHP_AUTH_USER']);
 		}
-		catch (NoSuchUserException $e) {
+		else {
 			return null;
 		}
 	}
