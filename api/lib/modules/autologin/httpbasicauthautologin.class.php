@@ -36,7 +36,7 @@ class HttpBasicAuthAutologin extends AutologinModule {
 	}
 
 	public function getUser() {
-		if (isset($_SERVER['PHP_AUTH_USER']) && strlen($_SERVER['PHP_AUTH_USER') > 0) {
+		if (isset($_SERVER['PHP_AUTH_USER']) && strlen($_SERVER['PHP_AUTH_USER']) > 0) {
 			return new User($_SERVER['PHP_AUTH_USER']);
 		}
 		else {
