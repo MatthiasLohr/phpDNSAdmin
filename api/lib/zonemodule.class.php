@@ -103,6 +103,106 @@ abstract class ZoneModule {
 		}
 	}
 
+	protected static function helpFilter(array $records, array $filter) {
+		// shortcut for id filtering (only 1 result record)
+		if (isset($filter['id'])) {
+			if (isset($records[$filter['id']])) {
+				return array($filter['id'] => $records[$filter['id']]);
+			}
+			else {
+				return array();
+			}
+		}
+		// apply other filters
+		foreach ($records as $id => $record) {
+			if (isset($filter['name']) && $filter['name'] != $record->getName()) {
+				unset($records[$id]);
+				continue;
+			}
+			if (isset($filter['type']) && $filter['type'] != $record->getType()) {
+				unset($records[$id]);
+				continue;
+			}
+			if (isset($filter['content']) && $filter['content'] != $record->getContentString()) {
+				unset($records[$id]);
+				continue;
+			}
+			if (isset($filter['ttl']) && $filter['ttl'] != $record->getTTL()) {
+				unset($records[$id]);
+				continue;
+			}
+		}
+		return $records;
+	}
+
+	protected static function helpPaging(array $records, $offset = 0, $limit = null) {
+		if ($limit === null) {
+			return array_slice($records,$offset);
+		}
+		else {
+			return array_slice($records,$offset,$limit);
+		}
+	}
+
+	protected static function helpSort(array $records, $sortoptions = '') {
+		$cycles = explode(',',$sortoptions);
+		foreach ($cycles as $cycle) {
+			$inverse = (substr($cycle,0,1) == '-');
+			$subject = substr($cycle,$inverse?1:0);
+			switch ($subject) {
+				case 'id':
+					if ($inverse) {
+						krsort($records,SORT_NUMERIC);
+					}
+					else {
+						ksort($records,SORT_NUMERIC);
+					}
+					break;
+				case 'name':
+					uasort($records,array('self','helpSortCompareName'));
+					if ($inverse) $records = array_reverse($records,true);
+					break;
+				case 'type':
+					uasort($records,array('self','helpSortCompareType'));
+					if ($inverse) $records = array_reverse($records,true);
+					break;
+				case 'content':
+					uasort($records,array('self','helpSortCompareContent'));
+					if ($inverse) $records = array_reverse($records,true);
+					break;
+				case 'ttl':
+					uasort($records,array('self','helpSortCompareTTL'));
+					if ($inverse) $records = array_reverse($records,true);
+					break;
+				case 'priority':
+					uasort($records,array('self','helpSortComparePriority'));
+					if ($inverse) $records = array_reverse($records,true);
+					break;
+			}
+		}
+		return $records;
+	}
+
+	private static function helpSortCompareContent(ResourceRecord $a, ResourceRecord $b) {
+		return strcmp($a->getContentString(),$b->getContentString());
+	}
+
+	private static function helpSortCompareName(ResourceRecord $a, ResourceRecord $b) {
+		return strcmp($a->getName(),$b->getName());
+	}
+
+	private static function helpSortComparePriority(ResourceRecord $a, ResourceRecord $b) {
+		return ($a->getField('priority') < $b->getField('priority'))?-1:(($a->getField('priority') > $b->getField('priority'))?1:0);
+	}
+
+	private static function helpSortCompareTTL(ResourceRecord $a, ResourceRecord $b) {
+		return ($a->getTTL() < $b->getTTL())?-1:(($a->getTTL() > $b->getTTL())?1:0);
+	}
+
+	private static function helpSortCompareType(ResourceRecord $a, ResourceRecord $b) {
+		return strcmp($a->getType(),$b->getType());
+	}
+
 	public function incrementSerial(Zone $zone) {
 		$success = true;
 		$records = $this->listRecordsByType($zone,'SOA');
