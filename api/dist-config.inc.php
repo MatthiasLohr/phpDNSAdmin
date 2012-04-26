@@ -47,7 +47,7 @@ $config = array(
 		),
 		// */
 
-		/* -- delete this line for enabling PdoGenericAuthentication -- */
+		/* -- delete this line for enabling PdoGenericAuthentication --
 		array(
 			'_module' => 'PdoGenericAuthentication',
 			'pdo_dsn' => 'pgsql:host=localhost;dbname=phpdnsadmin',
