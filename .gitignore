@@ -1,2 +1,5 @@
+.htaccess
+.htdigest
+.htpasswd
 api/config.inc.php
 api/doc/*
