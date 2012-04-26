@@ -210,7 +210,7 @@ abstract class ResourceRecord {
 		$result = array();
 		foreach ($fields as $key => $simpletype) {
 			if ($key == 'priority') continue;
-			$result[$key] = $values[$i];
+			$result[$key] = isset($values[$i])?$values[$i]:null;
 			$i++;
 		}
 		return $result;
