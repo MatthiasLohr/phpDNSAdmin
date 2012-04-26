@@ -93,6 +93,26 @@ $config = array(
 		),
 		// */
 
+		/* -- delete this line for enabling InwxZone (provides access to INWX nameservers) --
+		array(
+			'_module' => 'InwxZone',
+			'_sysname' => 'server'.(++$zoneModCount),
+			'_name' => 'My DNS server',
+			'username' => 'admin',
+			'password' => 'admin'
+		),
+		// */
+
+		/* -- delete this line for enabling JsonZone --
+		array(
+			'_module' => 'JsonZone',
+			'_sysname' => 'server'.(++$zoneModCount),
+			'_name' => 'My DNS server',
+			'api_base' => 'http://localhost/phpdnsadmin/api/',
+			'server_sysname' => 'server0'
+		),
+		// */
+
 		/* -- delete this line for enabling MultiServerViewZone --
 		array(
 			'_module' => 'MultiServerViewZone',
@@ -109,16 +129,6 @@ $config = array(
 				// paste here zone module configurations
 
 			)
-		),
-		// */
-
-		/* -- delete this line for enabling JsonZone --
-		array(
-			'_module' => 'JsonZone',
-			'_sysname' => 'server'.(++$zoneModCount),
-			'_name' => 'My DNS server',
-			'api_base' => 'http://localhost/phpdnsadmin/api/',
-			'server_sysname' => 'server0'
 		),
 		// */
 
