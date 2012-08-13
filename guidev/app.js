@@ -1,6 +1,16 @@
+/**
+ * Configuration
+ */
+Ext.define('Config', {
+			singleton : true, /* do not change this line! */
+
+			apiBaseUrl : '/phpDNSAdmin/api'
+		});
+
 Ext.application({
-    name: 'DNSAdmin',
-    autoCreateViewport: true,
-    launch: function() {
-    }
-});
+			name : 'DNSAdmin',
+			controllers : ['LoginController'],
+			autoCreateViewport : true,
+			launch : function() {
+			}
+		});
