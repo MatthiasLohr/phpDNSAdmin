@@ -1,0 +1,3 @@
+[submodule "guidev/extjs"]
+	path = guidev/extjs
+	url = git://github.com/LAndreas/extjs.git
