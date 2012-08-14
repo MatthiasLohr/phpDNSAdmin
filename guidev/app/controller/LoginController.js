@@ -10,12 +10,6 @@ Ext.define('DNSAdmin.controller.LoginController', {
 			],
 
 			init : function() {
-				this.control({
-					'loginview button[action=login]': {
-						click: this.loginBtnClicked
-					}
-				});
-				
 				this.checkIfLoggedIn();
 			},
 
@@ -43,14 +37,5 @@ Ext.define('DNSAdmin.controller.LoginController', {
 								}
 							}
 						});
-			},
-			
-			loginBtnClicked: function(button) {
-				var win    = button.up('window'),
-        form   = win.down('form'),
-        record = form.getRecord(),
-        values = form.getValues();
-        form.submit();
-        console.log(values);
 			}
 		});
