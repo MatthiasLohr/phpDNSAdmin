@@ -15,6 +15,8 @@ Ext.define('DNSAdmin.view.LoginView', {
 						xtype : 'form',
 						url : Config.apiBaseUrl + '/status',
 						border : 0,
+						plain : true,
+						frame: true,
 						bodyPadding : 5,
 						layout : 'anchor',
 						defaults : {
