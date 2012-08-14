@@ -12,5 +12,6 @@ Ext.application({
 			controllers : ['LoginController'],
 			autoCreateViewport : true,
 			launch : function() {
+
 			}
 		});

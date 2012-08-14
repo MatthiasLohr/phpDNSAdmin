@@ -3,6 +3,7 @@ Ext.define('DNSAdmin.view.Viewport', {
 			requires : [],
 			layout : 'fit',
 			initComponent : function() {
+				this.setLoading();
 				this.items = {
 					xtype : 'panel',
 					dockedItems : [{

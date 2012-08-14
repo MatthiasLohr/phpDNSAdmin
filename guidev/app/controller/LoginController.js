@@ -5,17 +5,15 @@
  */
 Ext.define('DNSAdmin.controller.LoginController', {
 			extend : 'Ext.app.Controller',
-			views: [
-				'LoginView'
-			],
+			views : ['LoginView'],
 
 			init : function() {
 				this.control({
-					'loginview button[action=login]': {
-						click: this.loginBtnClicked
-					}
-				});
-				
+							'loginview button[action=login]' : {
+								click : this.loginBtnClicked
+							}
+						});
+
 				this.checkIfLoggedIn();
 			},
 
@@ -33,7 +31,7 @@ Ext.define('DNSAdmin.controller.LoginController', {
 												'Logged in!');
 									} else {
 										// User is not logged in! Call Login
-										// View to do this Job!												
+										// View to do this Job!
 										var loginView = Ext.widget('loginview');
 										loginView.show();
 									}
@@ -44,13 +42,31 @@ Ext.define('DNSAdmin.controller.LoginController', {
 							}
 						});
 			},
-			
-			loginBtnClicked: function(button) {
-				var win    = button.up('window'),
-        form   = win.down('form'),
-        record = form.getRecord(),
-        values = form.getValues();
-        form.submit();
-        console.log(values);
+
+			loginBtnClicked : function(button) {
+				var win = button.up('window'), form = win.down('form')
+						.getForm();
+				win.setLoading();
+				if (form.isValid()) {
+					Ext.getCmp('loginStatusLabel').hide();
+					form.submit({
+								success : function(form, action) {
+									if (action.result.loggedIn) {
+										// Login was successful
+										win.hide();
+									} else {
+										// Login failed
+										Ext.getCmp('loginStatusLabel').show();
+									}
+									win.setLoading(false);
+								},
+								failure : function(form, action) {
+									win.setLoading(false);
+									Ext.Msg
+											.alert('Failed',
+													action.result.error);
+								}
+							});
+				}
 			}
 		});
