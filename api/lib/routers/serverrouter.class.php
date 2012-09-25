@@ -70,47 +70,46 @@ class ServerRouter extends RequestRouter {
 	}
 
 	public function zones($zonename = null) {
-		if ($this->endOfTracking()) {
-			if ($zonename === null) {
-				if ($this->getRequestType() == 'PUT') {
-					$data = RequestRouter::getRequestData();
-					$zone = new Zone($data['zonename'], $this->zoneModule);
+		if ($zonename === null) {
+			// list zones
+			$result = new stdClass();
+			$result->zones = array();
+			foreach ($this->zoneModule->listZones() as $zone) {
+				$tmpzone = new stdClass();
+				$tmpzone->id = $zone->getName();
+				$tmpzone->name = $zone->getName();
+				// check for views
+				if ($this->zoneModule->hasViews()) {
+					$tmpzone->views = $this->zoneModule->listViews();
+				}
+				$result->zones[$zone->getName()] = $tmpzone;
+				ksort($result->zones,SORT_STRING);
+			}
+			return $result;
+		}
+		else {
+			$zone = new Zone($zonename, $this->zoneModule);
+			if ($this->endOfTracking()) {
+				if ($this->getRequestType() === 'PUT') {
 					$result = new stdClass();
 					$result->success = $this->zoneModule->zoneCreate($zone);
 					return $result;
 				}
-				// list zones
-				$result = new stdClass();
-				$result->zones = array();
-				foreach ($this->zoneModule->listZones() as $zone) {
-					$tmpzone = new stdClass();
-					$tmpzone->id = $zone->getName();
-					$tmpzone->name = $zone->getName();
-					// check for views
-					if ($this->zoneModule->hasViews()) {
-						$tmpzone->views = $this->zoneModule->listViews();
-					}
-					$result->zones[$zone->getName()] = $tmpzone;
-					ksort($result->zones,SORT_STRING);
-				}
-				return $result;
-			} else {
-				$zone = new Zone($zonename, $this->zoneModule);
-				if ($this->getRequestType() == 'DELETE') {
+				elseif ($this->getRequestType() === 'DELETE') {
 					$this->zoneModule->zoneDelete($zone);
 					$result = new stdClass();
 					$result->success = true;
 					return $result;
-				} else {
-					$zone = new Zone($zonename, $this->zoneModule);
-					$zoneRouter = new ZoneRouter($zone);
-					return $zoneRouter->track($this->routingPath);
+				}
+				else {
+					return new stdClass();
 				}
 			}
-		} else {
-			$zone = new Zone($zonename, $this->zoneModule);
-			$zoneRouter = new ZoneRouter($zone);
-			return $zoneRouter->track($this->routingPath);
+			else {
+				$zone = new Zone($zonename, $this->zoneModule);
+				$zoneRouter = new ZoneRouter($zone);
+				return $zoneRouter->track($this->routingPath);
+			}
 		}
 	}
 }

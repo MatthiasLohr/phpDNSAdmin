@@ -1,7 +1,8 @@
 .htaccess
 .htdigest
 .htpasswd
-api/config.inc.php
-api/doc/*
 .project
 .settings
+api/config.inc.php
+api/doc/*
+/nbproject/
