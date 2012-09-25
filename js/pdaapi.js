@@ -106,9 +106,8 @@ function pdaAPI(url) {
 
 	this.createZone = function(server, zonename, success, failure) {
 		Ext.Ajax.request({
-			url: URL+'/servers/'+server+'/zones/',
+			url: URL+'/servers/'+server+'/zones/'+zonename,
 			method: 'PUT',
-			params: 'zonename='+zonename,
 			success: function(response, options) {
 				var data = Ext.decode(response.responseText);
 				if(data.success) {

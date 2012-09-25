@@ -182,11 +182,11 @@ function pdaGUI(api) {
 										},
 										create: {
 											url: RestURL,
-											method: "PUT"
+											method: "POST"
 										},
 										update: {
 											url: RestURL,
-											method: "POST"
+											method: "PUT"
 										},
 										destroy: {
 											url: RestURL,
