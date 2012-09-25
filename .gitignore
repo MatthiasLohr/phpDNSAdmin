@@ -3,3 +3,4 @@
 .htpasswd
 api/config.inc.php
 api/doc/*
+/nbproject/
