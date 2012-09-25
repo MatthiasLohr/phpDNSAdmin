@@ -11,6 +11,14 @@ Ext.define('DNSAdmin.controller.LoginController', {
 				this.control({
 							'loginview button[action=login]' : {
 								click : this.loginBtnClicked
+							},
+							'loginview input' : {
+								specialkey : function(field, e) {
+									console.log(field, e);
+									if (e.getKey() == e.ENTER) {
+										this.loginBtnClicked();
+									}
+								}
 							}
 						});
 
