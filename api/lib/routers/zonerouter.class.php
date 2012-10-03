@@ -116,7 +116,7 @@ class ZoneRouter extends RequestRouter {
 	public function records($recordid = null) {
 		$result = new stdClass();
 		if ($this->endOfTracking() && $recordid === null) {
-			if (RequestRouter::getRequestType() == 'PUT') {
+			if (RequestRouter::getRequestType() == 'POST') {
 				$data = RequestRouter::getRequestData();
 				if (!isset($data['type'])) {
 					$result->success = false;
@@ -158,7 +158,7 @@ class ZoneRouter extends RequestRouter {
 			}
 		} elseif ($this->endOfTracking() && $recordid !== null) {
 			$record = $this->zone->getRecordById($recordid);
-			if ($this->getRequestType() == 'POST') {
+			if ($this->getRequestType() == 'PUT') {
 				$data = RequestRouter::getRequestData();
 				if (!isset($data['type'])) {
 					$result->success = false;
@@ -181,7 +181,7 @@ class ZoneRouter extends RequestRouter {
 					} else {
 						$views = null;
 					}
-					
+
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $views);
 					$this->zone->recordUpdate($recordid, $record);
 					$result->success = true;

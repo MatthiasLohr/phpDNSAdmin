@@ -159,7 +159,7 @@ class JsonZone extends ZoneModule implements Views {
 	}
 
 	public function incrementSerial(Zone $zone) {
-		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/incserial');
+		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/incserial');
 		return $result->success;
 	}
 
@@ -175,7 +175,7 @@ class JsonZone extends ZoneModule implements Views {
 		}
 		$data->ttl = $record->getTTL();
 		$data->views = $record->getViewinfo();
-		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records',$data);
+		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records',$data);
 		if ($result->success) {
 			return $result->newid;
 		}
@@ -200,7 +200,7 @@ class JsonZone extends ZoneModule implements Views {
 			$data->fields[$fieldname] = $record->getField($fieldname);
 		}
 		$data->views = $views;
-		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
+		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
 		return $result->success;
 	}
 
@@ -215,15 +215,13 @@ class JsonZone extends ZoneModule implements Views {
 			$data->fields[$fieldname] = $record->getField($fieldname);
 		}
 		$data->ttl = $record->getTTL();
-		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
+		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
 		return $result->success;
 	}
 
 	public function zoneCreate(Zone $zone) {
 		if ($this->zoneExists($zone)) return false;
-		$data = array();
-		$data->name = $zone->getName();
-		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones',$data);
+		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName());
 		return $result->success;
 	}
 
