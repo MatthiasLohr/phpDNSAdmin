@@ -12,11 +12,10 @@ Ext.define('DNSAdmin.controller.LoginController', {
 							'loginview button[action=login]' : {
 								click : this.loginBtnClicked
 							},
-							'loginview input' : {
+							'loginview textfield' : {
 								specialkey : function(field, e) {
-									console.log(field, e);
 									if (e.getKey() == e.ENTER) {
-										this.loginBtnClicked();
+										this.loginBtnClicked(field);
 									}
 								}
 							}
@@ -46,13 +45,14 @@ Ext.define('DNSAdmin.controller.LoginController', {
 								} else {
 									// There was an Error on Server... need some
 									// Error handling here!
+									// TODO: Error Handling.
 								}
 							}
 						});
 			},
 
-			loginBtnClicked : function(button) {
-				var win = button.up('window'), form = win.down('form')
+			loginBtnClicked : function(srcElement) {
+				var win = srcElement.up('window'), form = win.down('form')
 						.getForm();
 				win.setLoading();
 				if (form.isValid()) {
