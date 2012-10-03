@@ -660,7 +660,7 @@ function pdaGUI(api) {
 				formBind: true,
 				handler: function() {
 					recordForm.getForm().submit({
-						method:'PUT',
+						method:'POST',
 						waitTitle:'Connecting',
 						waitMsg:'Sending data...',
 						success: function(form, action) {
