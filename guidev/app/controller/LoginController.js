@@ -5,7 +5,7 @@
  */
 Ext.define('DNSAdmin.controller.LoginController', {
 			extend : 'Ext.app.Controller',
-			views : ['LoginView'],
+			views : ['LoginView', 'LoggedInView', 'Viewport'],
 
 			init : function() {
 				this.control({
@@ -21,10 +21,17 @@ Ext.define('DNSAdmin.controller.LoginController', {
 							}
 						});
 
+				this.application.on({
+							loggedInEvent : this.onLoggedInEvent,
+							notLoggedInEvent : this.onNotLoggedInEvent,
+							scope : this
+						});
+
 				this.checkIfLoggedIn();
 			},
 
 			checkIfLoggedIn : function() {
+				var app = this.application;
 				Ext.Ajax.request({
 							url : Config.apiBaseUrl + '/status',
 
@@ -32,15 +39,15 @@ Ext.define('DNSAdmin.controller.LoginController', {
 								var text = response.responseText;
 								var jsonResponse = Ext.JSON.decode(text);
 								if (jsonResponse.success) {
+									var loggedInView = Ext.widget('loggedin');
 									if (jsonResponse.loggedIn) {
 										// User is logged in, do something!
-										console.log('LoginController',
-												'Logged in!');
+										app.fireEvent('loggedInEvent',
+												jsonResponse.username);
 									} else {
-										// User is not logged in! Call Login
-										// View to do this Job!
-										var loginView = Ext.widget('loginview');
-										loginView.show();
+										// User is not logged in! Call
+										// notLoggedInEvent - Event
+										app.fireEvent('notLoggedInEvent');
 									}
 								} else {
 									// There was an Error on Server... need some
@@ -76,5 +83,19 @@ Ext.define('DNSAdmin.controller.LoginController', {
 								}
 							});
 				}
+			},
+
+			/*
+			 * Functions which will be called on Events.
+			 */
+			onLoggedInEvent : function(username) {				
+				var loggedInView = this.getLoggedInViewView();
+				loggedInView.setText(username);
+				console.log(loggedInView);
+			},
+
+			onNotLoggedInEvent : function() {
+				var loginView = Ext.widget('loginview');
+				loginView.show();
 			}
 		});

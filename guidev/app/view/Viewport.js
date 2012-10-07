@@ -1,6 +1,6 @@
 Ext.define('DNSAdmin.view.Viewport', {
 			extend : 'Ext.container.Viewport',
-			requires : [],
+			requires : ['DNSAdmin.view.LoggedInView', 'DNSAdmin.view.LoginView'],
 			layout : 'fit',
 			initComponent : function() {
 				this.setLoading();
@@ -14,24 +14,27 @@ Ext.define('DNSAdmin.view.Viewport', {
 									type : 'hbox',
 									align : 'middle'
 								},
-								items : [
-										'->',
-										'-', {
+								items : ['->', {
+											xtype : 'loggedin'
+										}, '-', {
 											xtype : 'image',
 											src : 'resources/images/logo.png'
 										}]
 							}],
 					layout : {
 						type : 'hbox',
-						align : 'middle',
-						pack : 'center'
+						align : 'stretch'
 					},
 					items : [{
-								xtype : 'button',
-								text : 'Click me',
-								handler : function() {
-									alert('You clicked the button!');
-								}
+								width : 250,
+								xtype : 'panel',
+								layout : {
+									type : 'vbox',
+									align : 'stretch'
+								},
+								items : []
+							}, {
+
 							}]
 				};
 
