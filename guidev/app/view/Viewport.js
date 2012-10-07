@@ -14,7 +14,9 @@ Ext.define('DNSAdmin.view.Viewport', {
 									type : 'hbox',
 									align : 'middle'
 								},
-								items : ['->', {
+								items : [
+										'->',
+										'-', {
 											xtype : 'image',
 											src : 'resources/images/logo.png'
 										}]
