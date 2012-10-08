@@ -66219,6 +66219,2277 @@ Ext.define('Ext.toolbar.TextItem', {
         }
     }
 });
+/**
+ * This is a layout that enables anchoring of contained elements relative to the container's dimensions.
+ * If the container is resized, all anchored items are automatically rerendered according to their
+ * `{@link #anchor}` rules.
+ *
+ * This class is intended to be extended or created via the {@link Ext.container.AbstractContainer#layout layout}: 'anchor' 
+ * config, and should generally not need to be created directly via the new keyword.
+ * 
+ * AnchorLayout does not have any direct config options (other than inherited ones). By default,
+ * AnchorLayout will calculate anchor measurements based on the size of the container itself. However, the
+ * container using the AnchorLayout can supply an anchoring-specific config property of `anchorSize`.
+ *
+ * If anchorSize is specifed, the layout will use it as a virtual container for the purposes of calculating
+ * anchor measurements based on it instead, allowing the container to be sized independently of the anchoring
+ * logic if necessary.
+ *
+ *     @example
+ *     Ext.create('Ext.Panel', {
+ *         width: 500,
+ *         height: 400,
+ *         title: "AnchorLayout Panel",
+ *         layout: 'anchor',
+ *         renderTo: Ext.getBody(),
+ *         items: [
+ *             {
+ *                 xtype: 'panel',
+ *                 title: '75% Width and 20% Height',
+ *                 anchor: '75% 20%'
+ *             },
+ *             {
+ *                 xtype: 'panel',
+ *                 title: 'Offset -300 Width & -200 Height',
+ *                 anchor: '-300 -200'		
+ *             },
+ *             {
+ *                 xtype: 'panel',
+ *                 title: 'Mixed Offset and Percent',
+ *                 anchor: '-250 20%'
+ *             }
+ *         ]
+ *     });
+ */
+Ext.define('Ext.layout.container.Anchor', {
+
+    /* Begin Definitions */
+
+    alias: 'layout.anchor',
+    extend: 'Ext.layout.container.Container',
+    alternateClassName: 'Ext.layout.AnchorLayout',
+
+    /* End Definitions */
+
+    type: 'anchor',
+
+    manageOverflow: 2,
+
+    renderTpl: [
+        '{%this.renderBody(out,values);this.renderPadder(out,values)%}'
+    ],
+
+    /**
+     * @cfg {String} anchor
+     *
+     * This configuation option is to be applied to **child `items`** of a container managed by
+     * this layout (ie. configured with `layout:'anchor'`).
+     *
+     * This value is what tells the layout how an item should be anchored to the container. `items`
+     * added to an AnchorLayout accept an anchoring-specific config property of **anchor** which is a string
+     * containing two values: the horizontal anchor value and the vertical anchor value (for example, '100% 50%').
+     * The following types of anchor values are supported:
+     *
+     * - **Percentage** : Any value between 1 and 100, expressed as a percentage.
+     *
+     *   The first anchor is the percentage width that the item should take up within the container, and the
+     *   second is the percentage height.  For example:
+     *
+     *       // two values specified
+     *       anchor: '100% 50%' // render item complete width of the container and
+     *                          // 1/2 height of the container
+     *       // one value specified
+     *       anchor: '100%'     // the width value; the height will default to auto
+     *
+     * - **Offsets** : Any positive or negative integer value.
+     *
+     *   This is a raw adjustment where the first anchor is the offset from the right edge of the container,
+     *   and the second is the offset from the bottom edge. For example:
+     *
+     *       // two values specified
+     *       anchor: '-50 -100' // render item the complete width of the container
+     *                          // minus 50 pixels and
+     *                          // the complete height minus 100 pixels.
+     *       // one value specified
+     *       anchor: '-50'      // anchor value is assumed to be the right offset value
+     *                          // bottom offset will default to 0
+     *
+     * - **Sides** : Valid values are `right` (or `r`) and `bottom` (or `b`).
+     *
+     *   Either the container must have a fixed size or an anchorSize config value defined at render time in
+     *   order for these to have any effect.
+     *   
+     * - **Mixed** :
+     *
+     *   Anchor values can also be mixed as needed.  For example, to render the width offset from the container
+     *   right edge by 50 pixels and 75% of the container's height use:
+     *   
+     *       anchor:   '-50 75%'
+     */
+
+    /**
+     * @cfg {String} defaultAnchor
+     * Default anchor for all child **container** items applied if no anchor or specific width is set on the child item.
+     */
+    defaultAnchor: '100%',
+
+    parseAnchorRE: /^(r|right|b|bottom)$/i,
+
+    beginLayout: function (ownerContext) {
+        var me = this,
+            dimensions = 0,
+            anchorSpec, childContext, childItems, i, length, target;
+
+        me.callParent(arguments);
+
+        childItems = ownerContext.childItems; // populated by callParent
+        length = childItems.length;
+
+        for (i = 0; i < length; ++i) {
+            childContext = childItems[i];
+            anchorSpec = childContext.target.anchorSpec;
+
+            if (anchorSpec) {
+                if (childContext.widthModel.calculated && anchorSpec.right) {
+                    dimensions |= 1;
+                }
+                if (childContext.heightModel.calculated && anchorSpec.bottom) {
+                    dimensions |= 2;
+                }
+
+                if (dimensions == 3) { // if (both dimensions in play)
+                    break;
+                }
+            }
+        }
+
+        ownerContext.anchorDimensions = dimensions;
+
+        // Work around WebKit RightMargin bug. We're going to inline-block all the children
+        // only ONCE and remove it when we're done
+        if (!Ext.supports.RightMargin && !me.rightMarginCleanerFn) {
+            target = ownerContext.targetContext.el; // targetContext is added by superclass
+
+            me.rightMarginCleanerFn = Ext.Element.getRightMarginFixCleaner(target);
+            target.addCls(Ext.baseCSSPrefix + 'inline-children');
+        }
+
+        me.sanityCheck(ownerContext);
+    },
+
+    calculate: function (ownerContext) {
+        var me = this,
+            containerSize = me.getContainerSize(ownerContext);
+
+        if (ownerContext.anchorDimensions !== ownerContext.state.calculatedAnchors) {
+            me.calculateAnchors(ownerContext, containerSize);
+        }
+
+        if (ownerContext.hasDomProp('containerChildrenDone')) {
+            // Once the child layouts are done we can determine the content sizes...
+
+            if (!containerSize.gotAll) {
+                me.done = false;
+            }
+
+            me.calculateContentSize(ownerContext, ownerContext.anchorDimensions);
+
+            if (me.done) {
+                me.calculateOverflow(ownerContext, containerSize, ownerContext.anchorDimensions);
+                return;
+            }
+        }
+
+        me.done = false;
+    },
+
+    calculateAnchors: function (ownerContext, containerSize) {
+        var me = this,
+            childItems = ownerContext.childItems,
+            length = childItems.length,
+            gotHeight = containerSize.gotHeight,
+            gotWidth = containerSize.gotWidth,
+            ownerHeight = containerSize.height,
+            ownerWidth = containerSize.width,
+            state = ownerContext.state,
+            calculatedAnchors = (gotWidth ? 1 : 0) | (gotHeight ? 2 : 0),
+            anchorSpec, childContext, childMargins, height, i, width;
+
+        state.calculatedAnchors = (state.calculatedAnchors || 0) | calculatedAnchors;
+
+        for (i = 0; i < length; i++) {
+            childContext = childItems[i];
+            childMargins = childContext.getMarginInfo();
+            anchorSpec = childContext.target.anchorSpec;
+
+            // Check widthModel in case "defaults" has applied an anchor to a component
+            // that also has width (which must win). If we did not make this check in this
+            // way, we would attempt to calculate a width where it had been configured.
+            //
+            if (gotWidth && childContext.widthModel.calculated) {
+                width = anchorSpec.right(ownerWidth) - childMargins.width;
+                width = me.adjustWidthAnchor(width, childContext);
+
+                childContext.setWidth(width);
+            }
+
+            // Repeat for height
+            if (gotHeight && childContext.heightModel.calculated) {
+                height = anchorSpec.bottom(ownerHeight) - childMargins.height;
+                height = me.adjustHeightAnchor(height, childContext);
+
+                childContext.setHeight(height);
+            }
+        }
+    },
+
+    finishedLayout: function (ownerContext) {
+        var cleanerFn = this.rightMarginCleanerFn;
+
+        if (cleanerFn) {
+            delete this.rightMarginCleanerFn;
+            ownerContext.targetContext.el.removeCls(Ext.baseCSSPrefix + 'inline-children');
+            cleanerFn();
+        }
+    },
+
+    sanityCheck: function (ownerContext) {
+        var shrinkWrapWidth = ownerContext.widthModel.shrinkWrap,
+            shrinkWrapHeight = ownerContext.heightModel.shrinkWrap,
+            children = ownerContext.childItems,
+            anchorSpec, comp, childContext,
+            i, length;
+
+        for (i = 0, length = children.length; i < length; ++i) {
+            childContext = children[i];
+            comp = childContext.target;
+            anchorSpec = comp.anchorSpec;
+
+            if (anchorSpec) {
+                if (childContext.widthModel.calculated && anchorSpec.right) {
+                    if (shrinkWrapWidth) {
+                        Ext.log({
+                            level: 'warn',
+                            msg: 'Right anchor on '+comp.id+' in shrinkWrap width container'
+                        });
+                    }
+                }
+
+                if (childContext.heightModel.calculated && anchorSpec.bottom) {
+                    if (shrinkWrapHeight) {
+                        Ext.log({
+                            level: 'warn',
+                            msg: 'Bottom anchor on '+comp.id+' in shrinkWrap height container'
+                        });
+                    }
+                }
+            }
+        }
+    },
+
+    // private
+    anchorFactory: {
+        offset: function (delta) {
+            return function(v) {
+                return v + delta;
+            };
+        },
+        ratio: function (ratio) {
+            return function(v) {
+                return Math.floor(v * ratio);
+            };
+        },
+        standard: function (diff) {
+            return function(v) {
+                return v - diff;
+            };
+        }
+    },
+
+    parseAnchor: function(a, start, cstart) {
+        if (a && a != 'none') {
+            var factory = this.anchorFactory,
+                delta;
+
+            if (this.parseAnchorRE.test(a)) {
+                return factory.standard(cstart - start);
+            }    
+            if (a.indexOf('%') != -1) {
+                return factory.ratio(parseFloat(a.replace('%', '')) * 0.01);
+            }    
+            delta = parseInt(a, 10);
+            if (!isNaN(delta)) {
+                return factory.offset(delta);
+            }
+        }
+        return null;
+    },
+
+    // private
+    adjustWidthAnchor: function(value, childContext) {
+        return value;
+    },
+
+    // private
+    adjustHeightAnchor: function(value, childContext) {
+        return value;
+    },
+
+    configureItem: function(item) {
+        var me = this,
+            owner = me.owner,
+            anchor= item.anchor,
+            anchorsArray,
+            anchorWidth,
+            anchorHeight;
+
+        me.callParent(arguments);
+
+        if (!item.anchor && item.items && !Ext.isNumber(item.width) && !(Ext.isIE6 && Ext.isStrict)) {
+            item.anchor = anchor = me.defaultAnchor;
+        }
+
+        /**
+         * @cfg {Number/Object} anchorSize
+         * Defines the anchoring size of container.
+         * Either a number to define the width of the container or an object with `width` and `height` fields.
+         * @member Ext.container.Container
+         */ 
+        if (owner.anchorSize) {
+            if (typeof owner.anchorSize == 'number') {
+                anchorWidth = owner.anchorSize;
+            } else {
+                anchorWidth = owner.anchorSize.width;
+                anchorHeight = owner.anchorSize.height;
+            }
+        } else {
+            anchorWidth = owner.initialConfig.width;
+            anchorHeight = owner.initialConfig.height;
+        }
+
+        if (anchor) {
+            // cache all anchor values
+            anchorsArray = anchor.split(' ');
+            item.anchorSpec = {
+                right: me.parseAnchor(anchorsArray[0], item.initialConfig.width, anchorWidth),
+                bottom: me.parseAnchor(anchorsArray[1], item.initialConfig.height, anchorHeight)
+            };
+        }
+    },
+
+    sizePolicy: {
+        '': {
+            setsWidth: 0,
+            setsHeight: 0
+        },
+        b: {
+            setsWidth: 0,
+            setsHeight: 1
+        },
+        r: {
+            '': {
+                setsWidth: 1,
+                setsHeight: 0
+            },
+            b: {
+                setsWidth: 1,
+                setsHeight: 1
+
+            }
+        }
+    },
+
+    getItemSizePolicy: function (item) {
+        var anchorSpec = item.anchorSpec,
+            key = '',
+            policy = this.sizePolicy,
+            sizeModel;
+
+        if (anchorSpec) {
+            sizeModel = this.owner.getSizeModel();
+            if (anchorSpec.right && !sizeModel.width.shrinkWrap) {
+                policy = policy.r;
+            }
+            if (anchorSpec.bottom && !sizeModel.height.shrinkWrap) {
+                key = 'b';
+            }
+        }
+
+        return policy[key];
+    }
+});
+
+/**
+ * @singleton
+ * @alternateClassName Ext.form.VTypes
+ *
+ * This is a singleton object which contains a set of commonly used field validation functions
+ * and provides a mechanism for creating reusable custom field validations.
+ * The following field validation functions are provided out of the box:
+ *
+ * - {@link #alpha}
+ * - {@link #alphanum}
+ * - {@link #email}
+ * - {@link #url}
+ *
+ * VTypes can be applied to a {@link Ext.form.field.Text Text Field} using the `{@link Ext.form.field.Text#vtype vtype}` configuration:
+ *
+ *     Ext.create('Ext.form.field.Text', {
+ *         fieldLabel: 'Email Address',
+ *         name: 'email',
+ *         vtype: 'email' // applies email validation rules to this field
+ *     });
+ *
+ * To create custom VTypes:
+ *
+ *     // custom Vtype for vtype:'time'
+ *     var timeTest = /^([1-9]|1[0-9]):([0-5][0-9])(\s[a|p]m)$/i;
+ *     Ext.apply(Ext.form.field.VTypes, {
+ *         //  vtype validation function
+ *         time: function(val, field) {
+ *             return timeTest.test(val);
+ *         },
+ *         // vtype Text property: The error text to display when the validation function returns false
+ *         timeText: 'Not a valid time.  Must be in the format "12:34 PM".',
+ *         // vtype Mask property: The keystroke filter mask
+ *         timeMask: /[\d\s:amp]/i
+ *     });
+ *
+ * In the above example the `time` function is the validator that will run when field validation occurs,
+ * `timeText` is the error message, and `timeMask` limits what characters can be typed into the field.
+ * Note that the `Text` and `Mask` functions must begin with the same name as the validator function.
+ *
+ * Using a custom validator is the same as using one of the build-in validators - just use the name of the validator function
+ * as the `{@link Ext.form.field.Text#vtype vtype}` configuration on a {@link Ext.form.field.Text Text Field}:
+ *
+ *     Ext.create('Ext.form.field.Text', {
+ *         fieldLabel: 'Departure Time',
+ *         name: 'departureTime',
+ *         vtype: 'time' // applies custom time validation rules to this field
+ *     });
+ *
+ * Another example of a custom validator:
+ *
+ *     // custom Vtype for vtype:'IPAddress'
+ *     Ext.apply(Ext.form.field.VTypes, {
+ *         IPAddress:  function(v) {
+ *             return /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(v);
+ *         },
+ *         IPAddressText: 'Must be a numeric IP address',
+ *         IPAddressMask: /[\d\.]/i
+ *     });
+ *
+ * It's important to note that using {@link Ext#apply Ext.apply()} means that the custom validator function
+ * as well as `Text` and `Mask` fields are added as properties of the `Ext.form.field.VTypes` singleton.
+ */
+Ext.define('Ext.form.field.VTypes', (function(){
+    // closure these in so they are only created once.
+    var alpha = /^[a-zA-Z_]+$/,
+        alphanum = /^[a-zA-Z0-9_]+$/,
+        email = /^(\w+)([\-+.][\w]+)*@(\w[\-\w]*\.){1,5}([A-Za-z]){2,6}$/,
+        url = /(((^https?)|(^ftp)):\/\/([\-\w]+\.)+\w{2,3}(\/[%\-\w]+(\.\w{2,})?)*(([\w\-\.\?\\\/+@&#;`~=%!]*)(\.\w{2,})?)*\/?)/i;
+
+    // All these messages and functions are configurable
+    return {
+        singleton: true,
+        alternateClassName: 'Ext.form.VTypes',
+
+        /**
+         * The function used to validate email addresses. Note that this is a very basic validation - complete
+         * validation per the email RFC specifications is very complex and beyond the scope of this class, although this
+         * function can be overridden if a more comprehensive validation scheme is desired. See the validation section
+         * of the [Wikipedia article on email addresses][1] for additional information. This implementation is intended
+         * to validate the following emails:
+         *
+         * - `barney@example.de`
+         * - `barney.rubble@example.com`
+         * - `barney-rubble@example.coop`
+         * - `barney+rubble@example.com`
+         *
+         * [1]: http://en.wikipedia.org/wiki/E-mail_address
+         *
+         * @param {String} value The email address
+         * @return {Boolean} true if the RegExp test passed, and false if not.
+         */
+        'email' : function(v){
+            return email.test(v);
+        },
+        //<locale>
+        /**
+         * @property {String} emailText
+         * The error text to display when the email validation function returns false.
+         * Defaults to: 'This field should be an e-mail address in the format "user@example.com"'
+         */
+        'emailText' : 'This field should be an e-mail address in the format "user@example.com"',
+        //</locale>
+        /**
+         * @property {RegExp} emailMask
+         * The keystroke filter mask to be applied on email input. See the {@link #email} method for information about
+         * more complex email validation. Defaults to: /[a-z0-9_\.\-@]/i
+         */
+        'emailMask' : /[a-z0-9_\.\-@\+]/i,
+
+        /**
+         * The function used to validate URLs
+         * @param {String} value The URL
+         * @return {Boolean} true if the RegExp test passed, and false if not.
+         */
+        'url' : function(v){
+            return url.test(v);
+        },
+        //<locale>
+        /**
+         * @property {String} urlText
+         * The error text to display when the url validation function returns false.
+         * Defaults to: 'This field should be a URL in the format "http:/'+'/www.example.com"'
+         */
+        'urlText' : 'This field should be a URL in the format "http:/'+'/www.example.com"',
+        //</locale>
+
+        /**
+         * The function used to validate alpha values
+         * @param {String} value The value
+         * @return {Boolean} true if the RegExp test passed, and false if not.
+         */
+        'alpha' : function(v){
+            return alpha.test(v);
+        },
+        //<locale>
+        /**
+         * @property {String} alphaText
+         * The error text to display when the alpha validation function returns false.
+         * Defaults to: 'This field should only contain letters and _'
+         */
+        'alphaText' : 'This field should only contain letters and _',
+        //</locale>
+        /**
+         * @property {RegExp} alphaMask
+         * The keystroke filter mask to be applied on alpha input. Defaults to: /[a-z_]/i
+         */
+        'alphaMask' : /[a-z_]/i,
+
+        /**
+         * The function used to validate alphanumeric values
+         * @param {String} value The value
+         * @return {Boolean} true if the RegExp test passed, and false if not.
+         */
+        'alphanum' : function(v){
+            return alphanum.test(v);
+        },
+        //<locale>
+        /**
+         * @property {String} alphanumText
+         * The error text to display when the alphanumeric validation function returns false.
+         * Defaults to: 'This field should only contain letters, numbers and _'
+         */
+        'alphanumText' : 'This field should only contain letters, numbers and _',
+        //</locale>
+        /**
+         * @property {RegExp} alphanumMask
+         * The keystroke filter mask to be applied on alphanumeric input. Defaults to: /[a-z0-9_]/i
+         */
+        'alphanumMask' : /[a-z0-9_]/i
+    };
+}()));
+
+/**
+ * @private
+ */
+Ext.define('Ext.layout.component.ProgressBar', {
+
+    /* Begin Definitions */
+
+    alias: ['layout.progressbar'],
+
+    extend: 'Ext.layout.component.Auto',
+
+    /* End Definitions */
+
+    type: 'progressbar',
+
+    beginLayout: function (ownerContext) {
+        var me = this,
+            i, textEls;
+
+        me.callParent(arguments);
+
+        if (!ownerContext.textEls) {
+            textEls = me.owner.textEl; // an Ext.Element or CompositeList (raw DOM el's)
+
+            if (textEls.isComposite) {
+                ownerContext.textEls = [];
+                textEls = textEls.elements;
+                for (i = textEls.length; i--; ) {
+                    ownerContext.textEls[i] = ownerContext.getEl(Ext.get(textEls[i]));
+                }
+            } else {
+                ownerContext.textEls = [ ownerContext.getEl('textEl') ];
+            }
+        }
+    },
+
+    calculate: function(ownerContext) {
+        var me = this,
+            i, textEls, width;
+
+        me.callParent(arguments);
+
+        if (Ext.isNumber(width = ownerContext.getProp('width'))) {
+            width -= ownerContext.getBorderInfo().width;
+            textEls = ownerContext.textEls;
+
+            for (i = textEls.length; i--; ) {
+                textEls[i].setWidth(width);
+            }
+        } else {
+            me.done = false;
+        }
+    }
+});
+
+/**
+ * A mixin which allows a component to be configured and decorated with a label and/or error message as is
+ * common for form fields. This is used by e.g. Ext.form.field.Base and Ext.form.FieldContainer
+ * to let them be managed by the Field layout.
+ *
+ * NOTE: This mixin is mainly for internal library use and most users should not need to use it directly. It
+ * is more likely you will want to use one of the component classes that import this mixin, such as
+ * Ext.form.field.Base or Ext.form.FieldContainer.
+ *
+ * Use of this mixin does not make a component a field in the logical sense, meaning it does not provide any
+ * logic or state related to values or validation; that is handled by the related Ext.form.field.Field
+ * mixin. These two mixins may be used separately (for example Ext.form.FieldContainer is Labelable but not a
+ * Field), or in combination (for example Ext.form.field.Base implements both and has logic for connecting the
+ * two.)
+ *
+ * Component classes which use this mixin should use the Field layout
+ * or a derivation thereof to properly size and position the label and message according to the component config.
+ * They must also call the {@link #initLabelable} method during component initialization to ensure the mixin gets
+ * set up correctly.
+ *
+ * @docauthor Jason Johnston <jason@sencha.com>
+ */
+Ext.define("Ext.form.Labelable", {
+    requires: ['Ext.XTemplate'],
+
+    autoEl: {
+        tag: 'table',
+        cellpadding: 0
+    },
+
+    childEls: [
+        /**
+         * @property {Ext.Element} labelCell
+         * The `<TD>` Element which contains the label Element for this component. Only available after the component has been rendered.
+         */
+        'labelCell',
+
+        /**
+         * @property {Ext.Element} labelEl
+         * The label Element for this component. Only available after the component has been rendered.
+         */
+        'labelEl',
+
+        /**
+         * @property {Ext.Element} bodyEl
+         * The div Element wrapping the component's contents. Only available after the component has been rendered.
+         */
+        'bodyEl',
+
+        // private - the TD which contains the msgTarget: 'side' error icon
+        'sideErrorCell',
+
+        /**
+         * @property {Ext.Element} errorEl
+         * The div Element that will contain the component's error message(s). Note that depending on the configured
+         * {@link #msgTarget}, this element may be hidden in favor of some other form of presentation, but will always
+         * be present in the DOM for use by assistive technologies.
+         */
+        'errorEl',
+
+        'inputRow',
+
+        'bottomPlaceHolder'
+    ],
+
+    /**
+     * @cfg {String/String[]/Ext.XTemplate} labelableRenderTpl
+     * The rendering template for the field decorations. Component classes using this mixin
+     * should include logic to use this as their {@link Ext.AbstractComponent#renderTpl renderTpl},
+     * and implement the {@link #getSubTplMarkup} method to generate the field body content.
+     *
+     * The structure of a field is a table as follows:
+     * 
+     * If `labelAlign: 'left', `msgTarget: 'side'`
+     * 
+     *      +----------------------+----------------------+-------------+
+     *      | Label:               | InputField           | sideErrorEl |
+     *      +----------------------+----------------------+-------------+
+     *
+     * If `labelAlign: 'left', `msgTarget: 'under'`
+     * 
+     *      +----------------------+------------------------------------+
+     *      | Label:               | InputField      (colspan=2)        |
+     *      |                      | underErrorEl                       |
+     *      +----------------------+------------------------------------+
+     *
+     * If `labelAlign: 'top', `msgTarget: 'side'`
+     *
+     *      +---------------------------------------------+-------------+
+     *      | label                                       |             |
+     *      | InputField                                  | sideErrorEl |
+     *      +---------------------------------------------+-------------+
+     *
+     * If `labelAlign: 'top', `msgTarget: 'under'`
+     * 
+     *      +-----------------------------------------------------------+
+     *      | label                                                     |
+     *      | InputField                      (colspan=2)               |
+     *      | underErrorEl                                              |
+     *      +-----------------------------------------------------------+
+     *
+     * The total columns always the same for fields with each setting of {@link #labelAlign} because when
+     * rendered into a {@link Ext.layout.container.Form} layout, just the `TR` of the table
+     * will be placed into the form's main `TABLE`, and the columns of all the siblings
+     * must match so that they all line up. In a {@link Ext.layout.container.Form} layout, different
+     * settings of {@link #labelAlign} are not supported because of the incompatible column structure.
+     *
+     * When the triggerCell or side error cell are hidden or shown, the input cell's colspan
+     * is recalculated to maintain the correct 3 visible column count.
+     * @private
+     */
+    labelableRenderTpl: [
+
+        // body row. If a heighted Field (eg TextArea, HtmlEditor, this must greedily consume height.
+        '<tr id="{id}-inputRow" <tpl if="inFormLayout">id="{id}"</tpl>>',
+
+            // Label cell
+            '<tpl if="labelOnLeft">',
+                '<td id="{id}-labelCell" style="{labelCellStyle}" {labelCellAttrs}>',
+                    '{beforeLabelTpl}',
+                    '<label id="{id}-labelEl" {labelAttrTpl}<tpl if="inputId"> for="{inputId}"</tpl> class="{labelCls}"',
+                        '<tpl if="labelStyle"> style="{labelStyle}"</tpl>>',
+                        '{beforeLabelTextTpl}',
+                        '<tpl if="fieldLabel">{fieldLabel}{labelSeparator}</tpl>',
+                        '{afterLabelTextTpl}',
+                    '</label>',
+                    '{afterLabelTpl}',
+                '</td>',
+            '</tpl>',
+
+            // Body of the input. That will be an input element, or, from a TriggerField, a table containing an input cell and trigger cell(s)
+            '<td class="{baseBodyCls} {fieldBodyCls}" id="{id}-bodyEl" colspan="{bodyColspan}" role="presentation">',
+                '{beforeBodyEl}',
+
+                // Label just sits on top of the input field if labelAlign === 'top'
+                '<tpl if="labelAlign==\'top\'">',
+                    '{beforeLabelTpl}',
+                    '<div id="{id}-labelCell" style="{labelCellStyle}">',
+                        '<label id="{id}-labelEl" {labelAttrTpl}<tpl if="inputId"> for="{inputId}"</tpl> class="{labelCls}"',
+                            '<tpl if="labelStyle"> style="{labelStyle}"</tpl>>',
+                            '{beforeLabelTextTpl}',
+                            '<tpl if="fieldLabel">{fieldLabel}{labelSeparator}</tpl>',
+                            '{afterLabelTextTpl}',
+                        '</label>',
+                    '</div>',
+                    '{afterLabelTpl}',
+                '</tpl>',
+
+                '{beforeSubTpl}',
+                '{[values.$comp.getSubTplMarkup()]}',
+                '{afterSubTpl}',
+
+            // Final TD. It's a side error element unless there's a floating external one
+            '<tpl if="msgTarget===\'side\'">',
+                '{afterBodyEl}',
+                '</td>',
+                '<td id="{id}-sideErrorCell" vAlign="{[values.labelAlign===\'top\' && !values.hideLabel ? \'bottom\' : \'middle\']}" style="{[values.autoFitErrors ? \'display:none\' : \'\']}" width="{errorIconWidth}">',
+                    '<div id="{id}-errorEl" class="{errorMsgCls}" style="display:none;width:{errorIconWidth}px"></div>',
+                '</td>',
+            '<tpl elseif="msgTarget==\'under\'">',
+                '<div id="{id}-errorEl" class="{errorMsgClass}" colspan="2" style="display:none"></div>',
+                '{afterBodyEl}',
+                '</td>',
+            '</tpl>',
+
+        '</tr>',
+        {
+            disableFormats: true
+        }
+    ],
+
+    /**
+     * @cfg {String/String[]/Ext.XTemplate} activeErrorsTpl
+     * The template used to format the Array of error messages passed to {@link #setActiveErrors} into a single HTML
+     * string. By default this renders each message as an item in an unordered list.
+     */
+    activeErrorsTpl: [
+        '<tpl if="errors && errors.length">',
+            '<ul><tpl for="errors"><li>{.}</li></tpl></ul>',
+        '</tpl>'
+    ],
+
+    /**
+     * @property {Boolean} isFieldLabelable
+     * Flag denoting that this object is labelable as a field. Always true.
+     */
+    isFieldLabelable: true,
+
+    /**
+     * @cfg {String} formItemCls
+     * A CSS class to be applied to the outermost element to denote that it is participating in the form field layout.
+     */
+    formItemCls: Ext.baseCSSPrefix + 'form-item',
+
+    /**
+     * @cfg {String} labelCls
+     * The CSS class to be applied to the label element. This (single) CSS class is used to formulate the renderSelector
+     * and drives the field layout where it is concatenated with a hyphen ('-') and {@link #labelAlign}. To add
+     * additional classes, use {@link #labelClsExtra}.
+     */
+    labelCls: Ext.baseCSSPrefix + 'form-item-label',
+
+    /**
+     * @cfg {String} labelClsExtra
+     * An optional string of one or more additional CSS classes to add to the label element. Defaults to empty.
+     */
+
+    /**
+     * @cfg {String} errorMsgCls
+     * The CSS class to be applied to the error message element.
+     */
+    errorMsgCls: Ext.baseCSSPrefix + 'form-error-msg',
+
+    /**
+     * @cfg {String} baseBodyCls
+     * The CSS class to be applied to the body content element.
+     */
+    baseBodyCls: Ext.baseCSSPrefix + 'form-item-body',
+
+    /**
+     * @cfg {String} fieldBodyCls
+     * An extra CSS class to be applied to the body content element in addition to {@link #baseBodyCls}.
+     */
+    fieldBodyCls: '',
+
+    /**
+     * @cfg {String} clearCls
+     * The CSS class to be applied to the special clearing div rendered directly after the field contents wrapper to
+     * provide field clearing.
+     */
+    clearCls: Ext.baseCSSPrefix + 'clear',
+
+    /**
+     * @cfg {String} invalidCls
+     * The CSS class to use when marking the component invalid.
+     */
+    invalidCls : Ext.baseCSSPrefix + 'form-invalid',
+
+    /**
+     * @cfg {String} fieldLabel
+     * The label for the field. It gets appended with the {@link #labelSeparator}, and its position and sizing is
+     * determined by the {@link #labelAlign}, {@link #labelWidth}, and {@link #labelPad} configs.
+     */
+    fieldLabel: undefined,
+
+    /**
+     * @cfg {String} labelAlign
+     * Controls the position and alignment of the {@link #fieldLabel}. Valid values are:
+     *
+     *   - "left" (the default) - The label is positioned to the left of the field, with its text aligned to the left.
+     *     Its width is determined by the {@link #labelWidth} config.
+     *   - "top" - The label is positioned above the field.
+     *   - "right" - The label is positioned to the left of the field, with its text aligned to the right.
+     *     Its width is determined by the {@link #labelWidth} config.
+     */
+    labelAlign : 'left',
+
+    /**
+     * @cfg {Number} labelWidth
+     * The width of the {@link #fieldLabel} in pixels. Only applicable if the {@link #labelAlign} is set to "left" or
+     * "right".
+     */
+    labelWidth: 100,
+
+    /**
+     * @cfg {Number} labelPad
+     * The amount of space in pixels between the {@link #fieldLabel} and the input field.
+     */
+    labelPad : 5,
+
+    //<locale>
+    /**
+     * @cfg {String} labelSeparator
+     * Character(s) to be inserted at the end of the {@link #fieldLabel label text}.
+     *
+     * Set to empty string to hide the separator completely.
+     */
+    labelSeparator : ':',
+    //</locale>
+
+    /**
+     * @cfg {String} labelStyle
+     * A CSS style specification string to apply directly to this field's label.
+     */
+
+    /**
+     * @cfg {Boolean} hideLabel
+     * Set to true to completely hide the label element ({@link #fieldLabel} and {@link #labelSeparator}). Also see
+     * {@link #hideEmptyLabel}, which controls whether space will be reserved for an empty fieldLabel.
+     */
+    hideLabel: false,
+
+    /**
+     * @cfg {Boolean} hideEmptyLabel
+     * When set to true, the label element ({@link #fieldLabel} and {@link #labelSeparator}) will be automatically
+     * hidden if the {@link #fieldLabel} is empty. Setting this to false will cause the empty label element to be
+     * rendered and space to be reserved for it; this is useful if you want a field without a label to line up with
+     * other labeled fields in the same form.
+     *
+     * If you wish to unconditionall hide the label even if a non-empty fieldLabel is configured, then set the
+     * {@link #hideLabel} config to true.
+     */
+    hideEmptyLabel: true,
+
+    /**
+     * @cfg {Boolean} preventMark
+     * true to disable displaying any {@link #setActiveError error message} set on this object.
+     */
+    preventMark: false,
+
+    /**
+     * @cfg {Boolean} autoFitErrors
+     * Whether to adjust the component's body area to make room for 'side' or 'under' {@link #msgTarget error messages}.
+     */
+    autoFitErrors: true,
+
+    /**
+     * @cfg {String} msgTarget
+     * The location where the error message text should display. Must be one of the following values:
+     *
+     *   - `qtip` Display a quick tip containing the message when the user hovers over the field.
+     *     This is the default.
+     *
+     *     **{@link Ext.tip.QuickTipManager#init} must have been called for this setting to work.**
+     *
+     *   - `title` Display the message in a default browser title attribute popup.
+     *   - `under` Add a block div beneath the field containing the error message.
+     *   - `side` Add an error icon to the right of the field, displaying the message in a popup on hover.
+     *   - `none` Don't display any error message. This might be useful if you are implementing custom error display.
+     *   - `[element id]` Add the error message directly to the innerHTML of the specified element.
+     */
+    msgTarget: 'qtip',
+
+    /**
+     * @cfg {String} activeError
+     * If specified, then the component will be displayed with this value as its active error when first rendered. Use
+     * {@link #setActiveError} or {@link #unsetActiveError} to change it after component creation.
+     */
+
+    /**
+     * @private
+     * Tells the layout system that the height can be measured immediately because the width does not need setting.
+     */
+    noWrap: true,
+
+    labelableInsertions: [
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} beforeBodyEl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * at the beginning of the input containing element. If an `XTemplate` is used, the component's {@link Ext.AbstractComponent#renderData render data}
+         * serves as the context.
+         */
+        'beforeBodyEl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} afterBodyEl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * at the end of the input containing element. If an `XTemplate` is used, the component's {@link Ext.AbstractComponent#renderData render data}
+         * serves as the context.
+         */
+        'afterBodyEl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} beforeLabelTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * before the label element. If an `XTemplate` is used, the component's {@link Ext.AbstractComponent#renderData render data}
+         * serves as the context.
+         */
+        'beforeLabelTpl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} afterLabelTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * after the label element. If an `XTemplate` is used, the component's {@link Ext.AbstractComponent#renderData render data}
+         * serves as the context.
+         */
+        'afterLabelTpl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} beforeSubTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * before the {@link #getSubTplMarkup subTpl markup}. If an `XTemplate` is used, the
+         * component's {@link Ext.AbstractComponent#renderData render data} serves as the context.
+         */
+        'beforeSubTpl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} afterSubTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * after the {@link #getSubTplMarkup subTpl markup}. If an `XTemplate` is used, the
+         * component's {@link Ext.AbstractComponent#renderData render data} serves as the context.
+         */
+        'afterSubTpl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} beforeLabelTextTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * before the label text. If an `XTemplate` is used, the component's {@link Ext.AbstractComponent#renderData render data}
+         * serves as the context.
+         */
+        'beforeLabelTextTpl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} afterLabelTextTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * after the label text. If an `XTemplate` is used, the component's {@link Ext.AbstractComponent#renderData render data}
+         * serves as the context.
+         */
+        'afterLabelTextTpl',
+
+        /**
+         * @cfg {String/Array/Ext.XTemplate} labelAttrTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * inside the label element (as attributes). If an `XTemplate` is used, the component's
+         * {@link Ext.AbstractComponent#renderData render data} serves as the context.
+         */
+        'labelAttrTpl'
+    ],
+
+    // This is an array to avoid a split on every call to Ext.copyTo
+    labelableRenderProps: [ 'allowBlank', 'id', 'labelAlign', 'fieldBodyCls', 'baseBodyCls',
+                            'clearCls', 'labelSeparator', 'msgTarget' ],
+
+    /**
+     * Performs initialization of this mixin. Component classes using this mixin should call this method during their
+     * own initialization.
+     */
+    initLabelable: function() {
+        var me = this,
+            padding = me.padding;
+
+        // This Component is rendered as a table. Padding doesn't work on tables
+        // Before padding can be applied to the encapsulating table element, copy the padding into
+        // an extraMargins property which is to be added to all computed margins post render :(
+        if (padding) {
+            me.padding = undefined;
+            me.extraMargins = Ext.Element.parseBox(padding);
+        }
+
+        me.addCls(me.formItemCls);
+        
+        // Prevent first render of active error, at Field render time from signalling a change from undefined to "
+        me.lastActiveError = '';
+
+        me.addEvents(
+            /**
+             * @event errorchange
+             * Fires when the active error message is changed via {@link #setActiveError}.
+             * @param {Ext.form.Labelable} this
+             * @param {String} error The active error message
+             */
+            'errorchange'
+        );
+    },
+
+    /**
+     * Returns the trimmed label by slicing off the label separator character. Can be overridden.
+     * @return {String} The trimmed field label, or empty string if not defined
+     */
+    trimLabelSeparator: function() {
+        var me = this,
+            separator = me.labelSeparator,
+            label = me.fieldLabel || '',
+            lastChar = label.substr(label.length - 1);
+
+        // if the last char is the same as the label separator then slice it off otherwise just return label value
+        return lastChar === separator ? label.slice(0, -1) : label;
+    },
+
+    /**
+     * Returns the label for the field. Defaults to simply returning the {@link #fieldLabel} config. Can be overridden
+     * to provide a custom generated label.
+     * @template
+     * @return {String} The configured field label, or empty string if not defined
+     */
+    getFieldLabel: function() {
+        return this.trimLabelSeparator();
+    },
+    
+    /**
+     * Set the label of this field.
+     * @param {String} label The new label. The {@link #labelSeparator} will be automatically appended to the label
+     * string.
+     */
+    setFieldLabel: function(label){
+        label = label || '';
+        
+        var me = this,
+            separator = me.labelSeparator,
+            labelEl = me.labelEl;
+        
+        me.fieldLabel = label;
+        if (me.rendered) {
+            if (Ext.isEmpty(label) && me.hideEmptyLabel) {
+                labelEl.parent().setDisplayed('none');
+            } else {
+                if (separator) {
+                    label = me.trimLabelSeparator() + separator;
+                }
+                labelEl.update(label);
+                labelEl.parent().setDisplayed('');
+            }
+            me.updateLayout();
+        }
+    },
+
+    getInsertionRenderData: function (data, names) {
+        var i = names.length,
+            name, value;
+
+        while (i--) {
+            name = names[i];
+            value = this[name];
+
+            if (value) {
+                if (typeof value != 'string') {
+                    if (!value.isTemplate) {
+                        value = Ext.XTemplate.getTpl(this, name);
+                    }
+                    value = value.apply(data);
+                }
+            }
+
+            data[name] = value || '';
+        }
+
+        return data;
+    },
+
+    /**
+     * Generates the arguments for the field decorations {@link #labelableRenderTpl rendering template}.
+     * @return {Object} The template arguments
+     * @protected
+     */
+    getLabelableRenderData: function() {
+        var me = this,
+            data,
+            tempEl,
+            topLabel = me.labelAlign === 'top';
+
+        if (!Ext.form.Labelable.errorIconWidth) {
+            Ext.form.Labelable.errorIconWidth = (tempEl = Ext.resetElement.createChild({style: 'position:absolute', cls: Ext.baseCSSPrefix + 'form-invalid-icon'})).getWidth();
+            tempEl.remove();
+        }
+
+        data = Ext.copyTo({
+            inFormLayout   : me.ownerLayout && me.ownerLayout.type === 'form',
+            inputId        : me.getInputId(),
+            labelOnLeft    : !topLabel,
+            hideLabel      : !me.hasVisibleLabel(),
+            fieldLabel     : me.getFieldLabel(),
+            labelCellStyle : me.getLabelCellStyle(),
+            labelCellAttrs : me.getLabelCellAttrs(),
+            labelCls       : me.getLabelCls(),
+            labelStyle     : me.getLabelStyle(),
+            bodyColspan    : me.getBodyColspan(),
+            externalError  : !me.autoFitErrors,
+            errorMsgCls    : me.getErrorMsgCls(),
+            errorIconWidth : Ext.form.Labelable.errorIconWidth
+        },
+        me, me.labelableRenderProps, true);
+
+        me.getInsertionRenderData(data, me.labelableInsertions);
+
+        return data;
+    },
+    
+    beforeLabelableRender: function() {
+        var me = this;
+        if (me.ownerLayout) {
+            me.addCls(Ext.baseCSSPrefix + me.ownerLayout.type + '-form-item');
+        }
+    },
+
+    onLabelableRender: function() {
+        var me = this,
+            margins,
+            side,
+            style = {};
+
+        if (me.extraMargins) {
+            margins = me.el.getMargin();
+            for (side in margins) {
+                if (margins.hasOwnProperty(side)) {
+                    style['margin-' + side] = (margins[side] + me.extraMargins[side]) + 'px';
+                }
+            }
+            me.el.setStyle(style);
+        }
+    },
+    
+    /**
+     * Checks if the field has a visible label
+     * @return {Boolean} True if the field has a visible label
+     */
+    hasVisibleLabel: function(){
+        if (this.hideLabel) {
+            return false;
+        }
+        return !(this.hideEmptyLabel && !this.getFieldLabel());
+    },
+    
+    /**
+     * @private
+     * Calculates the colspan value for the body cell - the cell which contains the input field.
+     *
+     * The field table structure contains 4 columns:
+     */
+    getBodyColspan: function() {
+        var me = this,
+            result;
+
+        if (me.msgTarget === 'side' && (!me.autoFitErrors || me.hasActiveError())) {
+            result = 1;
+        } else {
+            result = 2;
+        }
+        if (me.labelAlign !== 'top' && !me.hasVisibleLabel()) {
+            result++;
+        }
+        return result;
+    },
+    
+    getLabelCls: function() {
+        var labelCls = this.labelCls,
+            labelClsExtra = this.labelClsExtra;
+
+        if (this.labelAlign === 'top') {
+            labelCls += '-top';
+        }
+        return labelClsExtra ? labelCls + ' ' + labelClsExtra : labelCls;
+    },
+
+    getLabelCellStyle: function() {
+        var me = this,
+            hideLabelCell = me.hideLabel || (!me.fieldLabel && me.hideEmptyLabel);
+
+        return hideLabelCell ? 'display:none;' : '';
+    },
+    
+    getErrorMsgCls: function() {
+        var me = this,
+            hideLabelCell = (me.hideLabel || (!me.fieldLabel && me.hideEmptyLabel));
+        
+        return me.errorMsgCls + (!hideLabelCell && me.labelAlign === 'top' ? ' ' + Ext.baseCSSPrefix + 'lbl-top-err-icon' : '');
+    },
+
+    getLabelCellAttrs: function() {
+        var me = this,
+            labelAlign = me.labelAlign,
+            result = '';
+
+        if (labelAlign !== 'top') {
+            result = 'valign="top" halign="' + labelAlign + '" width="' + (me.labelWidth + me.labelPad) + '"';
+        }
+        return result + ' class="' + Ext.baseCSSPrefix + 'field-label-cell"';
+    },
+    
+    /**
+     * Gets any label styling for the labelEl
+     * @private
+     * @return {String} The label styling
+     */
+    getLabelStyle: function(){
+        var me = this,
+            labelPad = me.labelPad,
+            labelStyle = '';
+
+        // Calculate label styles up front rather than in the Field layout for speed; this
+        // is safe because label alignment/width/pad are not expected to change.
+        if (me.labelAlign !== 'top') {
+            if (me.labelWidth) {
+                labelStyle = 'width:' + me.labelWidth + 'px;';
+            }
+            labelStyle += 'margin-right:' + labelPad + 'px;';
+        }
+        
+        return labelStyle + (me.labelStyle || '');
+    },
+
+    /**
+     * Gets the markup to be inserted into the outer template's bodyEl. Defaults to empty string, should be implemented
+     * by classes including this mixin as needed.
+     * @return {String} The markup to be inserted
+     * @protected
+     */
+    getSubTplMarkup: function() {
+        return '';
+    },
+
+    /**
+     * Get the input id, if any, for this component. This is used as the "for" attribute on the label element.
+     * Implementing subclasses may also use this as e.g. the id for their own input element.
+     * @return {String} The input id
+     */
+    getInputId: function() {
+        return '';
+    },
+
+    /**
+     * Gets the active error message for this component, if any. This does not trigger validation on its own, it merely
+     * returns any message that the component may already hold.
+     * @return {String} The active error message on the component; if there is no error, an empty string is returned.
+     */
+    getActiveError : function() {
+        return this.activeError || '';
+    },
+
+    /**
+     * Tells whether the field currently has an active error message. This does not trigger validation on its own, it
+     * merely looks for any message that the component may already hold.
+     * @return {Boolean}
+     */
+    hasActiveError: function() {
+        return !!this.getActiveError();
+    },
+
+    /**
+     * Sets the active error message to the given string. This replaces the entire error message contents with the given
+     * string. Also see {@link #setActiveErrors} which accepts an Array of messages and formats them according to the
+     * {@link #activeErrorsTpl}. Note that this only updates the error message element's text and attributes, you'll
+     * have to call doComponentLayout to actually update the field's layout to match. If the field extends {@link
+     * Ext.form.field.Base} you should call {@link Ext.form.field.Base#markInvalid markInvalid} instead.
+     * @param {String} msg The error message
+     */
+    setActiveError: function(msg) {
+        this.setActiveErrors(msg);
+    },
+
+    /**
+     * Gets an Array of any active error messages currently applied to the field. This does not trigger validation on
+     * its own, it merely returns any messages that the component may already hold.
+     * @return {String[]} The active error messages on the component; if there are no errors, an empty Array is
+     * returned.
+     */
+    getActiveErrors: function() {
+        return this.activeErrors || [];
+    },
+
+    /**
+     * Set the active error message to an Array of error messages. The messages are formatted into a single message
+     * string using the {@link #activeErrorsTpl}. Also see {@link #setActiveError} which allows setting the entire error
+     * contents with a single string. Note that this only updates the error message element's text and attributes,
+     * you'll have to call doComponentLayout to actually update the field's layout to match. If the field extends
+     * {@link Ext.form.field.Base} you should call {@link Ext.form.field.Base#markInvalid markInvalid} instead.
+     * @param {String[]} errors The error messages
+     */
+    setActiveErrors: function(errors) {
+        errors = Ext.Array.from(errors);
+        this.activeError = errors[0];
+        this.activeErrors = errors;
+        this.activeError = this.getTpl('activeErrorsTpl').apply({errors: errors});
+        this.renderActiveError();
+    },
+
+    /**
+     * Clears the active error message(s). Note that this only clears the error message element's text and attributes,
+     * you'll have to call doComponentLayout to actually update the field's layout to match. If the field extends {@link
+     * Ext.form.field.Base} you should call {@link Ext.form.field.Base#clearInvalid clearInvalid} instead.
+     */
+    unsetActiveError: function() {
+        delete this.activeError;
+        delete this.activeErrors;
+        this.renderActiveError();
+    },
+
+    /**
+     * @private
+     * Updates the rendered DOM to match the current activeError. This only updates the content and
+     * attributes, you'll have to call doComponentLayout to actually update the display.
+     */
+    renderActiveError: function() {
+        var me = this,
+            activeError = me.getActiveError(),
+            hasError = !!activeError;
+
+        if (activeError !== me.lastActiveError) {
+            me.fireEvent('errorchange', me, activeError);
+            me.lastActiveError = activeError;
+        }
+
+        if (me.rendered && !me.isDestroyed && !me.preventMark) {
+            // Add/remove invalid class
+            me.el[hasError ? 'addCls' : 'removeCls'](me.invalidCls);
+
+            // Update the aria-invalid attribute
+            me.getActionEl().dom.setAttribute('aria-invalid', hasError);
+
+            // Update the errorEl (There will only be one if msgTarget is 'side' or 'under') with the error message text
+            if (me.errorEl) {
+                me.errorEl.dom.innerHTML = activeError;
+            }
+        }
+    },
+
+    /**
+     * Applies a set of default configuration values to this Labelable instance. For each of the properties in the given
+     * object, check if this component hasOwnProperty that config; if not then it's inheriting a default value from its
+     * prototype and we should apply the default value.
+     * @param {Object} defaults The defaults to apply to the object.
+     */
+    setFieldDefaults: function(defaults) {
+        var me = this,
+            val, key;
+
+        for (key in defaults) {
+            if (defaults.hasOwnProperty(key)) {
+                val = defaults[key];
+
+                if (!me.hasOwnProperty(key)) {
+                    me[key] = val;
+                }
+            }
+        }
+    }
+});
+
+/**
+ * @docauthor Jason Johnston <jason@sencha.com>
+ *
+ * This mixin provides a common interface for the logical behavior and state of form fields, including:
+ *
+ * - Getter and setter methods for field values
+ * - Events and methods for tracking value and validity changes
+ * - Methods for triggering validation
+ *
+ * **NOTE**: When implementing custom fields, it is most likely that you will want to extend the {@link Ext.form.field.Base}
+ * component class rather than using this mixin directly, as BaseField contains additional logic for generating an
+ * actual DOM complete with {@link Ext.form.Labelable label and error message} display and a form input field,
+ * plus methods that bind the Field value getters and setters to the input field's value.
+ *
+ * If you do want to implement this mixin directly and don't want to extend {@link Ext.form.field.Base}, then
+ * you will most likely want to override the following methods with custom implementations: {@link #getValue},
+ * {@link #setValue}, and {@link #getErrors}. Other methods may be overridden as needed but their base
+ * implementations should be sufficient for common cases. You will also need to make sure that {@link #initField}
+ * is called during the component's initialization.
+ */
+Ext.define('Ext.form.field.Field', {
+    /**
+     * @property {Boolean} isFormField
+     * Flag denoting that this component is a Field. Always true.
+     */
+    isFormField : true,
+
+    /**
+     * @cfg {Object} value
+     * A value to initialize this field with.
+     */
+
+    /**
+     * @cfg {String} name
+     * The name of the field. By default this is used as the parameter name when including the
+     * {@link #getSubmitData field value} in a {@link Ext.form.Basic#submit form submit()}. To prevent the field from
+     * being included in the form submit, set {@link #submitValue} to false.
+     */
+
+    /**
+     * @cfg {Boolean} disabled
+     * True to disable the field. Disabled Fields will not be {@link Ext.form.Basic#submit submitted}.
+     */
+    disabled : false,
+
+    /**
+     * @cfg {Boolean} submitValue
+     * Setting this to false will prevent the field from being {@link Ext.form.Basic#submit submitted} even when it is
+     * not disabled.
+     */
+    submitValue: true,
+
+    /**
+     * @cfg {Boolean} validateOnChange
+     * Specifies whether this field should be validated immediately whenever a change in its value is detected.
+     * If the validation results in a change in the field's validity, a {@link #validitychange} event will be
+     * fired. This allows the field to show feedback about the validity of its contents immediately as the user is
+     * typing.
+     *
+     * When set to false, feedback will not be immediate. However the form will still be validated before submitting if
+     * the clientValidation option to {@link Ext.form.Basic#doAction} is enabled, or if the field or form are validated
+     * manually.
+     *
+     * See also {@link Ext.form.field.Base#checkChangeEvents} for controlling how changes to the field's value are
+     * detected.
+     */
+    validateOnChange: true,
+
+    /**
+     * @private
+     */
+    suspendCheckChange: 0,
+
+    /**
+     * Initializes this Field mixin on the current instance. Components using this mixin should call this method during
+     * their own initialization process.
+     */
+    initField: function() {
+        this.addEvents(
+            /**
+             * @event change
+             * Fires when the value of a field is changed via the {@link #setValue} method.
+             * @param {Ext.form.field.Field} this
+             * @param {Object} newValue The new value
+             * @param {Object} oldValue The original value
+             */
+            'change',
+            /**
+             * @event validitychange
+             * Fires when a change in the field's validity is detected.
+             * @param {Ext.form.field.Field} this
+             * @param {Boolean} isValid Whether or not the field is now valid
+             */
+            'validitychange',
+            /**
+             * @event dirtychange
+             * Fires when a change in the field's {@link #isDirty} state is detected.
+             * @param {Ext.form.field.Field} this
+             * @param {Boolean} isDirty Whether or not the field is now dirty
+             */
+            'dirtychange'
+        );
+
+        this.initValue();
+    },
+
+    /**
+     * Initializes the field's value based on the initial config.
+     */
+    initValue: function() {
+        var me = this;
+
+        me.value = me.transformOriginalValue(me.value);
+        /**
+         * @property {Object} originalValue
+         * The original value of the field as configured in the {@link #value} configuration, or as loaded by the last
+         * form load operation if the form's {@link Ext.form.Basic#trackResetOnLoad trackResetOnLoad} setting is `true`.
+         */
+        me.originalValue = me.lastValue = me.value;
+
+        // Set the initial value - prevent validation on initial set
+        me.suspendCheckChange++;
+        me.setValue(me.value);
+        me.suspendCheckChange--;
+    },
+    
+    /**
+     * Allows for any necessary modifications before the original
+     * value is set
+     * @protected
+     * @param {Object} value The initial value
+     * @return {Object} The modified initial value
+     */
+    transformOriginalValue: function(value){
+        return value;
+    },
+
+    /**
+     * Returns the {@link Ext.form.field.Field#name name} attribute of the field. This is used as the parameter name
+     * when including the field value in a {@link Ext.form.Basic#submit form submit()}.
+     * @return {String} name The field {@link Ext.form.field.Field#name name}
+     */
+    getName: function() {
+        return this.name;
+    },
+
+    /**
+     * Returns the current data value of the field. The type of value returned is particular to the type of the
+     * particular field (e.g. a Date object for {@link Ext.form.field.Date}).
+     * @return {Object} value The field value
+     */
+    getValue: function() {
+        return this.value;
+    },
+
+    /**
+     * Sets a data value into the field and runs the change detection and validation.
+     * @param {Object} value The value to set
+     * @return {Ext.form.field.Field} this
+     */
+    setValue: function(value) {
+        var me = this;
+        me.value = value;
+        me.checkChange();
+        return me;
+    },
+
+    /**
+     * Returns whether two field {@link #getValue values} are logically equal. Field implementations may override this
+     * to provide custom comparison logic appropriate for the particular field's data type.
+     * @param {Object} value1 The first value to compare
+     * @param {Object} value2 The second value to compare
+     * @return {Boolean} True if the values are equal, false if inequal.
+     */
+    isEqual: function(value1, value2) {
+        return String(value1) === String(value2);
+    },
+
+    /**
+     * Returns whether two values are logically equal.
+     * Similar to {@link #isEqual}, however null or undefined values will be treated as empty strings.
+     * @private
+     * @param {Object} value1 The first value to compare
+     * @param {Object} value2 The second value to compare
+     * @return {Boolean} True if the values are equal, false if inequal.
+     */
+    isEqualAsString: function(value1, value2){
+        return String(Ext.value(value1, '')) === String(Ext.value(value2, ''));
+    },
+
+    /**
+     * Returns the parameter(s) that would be included in a standard form submit for this field. Typically this will be
+     * an object with a single name-value pair, the name being this field's {@link #getName name} and the value being
+     * its current stringified value. More advanced field implementations may return more than one name-value pair.
+     *
+     * Note that the values returned from this method are not guaranteed to have been successfully {@link #validate
+     * validated}.
+     *
+     * @return {Object} A mapping of submit parameter names to values; each value should be a string, or an array of
+     * strings if that particular name has multiple values. It can also return null if there are no parameters to be
+     * submitted.
+     */
+    getSubmitData: function() {
+        var me = this,
+            data = null;
+        if (!me.disabled && me.submitValue && !me.isFileUpload()) {
+            data = {};
+            data[me.getName()] = '' + me.getValue();
+        }
+        return data;
+    },
+
+    /**
+     * Returns the value(s) that should be saved to the {@link Ext.data.Model} instance for this field, when {@link
+     * Ext.form.Basic#updateRecord} is called. Typically this will be an object with a single name-value pair, the name
+     * being this field's {@link #getName name} and the value being its current data value. More advanced field
+     * implementations may return more than one name-value pair. The returned values will be saved to the corresponding
+     * field names in the Model.
+     *
+     * Note that the values returned from this method are not guaranteed to have been successfully {@link #validate
+     * validated}.
+     *
+     * @return {Object} A mapping of submit parameter names to values; each value should be a string, or an array of
+     * strings if that particular name has multiple values. It can also return null if there are no parameters to be
+     * submitted.
+     */
+    getModelData: function() {
+        var me = this,
+            data = null;
+        if (!me.disabled && !me.isFileUpload()) {
+            data = {};
+            data[me.getName()] = me.getValue();
+        }
+        return data;
+    },
+
+    /**
+     * Resets the current field value to the originally loaded value and clears any validation messages. See {@link
+     * Ext.form.Basic}.{@link Ext.form.Basic#trackResetOnLoad trackResetOnLoad}
+     */
+    reset : function(){
+        var me = this;
+
+        me.beforeReset();
+        me.setValue(me.originalValue);
+        me.clearInvalid();
+        // delete here so we reset back to the original state
+        delete me.wasValid;
+    },
+    
+    /**
+     * Template method before a field is reset.
+     * @protected
+     */
+    beforeReset: Ext.emptyFn,
+
+    /**
+     * Resets the field's {@link #originalValue} property so it matches the current {@link #getValue value}. This is
+     * called by {@link Ext.form.Basic}.{@link Ext.form.Basic#setValues setValues} if the form's
+     * {@link Ext.form.Basic#trackResetOnLoad trackResetOnLoad} property is set to true.
+     */
+    resetOriginalValue: function() {
+        this.originalValue = this.getValue();
+        this.checkDirty();
+    },
+
+    /**
+     * Checks whether the value of the field has changed since the last time it was checked.
+     * If the value has changed, it:
+     *
+     * 1. Fires the {@link #change change event},
+     * 2. Performs validation if the {@link #validateOnChange} config is enabled, firing the
+     *    {@link #validitychange validitychange event} if the validity has changed, and
+     * 3. Checks the {@link #isDirty dirty state} of the field and fires the {@link #dirtychange dirtychange event}
+     *    if it has changed.
+     */
+    checkChange: function() {
+        if (!this.suspendCheckChange) {
+            var me = this,
+                newVal = me.getValue(),
+                oldVal = me.lastValue;
+            if (!me.isEqual(newVal, oldVal) && !me.isDestroyed) {
+                me.lastValue = newVal;
+                me.fireEvent('change', me, newVal, oldVal);
+                me.onChange(newVal, oldVal);
+            }
+        }
+    },
+
+    /**
+     * @private
+     * Called when the field's value changes. Performs validation if the {@link #validateOnChange}
+     * config is enabled, and invokes the dirty check.
+     */
+    onChange: function(newVal, oldVal) {
+        if (this.validateOnChange) {
+            this.validate();
+        }
+        this.checkDirty();
+    },
+
+    /**
+     * Returns true if the value of this Field has been changed from its {@link #originalValue}.
+     * Will always return false if the field is disabled.
+     *
+     * Note that if the owning {@link Ext.form.Basic form} was configured with
+     * {@link Ext.form.Basic#trackResetOnLoad trackResetOnLoad} then the {@link #originalValue} is updated when
+     * the values are loaded by {@link Ext.form.Basic}.{@link Ext.form.Basic#setValues setValues}.
+     * @return {Boolean} True if this field has been changed from its original value (and is not disabled),
+     * false otherwise.
+     */
+    isDirty : function() {
+        var me = this;
+        return !me.disabled && !me.isEqual(me.getValue(), me.originalValue);
+    },
+
+    /**
+     * Checks the {@link #isDirty} state of the field and if it has changed since the last time it was checked,
+     * fires the {@link #dirtychange} event.
+     */
+    checkDirty: function() {
+        var me = this,
+            isDirty = me.isDirty();
+        if (isDirty !== me.wasDirty) {
+            me.fireEvent('dirtychange', me, isDirty);
+            me.onDirtyChange(isDirty);
+            me.wasDirty = isDirty;
+        }
+    },
+
+    /**
+     * @private Called when the field's dirty state changes.
+     * @param {Boolean} isDirty
+     */
+    onDirtyChange: Ext.emptyFn,
+
+    /**
+     * Runs this field's validators and returns an array of error messages for any validation failures. This is called
+     * internally during validation and would not usually need to be used manually.
+     *
+     * Each subclass should override or augment the return value to provide their own errors.
+     *
+     * @param {Object} value The value to get errors for (defaults to the current field value)
+     * @return {String[]} All error messages for this field; an empty Array if none.
+     */
+    getErrors: function(value) {
+        return [];
+    },
+
+    /**
+     * Returns whether or not the field value is currently valid by {@link #getErrors validating} the field's current
+     * value. The {@link #validitychange} event will not be fired; use {@link #validate} instead if you want the event
+     * to fire. **Note**: {@link #disabled} fields are always treated as valid.
+     *
+     * Implementations are encouraged to ensure that this method does not have side-effects such as triggering error
+     * message display.
+     *
+     * @return {Boolean} True if the value is valid, else false
+     */
+    isValid : function() {
+        var me = this;
+        return me.disabled || Ext.isEmpty(me.getErrors());
+    },
+
+    /**
+     * Returns whether or not the field value is currently valid by {@link #getErrors validating} the field's current
+     * value, and fires the {@link #validitychange} event if the field's validity has changed since the last validation.
+     * **Note**: {@link #disabled} fields are always treated as valid.
+     *
+     * Custom implementations of this method are allowed to have side-effects such as triggering error message display.
+     * To validate without side-effects, use {@link #isValid}.
+     *
+     * @return {Boolean} True if the value is valid, else false
+     */
+    validate : function() {
+        var me = this,
+            isValid = me.isValid();
+        if (isValid !== me.wasValid) {
+            me.wasValid = isValid;
+            me.fireEvent('validitychange', me, isValid);
+        }
+        return isValid;
+    },
+
+    /**
+     * A utility for grouping a set of modifications which may trigger value changes into a single transaction, to
+     * prevent excessive firing of {@link #change} events. This is useful for instance if the field has sub-fields which
+     * are being updated as a group; you don't want the container field to check its own changed state for each subfield
+     * change.
+     * @param {Object} fn A function containing the transaction code
+     */
+    batchChanges: function(fn) {
+        try {
+            this.suspendCheckChange++;
+            fn();
+        } catch(e){
+            throw e;
+        } finally {
+            this.suspendCheckChange--;
+        }
+        this.checkChange();
+    },
+
+    /**
+     * Returns whether this Field is a file upload field; if it returns true, forms will use special techniques for
+     * {@link Ext.form.Basic#submit submitting the form} via AJAX. See {@link Ext.form.Basic#hasUpload} for details. If
+     * this returns true, the {@link #extractFileInput} method must also be implemented to return the corresponding file
+     * input element.
+     * @return {Boolean}
+     */
+    isFileUpload: function() {
+        return false;
+    },
+
+    /**
+     * Only relevant if the instance's {@link #isFileUpload} method returns true. Returns a reference to the file input
+     * DOM element holding the user's selected file. The input will be appended into the submission form and will not be
+     * returned, so this method should also create a replacement.
+     * @return {HTMLElement}
+     */
+    extractFileInput: function() {
+        return null;
+    },
+
+    /**
+     * @method markInvalid
+     * Associate one or more error messages with this field. Components using this mixin should implement this method to
+     * update the component's rendering to display the messages.
+     *
+     * **Note**: this method does not cause the Field's {@link #validate} or {@link #isValid} methods to return `false`
+     * if the value does _pass_ validation. So simply marking a Field as invalid will not prevent submission of forms
+     * submitted with the {@link Ext.form.action.Submit#clientValidation} option set.
+     *
+     * @param {String/String[]} errors The error message(s) for the field.
+     */
+    markInvalid: Ext.emptyFn,
+
+    /**
+     * @method clearInvalid
+     * Clear any invalid styles/messages for this field. Components using this mixin should implement this method to
+     * update the components rendering to clear any existing messages.
+     *
+     * **Note**: this method does not cause the Field's {@link #validate} or {@link #isValid} methods to return `true`
+     * if the value does not _pass_ validation. So simply clearing a field's errors will not necessarily allow
+     * submission of forms submitted with the {@link Ext.form.action.Submit#clientValidation} option set.
+     */
+    clearInvalid: Ext.emptyFn
+
+});
+
+/**
+ * Layout class for components with {@link Ext.form.Labelable field labeling}, handling the sizing and alignment of
+ * the form control, label, and error message treatment.
+ * @private
+ */
+Ext.define('Ext.layout.component.field.Field', {
+
+    /* Begin Definitions */
+
+    extend: 'Ext.layout.component.Auto',
+
+    alias: 'layout.field',
+
+    uses: ['Ext.tip.QuickTip', 'Ext.util.TextMetrics', 'Ext.util.CSS'],
+
+    /* End Definitions */
+
+    type: 'field',
+    
+    naturalSizingProp: 'size',
+
+    beginLayout: function(ownerContext) {
+        var me = this,
+            owner = me.owner,
+            widthModel = ownerContext.widthModel,
+            ownerNaturalSize = owner[me.naturalSizingProp],
+            width;
+
+        me.callParent(arguments);
+
+        ownerContext.labelStrategy = me.getLabelStrategy();
+        ownerContext.errorStrategy = me.getErrorStrategy();
+
+        ownerContext.labelContext = ownerContext.getEl('labelEl');
+        ownerContext.bodyCellContext = ownerContext.getEl('bodyEl');
+        ownerContext.inputContext = ownerContext.getEl('inputEl');
+        ownerContext.errorContext = ownerContext.getEl('errorEl');
+
+        // width:100% on an element inside a table in IE6/7 "strict" sizes the content box.
+        // store the input element's border and padding info so that subclasses can take it into consideration if needed
+        if ((Ext.isIE6 || Ext.isIE7) && Ext.isStrict && ownerContext.inputContext) {
+            me.ieInputWidthAdjustment = ownerContext.inputContext.getPaddingInfo().width + ownerContext.inputContext.getBorderInfo().width;
+        }
+
+        // perform preparation on the label and error (setting css classes, qtips, etc.)
+        ownerContext.labelStrategy.prepare(ownerContext, owner);
+        ownerContext.errorStrategy.prepare(ownerContext, owner);
+
+        // Body cell must stretch to use up available width unless the field is auto width
+        if (widthModel.shrinkWrap) {
+            // When the width needs to be auto, table-layout cannot be fixed
+            me.beginLayoutShrinkWrap(ownerContext);
+        } else if (widthModel.natural) {
+
+            // When a size specified, natural becomes fixed width unless the inpiutWidth is specified - we shrinkwrap that
+            if (typeof ownerNaturalSize == 'number' && !owner.inputWidth) {
+                me.beginLayoutFixed(ownerContext, (width = ownerNaturalSize * 6.5 + 20), 'px');
+            }
+
+            // Otherwise it is the same as shrinkWrap
+            else {
+                me.beginLayoutShrinkWrap(ownerContext);
+            }
+            ownerContext.setWidth(width, false);
+        } else {
+            me.beginLayoutFixed(ownerContext, '100', '%');
+        }
+    },
+
+    beginLayoutFixed: function (ownerContext, width, suffix) {
+        var owner = ownerContext.target,
+            inputEl = owner.inputEl,
+            inputWidth = owner.inputWidth;
+
+        owner.el.setStyle('table-layout', 'fixed');
+        owner.bodyEl.setStyle('width', width + suffix);
+        if (inputEl && inputWidth) {
+            inputEl.setStyle('width', inputWidth + 'px');
+        }
+        ownerContext.isFixed = true;
+    },
+
+    beginLayoutShrinkWrap: function (ownerContext) {
+        var owner = ownerContext.target,
+            inputEl = owner.inputEl,
+            inputWidth = owner.inputWidth;
+
+        if (inputEl && inputEl.dom) {
+            inputEl.dom.removeAttribute('size');
+            if (inputWidth) {
+                inputEl.setStyle('width', inputWidth + 'px');
+            }
+        }
+        owner.el.setStyle('table-layout', 'auto');
+        owner.bodyEl.setStyle('width', '');
+    },
+
+    finishedLayout: function(ownerContext){
+        var owner = this.owner;
+
+        this.callParent(arguments);        
+        ownerContext.labelStrategy.finishedLayout(ownerContext, owner);
+        ownerContext.errorStrategy.finishedLayout(ownerContext, owner);
+    },
+
+    calculateOwnerHeightFromContentHeight: function(ownerContext, contentHeight) {
+        return contentHeight;
+    },
+
+    measureContentHeight: function (ownerContext) {
+        return ownerContext.el.getHeight();
+    },
+    
+    measureContentWidth: function (ownerContext) {
+        return ownerContext.el.getWidth();
+    },
+
+    measureLabelErrorHeight: function (ownerContext) {
+        return ownerContext.labelStrategy.getHeight(ownerContext) +
+               ownerContext.errorStrategy.getHeight(ownerContext);
+    },
+
+    onFocus: function() {
+        this.getErrorStrategy().onFocus(this.owner);    
+    },
+
+    /**
+     * Return the set of strategy functions from the {@link #labelStrategies labelStrategies collection}
+     * that is appropriate for the field's {@link Ext.form.Labelable#labelAlign labelAlign} config.
+     */
+    getLabelStrategy: function() {
+        var me = this,
+            strategies = me.labelStrategies,
+            labelAlign = me.owner.labelAlign;
+        return strategies[labelAlign] || strategies.base;
+    },
+
+    /**
+     * Return the set of strategy functions from the {@link #errorStrategies errorStrategies collection}
+     * that is appropriate for the field's {@link Ext.form.Labelable#msgTarget msgTarget} config.
+     */
+    getErrorStrategy: function() {
+        var me = this,
+            owner = me.owner,
+            strategies = me.errorStrategies,
+            msgTarget = owner.msgTarget;
+        return !owner.preventMark && Ext.isString(msgTarget) ?
+                (strategies[msgTarget] || strategies.elementId) :
+                strategies.none;
+    },
+
+    /**
+     * Collection of named strategies for laying out and adjusting labels to accommodate error messages.
+     * An appropriate one will be chosen based on the owner field's {@link Ext.form.Labelable#labelAlign} config.
+     */
+    labelStrategies: (function() {
+        var base = {
+                prepare: function(ownerContext, owner) {
+                    var cls = owner.labelCls + '-' + owner.labelAlign,
+                        labelEl = owner.labelEl;
+
+                    if (labelEl) {
+                        labelEl.addCls(cls);
+                    }
+                },
+
+                getHeight: function () {
+                    return 0;
+                },
+                
+                finishedLayout: Ext.emptyFn
+            };
+
+        return {
+            base: base,
+
+            /**
+             * Label displayed above the bodyEl
+             */
+            top: Ext.applyIf({        
+                        
+                getHeight: function (ownerContext) {
+                    var labelContext = ownerContext.labelContext,
+                        props = labelContext.props,
+                        height = props.height;
+                        
+                    if (height === undefined) {
+                        props.height = height = labelContext.el.getHeight();
+                    }
+
+                    return height;
+                }
+            }, base),
+
+            /**
+             * Label displayed to the left of the bodyEl
+             */
+            left: base,
+
+            /**
+             * Same as left, only difference is text-align in CSS
+             */
+            right: base
+        };
+    }()),
+
+    /**
+     * Collection of named strategies for laying out and adjusting insets to accommodate error messages.
+     * An appropriate one will be chosen based on the owner field's {@link Ext.form.Labelable#msgTarget} config.
+     */
+    errorStrategies: (function() {
+        function showTip(owner) {
+            var tip = Ext.layout.component.field.Field.tip,
+                target;
+                
+            if (tip && tip.isVisible()) {
+                target = tip.activeTarget;
+                if (target && target.el === owner.getActionEl().dom) {
+                    tip.toFront(true);
+                }
+            }
+        }
+
+        var applyIf = Ext.applyIf,
+            emptyFn = Ext.emptyFn,
+            iconCls = Ext.baseCSSPrefix + 'form-invalid-icon',
+            iconWidth,
+            base = {
+                prepare: function(ownerContext, owner) {
+                    var el = owner.errorEl;
+                    if (el) {
+                        el.setDisplayed(false);
+                    }
+                },
+                getHeight: function () {
+                    return 0;
+                },
+                onFocus: emptyFn,
+                finishedLayout: emptyFn
+            };
+
+        return {
+            none: base,
+
+            /**
+             * Error displayed as icon (with QuickTip on hover) to right of the bodyEl
+             */
+            side: applyIf({
+                prepare: function(ownerContext, owner) {
+                    var errorEl = owner.errorEl,
+                        sideErrorCell = owner.sideErrorCell,
+                        displayError = owner.hasActiveError(),
+                        tempEl;
+
+                    // Capture error icon width once
+                    if (!iconWidth) {
+                        iconWidth = (tempEl = Ext.getBody().createChild({style: 'position:absolute', cls: iconCls})).getWidth();
+                        tempEl.remove();
+                    }
+
+                    errorEl.addCls(iconCls);
+                    errorEl.set({'data-errorqtip': owner.getActiveError() || ''});
+                    if (owner.autoFitErrors) {
+                        errorEl.setDisplayed(displayError);
+                    }
+                    // Not autofitting, the space must still be allocated.
+                    else {
+                        errorEl.setVisible(displayError);
+                    }
+
+                    // If we are auto fitting, then hide and show the entire cell
+                    if (sideErrorCell && owner.autoFitErrors) {
+                        sideErrorCell.setDisplayed(displayError);
+                    }
+                    owner.bodyEl.dom.colSpan = owner.getBodyColspan();
+
+                    // TODO: defer the tip call until after the layout to avoid immediate DOM reads now
+                    Ext.layout.component.field.Field.initTip();
+                },
+                onFocus: showTip
+            }, base),
+
+            /**
+             * Error message displayed underneath the bodyEl
+             */
+            under: applyIf({
+                prepare: function(ownerContext, owner) {
+                    var errorEl = owner.errorEl,
+                        cls = Ext.baseCSSPrefix + 'form-invalid-under';
+
+                    errorEl.addCls(cls);
+                    errorEl.setDisplayed(owner.hasActiveError());
+                },
+                getHeight: function (ownerContext) {
+                    var height = 0,
+                        errorContext, props;
+
+                    if (ownerContext.target.hasActiveError()) {
+                        errorContext = ownerContext.errorContext;
+                        props = errorContext.props;
+                        height = props.height;
+
+                        if (height === undefined) {
+                            props.height = height = errorContext.el.getHeight();
+                        }
+                    }
+
+                    return height;
+                }
+            }, base),
+
+            /**
+             * Error displayed as QuickTip on hover of the field container
+             */
+            qtip: applyIf({
+                prepare: function(ownerContext, owner) {
+                    Ext.layout.component.field.Field.initTip();
+                    owner.getActionEl().set({'data-errorqtip': owner.getActiveError() || ''});
+                },
+                onFocus: showTip
+            }, base),
+
+            /**
+             * Error displayed as title tip on hover of the field container
+             */
+            title: applyIf({
+                prepare: function(ownerContext, owner) {
+                    owner.el.set({'title': owner.getActiveError() || ''});
+                }
+            }, base),
+
+            /**
+             * Error message displayed as content of an element with a given id elsewhere in the app
+             */
+            elementId: applyIf({
+                prepare: function(ownerContext, owner) {
+                    var targetEl = Ext.fly(owner.msgTarget);
+                    if (targetEl) {
+                        targetEl.dom.innerHTML = owner.getActiveError() || '';
+                        targetEl.setDisplayed(owner.hasActiveError());
+                    }
+                }
+            }, base)
+        };
+    }()),
+
+    statics: {
+        /**
+         * Use a custom QuickTip instance separate from the main QuickTips singleton, so that we
+         * can give it a custom frame style. Responds to errorqtip rather than the qtip property.
+         * @static
+         */
+        initTip: function() {
+            var tip = this.tip;
+            if (!tip) {
+                tip = this.tip = Ext.create('Ext.tip.QuickTip', {
+                    baseCls: Ext.baseCSSPrefix + 'form-invalid-tip'
+                });
+                tip.tagConfig = Ext.apply({}, {attribute: 'errorqtip'}, tip.tagConfig);
+            }
+        },
+
+        /**
+         * Destroy the error tip instance.
+         * @static
+         */
+        destroyTip: function() {
+            var tip = this.tip;
+            if (tip) {
+                tip.destroy();
+                delete this.tip;
+            }
+        }
+    }
+});
 Ext.define('DNSAdmin.view.LoggedInText', {
 			extend : 'Ext.toolbar.TextItem',
 			alias : 'widget.loggedin',
@@ -66347,114 +68618,3507 @@ Ext.define('DNSAdmin.view.Viewport', {
 			}
 		});
 /**
+ * An updateable progress bar component. The progress bar supports two different modes: manual and automatic.
+ *
+ * In manual mode, you are responsible for showing, updating (via {@link #updateProgress}) and clearing the progress bar
+ * as needed from your own code. This method is most appropriate when you want to show progress throughout an operation
+ * that has predictable points of interest at which you can update the control.
+ *
+ * In automatic mode, you simply call {@link #wait} and let the progress bar run indefinitely, only clearing it once the
+ * operation is complete. You can optionally have the progress bar wait for a specific amount of time and then clear
+ * itself. Automatic mode is most appropriate for timed operations or asynchronous operations in which you have no need
+ * for indicating intermediate progress.
+ *
+ *     @example
+ *     var p = Ext.create('Ext.ProgressBar', {
+ *        renderTo: Ext.getBody(),
+ *        width: 300
+ *     });
+ *
+ *     // Wait for 5 seconds, then update the status el (progress bar will auto-reset)
+ *     p.wait({
+ *         interval: 500, //bar will move fast!
+ *         duration: 50000,
+ *         increment: 15,
+ *         text: 'Updating...',
+ *         scope: this,
+ *         fn: function(){
+ *             p.updateText('Done!');
+ *         }
+ *     });
+ */
+Ext.define('Ext.ProgressBar', {
+    extend: 'Ext.Component',
+    alias: 'widget.progressbar',
+
+    requires: [
+        'Ext.Template',
+        'Ext.CompositeElement',
+        'Ext.TaskManager',
+        'Ext.layout.component.ProgressBar'
+    ],
+
+    uses: ['Ext.fx.Anim'],
+
+   /**
+    * @cfg {Number} [value=0]
+    * A floating point value between 0 and 1 (e.g., .5)
+    */
+
+   /**
+    * @cfg {String/HTMLElement/Ext.Element} textEl
+    * The element to render the progress text to (defaults to the progress bar's internal text element)
+    */
+
+   /**
+    * @cfg {String} id
+    * The progress bar element's id (defaults to an auto-generated id)
+    */
+
+   /**
+    * @cfg {String} [baseCls='x-progress']
+    * The base CSS class to apply to the progress bar's wrapper element.
+    */
+    baseCls: Ext.baseCSSPrefix + 'progress',
+
+    /**
+     * @cfg {Boolean} animate
+     * True to animate the progress bar during transitions.
+     */
+    animate: false,
+
+    /**
+     * @cfg {String} text
+     * The text shown in the progress bar.
+     */
+    text: '',
+
+    // private
+    waitTimer: null,
+
+    childEls: [
+        'bar'
+    ],
+
+    renderTpl: [
+        '<tpl if="internalText">',
+            '<div class="{baseCls}-text {baseCls}-text-back">{text}</div>',
+        '</tpl>',
+        '<div id="{id}-bar" class="{baseCls}-bar" style="width:{percentage}%">',
+            '<tpl if="internalText">',
+                '<div class="{baseCls}-text">',
+                    '<div>{text}</div>',
+                '</div>',
+            '</tpl>',
+        '</div>'
+    ],
+
+    componentLayout: 'progressbar',
+
+    // private
+    initComponent: function() {
+        this.callParent();
+
+        this.addEvents(
+            /**
+             * @event update
+             * Fires after each update interval
+             * @param {Ext.ProgressBar} this
+             * @param {Number} value The current progress value
+             * @param {String} text The current progress text
+             */
+            "update"
+        );
+    },
+
+    initRenderData: function() {
+        var me = this;
+        return Ext.apply(me.callParent(), {
+            internalText : !me.hasOwnProperty('textEl'),
+            text         : me.text || '&#160;',
+            percentage   : me.value ? me.value * 100 : 0
+        });
+    },
+
+    onRender : function() {
+        var me = this;
+
+        me.callParent(arguments);
+
+        // External text display
+        if (me.textEl) {
+            me.textEl = Ext.get(me.textEl);
+            me.updateText(me.text);
+        }
+        // Inline text display
+        else {
+            // This produces a composite w/2 el's (which is why we cannot use childEls or
+            // renderSelectors):
+            me.textEl = me.el.select('.' + me.baseCls + '-text');
+        }
+    },
+
+    /**
+     * Updates the progress bar value, and optionally its text. If the text argument is not specified, any existing text
+     * value will be unchanged. To blank out existing text, pass ''. Note that even if the progress bar value exceeds 1,
+     * it will never automatically reset -- you are responsible for determining when the progress is complete and
+     * calling {@link #reset} to clear and/or hide the control.
+     * @param {Number} [value=0] A floating point value between 0 and 1 (e.g., .5)
+     * @param {String} [text=''] The string to display in the progress text element
+     * @param {Boolean} [animate=false] Whether to animate the transition of the progress bar. If this value is not
+     * specified, the default for the class is used
+     * @return {Ext.ProgressBar} this
+     */
+    updateProgress: function(value, text, animate) {
+        var me = this,
+            oldValue = me.value;
+
+        me.value = value || 0;
+        if (text) {
+            me.updateText(text);
+        }
+        if (me.rendered && !me.isDestroyed) {
+            if (animate === true || (animate !== false && me.animate)) {
+                me.bar.stopAnimation();
+                me.bar.animate(Ext.apply({
+                    from: {
+                        width: (oldValue * 100) + '%'
+                    },
+                    to: {
+                        width: (me.value * 100) + '%'
+                    }
+                }, me.animate));
+            } else {
+                me.bar.setStyle('width', (me.value * 100) + '%');
+            }
+        }
+        me.fireEvent('update', me, me.value, text);
+        return me;
+    },
+
+    /**
+     * Updates the progress bar text. If specified, textEl will be updated, otherwise the progress bar itself will
+     * display the updated text.
+     * @param {String} [text=''] The string to display in the progress text element
+     * @return {Ext.ProgressBar} this
+     */
+    updateText: function(text) {
+        var me = this;
+        
+        me.text = text;
+        if (me.rendered) {
+            me.textEl.update(me.text);
+        }
+        return me;
+    },
+
+    applyText : function(text) {
+        this.updateText(text);
+    },
+    
+    getText: function(){
+        return this.text;    
+    },
+
+    /**
+     * Initiates an auto-updating progress bar. A duration can be specified, in which case the progress bar will
+     * automatically reset after a fixed amount of time and optionally call a callback function if specified. If no
+     * duration is passed in, then the progress bar will run indefinitely and must be manually cleared by calling
+     * {@link #reset}.
+     *
+     * Example usage:
+     *
+     *     var p = new Ext.ProgressBar({
+     *        renderTo: 'my-el'
+     *     });
+     *
+     *     //Wait for 5 seconds, then update the status el (progress bar will auto-reset)
+     *     var p = Ext.create('Ext.ProgressBar', {
+     *        renderTo: Ext.getBody(),
+     *        width: 300
+     *     });
+     *
+     *     //Wait for 5 seconds, then update the status el (progress bar will auto-reset)
+     *     p.wait({
+     *        interval: 500, //bar will move fast!
+     *        duration: 50000,
+     *        increment: 15,
+     *        text: 'Updating...',
+     *        scope: this,
+     *        fn: function(){
+     *           p.updateText('Done!');
+     *        }
+     *     });
+     *
+     *     //Or update indefinitely until some async action completes, then reset manually
+     *     p.wait();
+     *     myAction.on('complete', function(){
+     *         p.reset();
+     *         p.updateText('Done!');
+     *     });
+     *
+     * @param {Object} config (optional) Configuration options
+     * @param {Number} config.duration The length of time in milliseconds that the progress bar should
+     * run before resetting itself (defaults to undefined, in which case it will run indefinitely
+     * until reset is called)
+     * @param {Number} config.interval The length of time in milliseconds between each progress update
+     * (defaults to 1000 ms)
+     * @param {Boolean} config.animate Whether to animate the transition of the progress bar. If this
+     * value is not specified, the default for the class is used.
+     * @param {Number} config.increment The number of progress update segments to display within the
+     * progress bar (defaults to 10).  If the bar reaches the end and is still updating, it will
+     * automatically wrap back to the beginning.
+     * @param {String} config.text Optional text to display in the progress bar element (defaults to '').
+     * @param {Function} config.fn A callback function to execute after the progress bar finishes auto-
+     * updating.  The function will be called with no arguments.  This function will be ignored if
+     * duration is not specified since in that case the progress bar can only be stopped programmatically,
+     * so any required function should be called by the same code after it resets the progress bar.
+     * @param {Object} config.scope The scope that is passed to the callback function (only applies when
+     * duration and fn are both passed).
+     * @return {Ext.ProgressBar} this
+     */
+    wait: function(o) {
+        var me = this, scope;
+            
+        if (!me.waitTimer) {
+            scope = me;
+            o = o || {};
+            me.updateText(o.text);
+            me.waitTimer = Ext.TaskManager.start({
+                run: function(i){
+                    var inc = o.increment || 10;
+                    i -= 1;
+                    me.updateProgress(((((i+inc)%inc)+1)*(100/inc))*0.01, null, o.animate);
+                },
+                interval: o.interval || 1000,
+                duration: o.duration,
+                onStop: function(){
+                    if (o.fn) {
+                        o.fn.apply(o.scope || me);
+                    }
+                    me.reset();
+                },
+                scope: scope
+            });
+        }
+        return me;
+    },
+
+    /**
+     * Returns true if the progress bar is currently in a {@link #wait} operation
+     * @return {Boolean} True if waiting, else false
+     */
+    isWaiting: function(){
+        return this.waitTimer !== null;
+    },
+
+    /**
+     * Resets the progress bar value to 0 and text to empty string. If hide = true, the progress bar will also be hidden
+     * (using the {@link #hideMode} property internally).
+     * @param {Boolean} [hide=false] True to hide the progress bar.
+     * @return {Ext.ProgressBar} this
+     */
+    reset: function(hide){
+        var me = this;
+        
+        me.updateProgress(0);
+        me.clearTimer();
+        if (hide === true) {
+            me.hide();
+        }
+        return me;
+    },
+
+    // private
+    clearTimer: function(){
+        var me = this;
+        
+        if (me.waitTimer) {
+            me.waitTimer.onStop = null; //prevent recursion
+            Ext.TaskManager.stop(me.waitTimer);
+            me.waitTimer = null;
+        }
+    },
+
+    onDestroy: function(){
+        var me = this;
+        
+        me.clearTimer();
+        if (me.rendered) {
+            if (me.textEl.isComposite) {
+                me.textEl.clear();
+            }
+            Ext.destroyMembers(me, 'textEl', 'progressBar');
+        }
+        me.callParent();
+    }
+});
+
+/**
+ * @docauthor Jason Johnston <jason@sencha.com>
+ *
+ * Base class for form fields that provides default event handling, rendering, and other common functionality
+ * needed by all form field types. Utilizes the {@link Ext.form.field.Field} mixin for value handling and validation,
+ * and the {@link Ext.form.Labelable} mixin to provide label and error message display.
+ *
+ * In most cases you will want to use a subclass, such as {@link Ext.form.field.Text} or {@link Ext.form.field.Checkbox},
+ * rather than creating instances of this class directly. However if you are implementing a custom form field,
+ * using this as the parent class is recommended.
+ *
+ * # Values and Conversions
+ *
+ * Because Base implements the Field mixin, it has a main value that can be initialized with the
+ * {@link #value} config and manipulated via the {@link #getValue} and {@link #setValue} methods. This main
+ * value can be one of many data types appropriate to the current field, for instance a {@link Ext.form.field.Date Date}
+ * field would use a JavaScript Date object as its value type. However, because the field is rendered as a HTML
+ * input, this value data type can not always be directly used in the rendered field.
+ *
+ * Therefore Base introduces the concept of a "raw value". This is the value of the rendered HTML input field,
+ * and is normally a String. The {@link #getRawValue} and {@link #setRawValue} methods can be used to directly
+ * work with the raw value, though it is recommended to use getValue and setValue in most cases.
+ *
+ * Conversion back and forth between the main value and the raw value is handled by the {@link #valueToRaw} and
+ * {@link #rawToValue} methods. If you are implementing a subclass that uses a non-String value data type, you
+ * should override these methods to handle the conversion.
+ *
+ * # Rendering
+ *
+ * The content of the field body is defined by the {@link #fieldSubTpl} XTemplate, with its argument data
+ * created by the {@link #getSubTplData} method. Override this template and/or method to create custom
+ * field renderings.
+ *
+ * # Example usage:
+ *
+ *     @example
+ *     // A simple subclass of Base that creates a HTML5 search field. Redirects to the
+ *     // searchUrl when the Enter key is pressed.222
+ *     Ext.define('Ext.form.SearchField', {
+ *         extend: 'Ext.form.field.Base',
+ *         alias: 'widget.searchfield',
+ *     
+ *         inputType: 'search',
+ *     
+ *         // Config defining the search URL
+ *         searchUrl: 'http://www.google.com/search?q={0}',
+ *     
+ *         // Add specialkey listener
+ *         initComponent: function() {
+ *             this.callParent();
+ *             this.on('specialkey', this.checkEnterKey, this);
+ *         },
+ *     
+ *         // Handle enter key presses, execute the search if the field has a value
+ *         checkEnterKey: function(field, e) {
+ *             var value = this.getValue();
+ *             if (e.getKey() === e.ENTER && !Ext.isEmpty(value)) {
+ *                 location.href = Ext.String.format(this.searchUrl, value);
+ *             }
+ *         }
+ *     });
+ *     
+ *     Ext.create('Ext.form.Panel', {
+ *         title: 'Base Example',
+ *         bodyPadding: 5,
+ *         width: 250,
+ *     
+ *         // Fields will be arranged vertically, stretched to full width
+ *         layout: 'anchor',
+ *         defaults: {
+ *             anchor: '100%'
+ *         },
+ *         items: [{
+ *             xtype: 'searchfield',
+ *             fieldLabel: 'Search',
+ *             name: 'query'
+ *         }],
+ *         renderTo: Ext.getBody()
+ *     });
+ */
+Ext.define('Ext.form.field.Base', {
+    extend: 'Ext.Component',
+    mixins: {
+        labelable: 'Ext.form.Labelable',
+        field: 'Ext.form.field.Field'
+    },
+    alias: 'widget.field',
+    alternateClassName: ['Ext.form.Field', 'Ext.form.BaseField'],
+    requires: ['Ext.util.DelayedTask', 'Ext.XTemplate', 'Ext.layout.component.field.Field'],
+
+    /**
+     * @cfg {Ext.XTemplate} fieldSubTpl
+     * The content of the field body is defined by this config option.
+     * @private
+     */
+    fieldSubTpl: [ // note: {id} here is really {inputId}, but {cmpId} is available
+        '<input id="{id}" type="{type}" {inputAttrTpl}',
+            ' size="1"', // allows inputs to fully respect CSS widths across all browsers
+            '<tpl if="name"> name="{name}"</tpl>',
+            '<tpl if="value"> value="{[Ext.util.Format.htmlEncode(values.value)]}"</tpl>',
+            '<tpl if="placeholder"> placeholder="{placeholder}"</tpl>',
+            '{%if (values.maxLength !== undefined){%} maxlength="{maxLength}"{%}%}',
+            '<tpl if="readOnly"> readonly="readonly"</tpl>',
+            '<tpl if="disabled"> disabled="disabled"</tpl>',
+            '<tpl if="tabIdx"> tabIndex="{tabIdx}"</tpl>',
+            '<tpl if="fieldStyle"> style="{fieldStyle}"</tpl>',
+        ' class="{fieldCls} {typeCls} {editableCls}" autocomplete="off"/>',
+        {
+            disableFormats: true
+        }
+    ],
+
+    subTplInsertions: [
+        /**
+         * @cfg {String/Array/Ext.XTemplate} inputAttrTpl
+         * An optional string or `XTemplate` configuration to insert in the field markup
+         * inside the input element (as attributes). If an `XTemplate` is used, the component's
+         * {@link #getSubTplData subTpl data} serves as the context.
+         */
+        'inputAttrTpl'
+    ],
+
+    /**
+     * @cfg {String} name
+     * The name of the field. This is used as the parameter name when including the field value
+     * in a {@link Ext.form.Basic#submit form submit()}. If no name is configured, it falls back to the {@link #inputId}.
+     * To prevent the field from being included in the form submit, set {@link #submitValue} to false.
+     */
+
+    /**
+     * @cfg {String} inputType
+     * The type attribute for input fields -- e.g. radio, text, password, file. The extended types
+     * supported by HTML5 inputs (url, email, etc.) may also be used, though using them will cause older browsers to
+     * fall back to 'text'.
+     *
+     * The type 'password' must be used to render that field type currently -- there is no separate Ext component for
+     * that. You can use {@link Ext.form.field.File} which creates a custom-rendered file upload field, but if you want
+     * a plain unstyled file input you can use a Base with inputType:'file'.
+     */
+    inputType: 'text',
+
+    /**
+     * @cfg {Number} tabIndex
+     * The tabIndex for this field. Note this only applies to fields that are rendered, not those which are built via
+     * applyTo
+     */
+
+    //<locale>
+    /**
+     * @cfg {String} invalidText
+     * The error text to use when marking a field invalid and no message is provided
+     */
+    invalidText : 'The value in this field is invalid',
+    //</locale>
+
+    /**
+     * @cfg {String} [fieldCls='x-form-field']
+     * The default CSS class for the field input
+     */
+    fieldCls : Ext.baseCSSPrefix + 'form-field',
+
+    /**
+     * @cfg {String} fieldStyle
+     * Optional CSS style(s) to be applied to the {@link #inputEl field input element}. Should be a valid argument to
+     * {@link Ext.Element#applyStyles}. Defaults to undefined. See also the {@link #setFieldStyle} method for changing
+     * the style after initialization.
+     */
+
+    /**
+     * @cfg {String} [focusCls='x-form-focus']
+     * The CSS class to use when the field receives focus
+     */
+    focusCls : 'form-focus',
+
+    /**
+     * @cfg {String} dirtyCls
+     * The CSS class to use when the field value {@link #isDirty is dirty}.
+     */
+    dirtyCls : Ext.baseCSSPrefix + 'form-dirty',
+
+    /**
+     * @cfg {String[]} checkChangeEvents
+     * A list of event names that will be listened for on the field's {@link #inputEl input element}, which will cause
+     * the field's value to be checked for changes. If a change is detected, the {@link #change change event} will be
+     * fired, followed by validation if the {@link #validateOnChange} option is enabled.
+     *
+     * Defaults to ['change', 'propertychange'] in Internet Explorer, and ['change', 'input', 'textInput', 'keyup',
+     * 'dragdrop'] in other browsers. This catches all the ways that field values can be changed in most supported
+     * browsers; the only known exceptions at the time of writing are:
+     *
+     *   - Safari 3.2 and older: cut/paste in textareas via the context menu, and dragging text into textareas
+     *   - Opera 10 and 11: dragging text into text fields and textareas, and cut via the context menu in text fields
+     *     and textareas
+     *   - Opera 9: Same as Opera 10 and 11, plus paste from context menu in text fields and textareas
+     *
+     * If you need to guarantee on-the-fly change notifications including these edge cases, you can call the
+     * {@link #checkChange} method on a repeating interval, e.g. using {@link Ext.TaskManager}, or if the field is within
+     * a {@link Ext.form.Panel}, you can use the FormPanel's {@link Ext.form.Panel#pollForChanges} configuration to set up
+     * such a task automatically.
+     */
+    checkChangeEvents: Ext.isIE && (!document.documentMode || document.documentMode < 9) ?
+                        ['change', 'propertychange'] :
+                        ['change', 'input', 'textInput', 'keyup', 'dragdrop'],
+
+    /**
+     * @cfg {Number} checkChangeBuffer
+     * Defines a timeout in milliseconds for buffering {@link #checkChangeEvents} that fire in rapid succession.
+     * Defaults to 50 milliseconds.
+     */
+    checkChangeBuffer: 50,
+
+    componentLayout: 'field',
+
+    /**
+     * @cfg {Boolean} readOnly
+     * true to mark the field as readOnly in HTML.
+     *
+     * **Note**: this only sets the element's readOnly DOM attribute. Setting `readOnly=true`, for example, will not
+     * disable triggering a ComboBox or Date; it gives you the option of forcing the user to choose via the trigger
+     * without typing in the text box. To hide the trigger use `{@link Ext.form.field.Trigger#hideTrigger hideTrigger}`.
+     */
+    readOnly : false,
+
+    /**
+     * @cfg {String} readOnlyCls
+     * The CSS class applied to the component's main element when it is {@link #readOnly}.
+     */
+    readOnlyCls: Ext.baseCSSPrefix + 'form-readonly',
+
+    /**
+     * @cfg {String} inputId
+     * The id that will be given to the generated input DOM element. Defaults to an automatically generated id. If you
+     * configure this manually, you must make sure it is unique in the document.
+     */
+
+    /**
+     * @cfg {Boolean} validateOnBlur
+     * Whether the field should validate when it loses focus. This will cause fields to be validated
+     * as the user steps through the fields in the form regardless of whether they are making changes to those fields
+     * along the way. See also {@link #validateOnChange}.
+     */
+    validateOnBlur: true,
+
+    // private
+    hasFocus : false,
+
+    baseCls: Ext.baseCSSPrefix + 'field',
+
+    maskOnDisable: false,
+
+    // private
+    initComponent : function() {
+        var me = this;
+
+        me.callParent();
+
+        me.subTplData = me.subTplData || {};
+
+        me.addEvents(
+            /**
+             * @event specialkey
+             * Fires when any key related to navigation (arrows, tab, enter, esc, etc.) is pressed. To handle other keys
+             * see {@link Ext.util.KeyMap}. You can check {@link Ext.EventObject#getKey} to determine which key was
+             * pressed. For example:
+             *
+             *     var form = new Ext.form.Panel({
+             *         ...
+             *         items: [{
+             *                 fieldLabel: 'Field 1',
+             *                 name: 'field1',
+             *                 allowBlank: false
+             *             },{
+             *                 fieldLabel: 'Field 2',
+             *                 name: 'field2',
+             *                 listeners: {
+             *                     specialkey: function(field, e){
+             *                         // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
+             *                         // e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
+             *                         if (e.{@link Ext.EventObject#getKey getKey()} == e.ENTER) {
+             *                             var form = field.up('form').getForm();
+             *                             form.submit();
+             *                         }
+             *                     }
+             *                 }
+             *             }
+             *         ],
+             *         ...
+             *     });
+             *
+             * @param {Ext.form.field.Base} this
+             * @param {Ext.EventObject} e The event object
+             */
+            'specialkey',
+
+            /**
+             * @event writeablechange
+             * Fires when this field changes its read-only status.
+             * @param {Ext.form.field.Base} this
+             * @param {Boolean} Read only flag
+             */
+            'writeablechange'
+        );
+
+        // Init mixins
+        me.initLabelable();
+        me.initField();
+
+        // Default name to inputId
+        if (!me.name) {
+            me.name = me.getInputId();
+        }
+    },
+    
+    beforeRender: function(){
+        var me = this;
+            
+        me.callParent(arguments);
+        me.beforeLabelableRender(arguments);
+        if (me.readOnly) {
+            me.addCls(me.readOnlyCls);
+        }
+    },
+
+    /**
+     * Returns the input id for this field. If none was specified via the {@link #inputId} config, then an id will be
+     * automatically generated.
+     */
+    getInputId: function() {
+        return this.inputId || (this.inputId = this.id + '-inputEl');
+    },
+
+    /**
+     * Creates and returns the data object to be used when rendering the {@link #fieldSubTpl}.
+     * @return {Object} The template data
+     * @template
+     */
+    getSubTplData: function() {
+        var me = this,
+            type = me.inputType,
+            inputId = me.getInputId(),
+            data;
+        
+        data = Ext.apply({
+            id         : inputId,
+            cmpId      : me.id,
+            name       : me.name || inputId,
+            disabled   : me.disabled,
+            readOnly   : me.readOnly,
+            value      : me.getRawValue(),
+            type       : type,
+            fieldCls   : me.fieldCls,
+            fieldStyle : me.getFieldStyle(),
+            tabIdx     : me.tabIndex,
+            typeCls    : Ext.baseCSSPrefix + 'form-' + (type === 'password' ? 'text' : type)
+        }, me.subTplData);
+
+        me.getInsertionRenderData(data, me.subTplInsertions);
+
+        return data;
+    },
+
+    afterFirstLayout: function() {
+        this.callParent();
+        var el = this.inputEl;
+        if (el) {
+            el.selectable();
+        }
+    },
+
+    applyRenderSelectors: function() {
+        var me = this;
+
+        me.callParent();
+
+        /**
+         * @property {Ext.Element} inputEl
+         * The input Element for this Field. Only available after the field has been rendered.
+         */
+        me.inputEl = me.el.getById(me.getInputId());
+    },
+
+    /**
+     * Gets the markup to be inserted into the outer template's bodyEl. For fields this is the actual input element.
+     */
+    getSubTplMarkup: function() {
+        return this.getTpl('fieldSubTpl').apply(this.getSubTplData());
+    },
+
+    initRenderTpl: function() {
+        var me = this;
+        if (!me.hasOwnProperty('renderTpl')) {
+            me.renderTpl = me.getTpl('labelableRenderTpl');
+        }
+        return me.callParent();
+    },
+
+    initRenderData: function() {
+        return Ext.applyIf(this.callParent(), this.getLabelableRenderData());
+    },
+
+    /**
+     * Set the {@link #fieldStyle CSS style} of the {@link #inputEl field input element}.
+     * @param {String/Object/Function} style The style(s) to apply. Should be a valid argument to {@link
+     * Ext.Element#applyStyles}.
+     */
+    setFieldStyle: function(style) {
+        var me = this,
+            inputEl = me.inputEl;
+        if (inputEl) {
+            inputEl.applyStyles(style);
+        }
+        me.fieldStyle = style;
+    },
+
+    getFieldStyle: function() {
+        return 'width:100%;' + (Ext.isObject(this.fieldStyle) ? Ext.DomHelper.generateStyles(this.fieldStyle) : this.fieldStyle ||'');
+    },
+
+    // private
+    onRender : function() {
+        var me = this;
+        me.callParent(arguments);
+        me.onLabelableRender();
+        me.renderActiveError();
+    },
+
+    getFocusEl: function() {
+        return this.inputEl;
+    },
+
+    isFileUpload: function() {
+        return this.inputType === 'file';
+    },
+
+    extractFileInput: function() {
+        var me = this,
+            fileInput = me.isFileUpload() ? me.inputEl.dom : null,
+            clone;
+        if (fileInput) {
+            clone = fileInput.cloneNode(true);
+            fileInput.parentNode.replaceChild(clone, fileInput);
+            me.inputEl = Ext.get(clone);
+        }
+        return fileInput;
+    },
+
+    // private override to use getSubmitValue() as a convenience
+    getSubmitData: function() {
+        var me = this,
+            data = null,
+            val;
+        if (!me.disabled && me.submitValue && !me.isFileUpload()) {
+            val = me.getSubmitValue();
+            if (val !== null) {
+                data = {};
+                data[me.getName()] = val;
+            }
+        }
+        return data;
+    },
+
+    /**
+     * Returns the value that would be included in a standard form submit for this field. This will be combined with the
+     * field's name to form a name=value pair in the {@link #getSubmitData submitted parameters}. If an empty string is
+     * returned then just the name= will be submitted; if null is returned then nothing will be submitted.
+     *
+     * Note that the value returned will have been {@link #processRawValue processed} but may or may not have been
+     * successfully {@link #validate validated}.
+     *
+     * @return {String} The value to be submitted, or null.
+     */
+    getSubmitValue: function() {
+        return this.processRawValue(this.getRawValue());
+    },
+
+    /**
+     * Returns the raw value of the field, without performing any normalization, conversion, or validation. To get a
+     * normalized and converted value see {@link #getValue}.
+     * @return {String} value The raw String value of the field
+     */
+    getRawValue: function() {
+        var me = this,
+            v = (me.inputEl ? me.inputEl.getValue() : Ext.value(me.rawValue, ''));
+        me.rawValue = v;
+        return v;
+    },
+
+    /**
+     * Sets the field's raw value directly, bypassing {@link #valueToRaw value conversion}, change detection, and
+     * validation. To set the value with these additional inspections see {@link #setValue}.
+     * @param {Object} value The value to set
+     * @return {Object} value The field value that is set
+     */
+    setRawValue: function(value) {
+        var me = this;
+        value = Ext.value(me.transformRawValue(value), '');
+        me.rawValue = value;
+
+        // Some Field subclasses may not render an inputEl
+        if (me.inputEl) {
+            me.inputEl.dom.value = value;
+        }
+        return value;
+    },
+    
+    /**
+     * Transform the raw value before it is set
+     * @protected
+     * @param {Object} value The value
+     * @return {Object} The value to set
+     */
+    transformRawValue: function(value) {
+        return value;
+    },
+
+    /**
+     * Converts a mixed-type value to a raw representation suitable for displaying in the field. This allows controlling
+     * how value objects passed to {@link #setValue} are shown to the user, including localization. For instance, for a
+     * {@link Ext.form.field.Date}, this would control how a Date object passed to {@link #setValue} would be converted
+     * to a String for display in the field.
+     *
+     * See {@link #rawToValue} for the opposite conversion.
+     *
+     * The base implementation simply does a standard toString conversion, and converts {@link Ext#isEmpty empty values}
+     * to an empty string.
+     *
+     * @param {Object} value The mixed-type value to convert to the raw representation.
+     * @return {Object} The converted raw value.
+     */
+    valueToRaw: function(value) {
+        return '' + Ext.value(value, '');
+    },
+
+    /**
+     * Converts a raw input field value into a mixed-type value that is suitable for this particular field type. This
+     * allows controlling the normalization and conversion of user-entered values into field-type-appropriate values,
+     * e.g. a Date object for {@link Ext.form.field.Date}, and is invoked by {@link #getValue}.
+     *
+     * It is up to individual implementations to decide how to handle raw values that cannot be successfully converted
+     * to the desired object type.
+     *
+     * See {@link #valueToRaw} for the opposite conversion.
+     *
+     * The base implementation does no conversion, returning the raw value untouched.
+     *
+     * @param {Object} rawValue
+     * @return {Object} The converted value.
+     */
+    rawToValue: function(rawValue) {
+        return rawValue;
+    },
+
+    /**
+     * Performs any necessary manipulation of a raw field value to prepare it for {@link #rawToValue conversion} and/or
+     * {@link #validate validation}, for instance stripping out ignored characters. In the base implementation it does
+     * nothing; individual subclasses may override this as needed.
+     *
+     * @param {Object} value The unprocessed string value
+     * @return {Object} The processed string value
+     */
+    processRawValue: function(value) {
+        return value;
+    },
+
+    /**
+     * Returns the current data value of the field. The type of value returned is particular to the type of the
+     * particular field (e.g. a Date object for {@link Ext.form.field.Date}), as the result of calling {@link #rawToValue} on
+     * the field's {@link #processRawValue processed} String value. To return the raw String value, see {@link #getRawValue}.
+     * @return {Object} value The field value
+     */
+    getValue: function() {
+        var me = this,
+            val = me.rawToValue(me.processRawValue(me.getRawValue()));
+        me.value = val;
+        return val;
+    },
+
+    /**
+     * Sets a data value into the field and runs the change detection and validation. To set the value directly
+     * without these inspections see {@link #setRawValue}.
+     * @param {Object} value The value to set
+     * @return {Ext.form.field.Field} this
+     */
+    setValue: function(value) {
+        var me = this;
+        me.setRawValue(me.valueToRaw(value));
+        return me.mixins.field.setValue.call(me, value);
+    },
+
+    onBoxReady: function() {
+        var me = this;
+        me.callParent();
+        
+        if (me.setReadOnlyOnBoxReady) {
+            me.setReadOnly(me.readOnly);
+        }
+            
+    },
+
+    //private
+    onDisable: function() {
+        var me = this,
+            inputEl = me.inputEl;
+            
+        me.callParent();
+        if (inputEl) {
+            inputEl.dom.disabled = true;
+            if (me.hasActiveError()) {
+                // clear invalid state since the field is now disabled
+                me.clearInvalid();
+                me.needsValidateOnEnable = true;
+            }
+        }
+    },
+
+    //private
+    onEnable: function() {
+        var me = this,
+            inputEl = me.inputEl;
+            
+        me.callParent();
+        if (inputEl) {
+            inputEl.dom.disabled = false;
+            if (me.needsValidateOnEnable) {
+                delete me.needsValidateOnEnable;
+                // will trigger errors to be shown
+                me.forceValidation = true;
+                me.isValid();
+                delete me.forceValidation;
+            }
+        }
+    },
+
+    /**
+     * Sets the read only state of this field.
+     * @param {Boolean} readOnly Whether the field should be read only.
+     */
+    setReadOnly: function(readOnly) {
+        var me = this,
+            inputEl = me.inputEl;
+        readOnly = !!readOnly;
+        me[readOnly ? 'addCls' : 'removeCls'](me.readOnlyCls);
+        me.readOnly = readOnly;
+        if (inputEl) {
+            inputEl.dom.readOnly = readOnly;
+        } else if (me.rendering) {
+            me.setReadOnlyOnBoxReady = true;
+        }
+        me.fireEvent('writeablechange', me, readOnly);
+    },
+
+    // private
+    fireKey: function(e){
+        if(e.isSpecialKey()){
+            this.fireEvent('specialkey', this, new Ext.EventObjectImpl(e));
+        }
+    },
+
+    // private
+    initEvents : function(){
+        var me = this,
+            inputEl = me.inputEl,
+            onChangeTask,
+            onChangeEvent,
+            events = me.checkChangeEvents,
+            e,
+            eLen   = events.length,
+            event;
+
+        // standardise buffer across all browsers + OS-es for consistent event order.
+        // (the 10ms buffer for Editors fixes a weird FF/Win editor issue when changing OS window focus)
+        if (me.inEditor) {
+            me.onBlur = Ext.Function.createBuffered(me.onBlur, 10);
+        }
+        if (inputEl) {
+            me.mon(inputEl, Ext.EventManager.getKeyEvent(), me.fireKey,  me);
+
+            // listen for immediate value changes
+            onChangeTask = new Ext.util.DelayedTask(me.checkChange, me);
+            me.onChangeEvent = onChangeEvent = function() {
+                onChangeTask.delay(me.checkChangeBuffer);
+            };
+
+            for (e = 0; e < eLen; e++) {
+                event = events[e];
+
+                if (event === 'propertychange') {
+                    me.usesPropertychange = true;
+                }
+
+                me.mon(inputEl, event, onChangeEvent);
+            }
+        }
+        me.callParent();
+    },
+
+    doComponentLayout: function() {
+        var me = this,
+            inputEl = me.inputEl,
+            usesPropertychange = me.usesPropertychange,
+            ename = 'propertychange',
+            onChangeEvent = me.onChangeEvent;
+
+        // In IE if propertychange is one of the checkChangeEvents, we need to remove
+        // the listener prior to layout and re-add it after, to prevent it from firing
+        // needlessly for attribute and style changes applied to the inputEl.
+        if (usesPropertychange) {
+            me.mun(inputEl, ename, onChangeEvent);
+        }
+        me.callParent(arguments);
+        if (usesPropertychange) {
+            me.mon(inputEl, ename, onChangeEvent);
+        }
+    },
+
+    /**
+     * @private Called when the field's dirty state changes. Adds/removes the {@link #dirtyCls} on the main element.
+     * @param {Boolean} isDirty
+     */
+    onDirtyChange: function(isDirty) {
+        this[isDirty ? 'addCls' : 'removeCls'](this.dirtyCls);
+    },
+
+
+    /**
+     * Returns whether or not the field value is currently valid by {@link #getErrors validating} the
+     * {@link #processRawValue processed raw value} of the field. **Note**: {@link #disabled} fields are
+     * always treated as valid.
+     *
+     * @return {Boolean} True if the value is valid, else false
+     */
+    isValid : function() {
+        var me = this,
+            disabled = me.disabled,
+            validate = me.forceValidation || !disabled;
+            
+        
+        return validate ? me.validateValue(me.processRawValue(me.getRawValue())) : disabled;
+    },
+
+
+    /**
+     * Uses {@link #getErrors} to build an array of validation errors. If any errors are found, they are passed to
+     * {@link #markInvalid} and false is returned, otherwise true is returned.
+     *
+     * Previously, subclasses were invited to provide an implementation of this to process validations - from 3.2
+     * onwards {@link #getErrors} should be overridden instead.
+     *
+     * @param {Object} value The value to validate
+     * @return {Boolean} True if all validations passed, false if one or more failed
+     */
+    validateValue: function(value) {
+        var me = this,
+            errors = me.getErrors(value),
+            isValid = Ext.isEmpty(errors);
+        if (!me.preventMark) {
+            if (isValid) {
+                me.clearInvalid();
+            } else {
+                me.markInvalid(errors);
+            }
+        }
+
+        return isValid;
+    },
+
+    /**
+     * Display one or more error messages associated with this field, using {@link #msgTarget} to determine how to
+     * display the messages and applying {@link #invalidCls} to the field's UI element.
+     *
+     * **Note**: this method does not cause the Field's {@link #validate} or {@link #isValid} methods to return `false`
+     * if the value does _pass_ validation. So simply marking a Field as invalid will not prevent submission of forms
+     * submitted with the {@link Ext.form.action.Submit#clientValidation} option set.
+     *
+     * @param {String/String[]} errors The validation message(s) to display.
+     */
+    markInvalid : function(errors) {
+        // Save the message and fire the 'invalid' event
+        var me = this,
+            oldMsg = me.getActiveError();
+        me.setActiveErrors(Ext.Array.from(errors));
+        if (oldMsg !== me.getActiveError()) {
+            me.updateLayout();
+        }
+    },
+
+    /**
+     * Clear any invalid styles/messages for this field.
+     *
+     * **Note**: this method does not cause the Field's {@link #validate} or {@link #isValid} methods to return `true`
+     * if the value does not _pass_ validation. So simply clearing a field's errors will not necessarily allow
+     * submission of forms submitted with the {@link Ext.form.action.Submit#clientValidation} option set.
+     */
+    clearInvalid : function() {
+        // Clear the message and fire the 'valid' event
+        var me = this,
+            hadError = me.hasActiveError();
+        me.unsetActiveError();
+        if (hadError) {
+            me.updateLayout();
+        }
+    },
+
+    /**
+     * @private Overrides the method from the Ext.form.Labelable mixin to also add the invalidCls to the inputEl,
+     * as that is required for proper styling in IE with nested fields (due to lack of child selector)
+     */
+    renderActiveError: function() {
+        var me = this,
+            hasError = me.hasActiveError();
+        if (me.inputEl) {
+            // Add/remove invalid class
+            me.inputEl[hasError ? 'addCls' : 'removeCls'](me.invalidCls + '-field');
+        }
+        me.mixins.labelable.renderActiveError.call(me);
+    },
+
+
+    getActionEl: function() {
+        return this.inputEl || this.el;
+    }
+
+});
+
+/**
+ * A display-only text field which is not validated and not submitted. This is useful for when you want to display a
+ * value from a form's {@link Ext.form.Basic#load loaded data} but do not want to allow the user to edit or submit that
+ * value. The value can be optionally {@link #htmlEncode HTML encoded} if it contains HTML markup that you do not want
+ * to be rendered.
+ *
+ * If you have more complex content, or need to include components within the displayed content, also consider using a
+ * {@link Ext.form.FieldContainer} instead.
+ *
+ * Example:
+ *
+ *     @example
+ *     Ext.create('Ext.form.Panel', {
+ *         renderTo: Ext.getBody(),
+ *         width: 175,
+ *         height: 120,
+ *         bodyPadding: 10,
+ *         title: 'Final Score',
+ *         items: [{
+ *             xtype: 'displayfield',
+ *             fieldLabel: 'Home',
+ *             name: 'home_score',
+ *             value: '10'
+ *         }, {
+ *             xtype: 'displayfield',
+ *             fieldLabel: 'Visitor',
+ *             name: 'visitor_score',
+ *             value: '11'
+ *         }],
+ *         buttons: [{
+ *             text: 'Update'
+ *         }]
+ *     });
+ */
+Ext.define('Ext.form.field.Display', {
+    extend:'Ext.form.field.Base',
+    alias: 'widget.displayfield',
+    requires: ['Ext.util.Format', 'Ext.XTemplate'],
+    alternateClassName: ['Ext.form.DisplayField', 'Ext.form.Display'],
+    fieldSubTpl: [
+        '<div id="{id}"',
+        '<tpl if="fieldStyle"> style="{fieldStyle}"</tpl>', 
+        ' class="{fieldCls}">{value}</div>',
+        {
+            compiled: true,
+            disableFormats: true
+        }
+    ],
+
+    /**
+     * @cfg {String} [fieldCls="x-form-display-field"]
+     * The default CSS class for the field.
+     */
+    fieldCls: Ext.baseCSSPrefix + 'form-display-field',
+
+    /**
+     * @cfg {Boolean} htmlEncode
+     * True to escape HTML in text when rendering it.
+     */
+    htmlEncode: false,
+    
+    /**
+     * @cfg {Function} renderer
+     * A function to transform the raw value for display in the field. The function will receive 2 arguments, the raw value
+     * and the {@link Ext.form.field.Display} object.
+     */
+    
+    /**
+     * @cfg {Object} scope
+     * The scope to execute the {@link #renderer} function. Defaults to this.
+     */
+
+    validateOnChange: false,
+
+    initEvents: Ext.emptyFn,
+
+    submitValue: false,
+    
+    isDirty: function(){
+        return false;
+    },
+
+    isValid: function() {
+        return true;
+    },
+
+    validate: function() {
+        return true;
+    },
+
+    getRawValue: function() {
+        return this.rawValue;
+    },
+
+    setRawValue: function(value) {
+        var me = this,
+            display;
+            
+        value = Ext.value(value, '');
+        me.rawValue = value;
+        if (me.rendered) {
+            me.inputEl.dom.innerHTML = me.getDisplayValue();
+            me.updateLayout();
+        }
+        return value;
+    },
+
+    /**
+     * @private
+     * Format the value to display.
+     */
+    getDisplayValue: function() {
+        var me = this,
+            value = this.getRawValue(),
+            display;
+        if (me.renderer) {
+             display = me.renderer.call(me.scope || me, value, me);
+        } else {
+             display = me.htmlEncode ? Ext.util.Format.htmlEncode(value) : value;
+        }
+        return display;
+    },
+        
+    getSubTplData: function() {
+        var ret = this.callParent(arguments);
+
+        ret.value = this.getDisplayValue();
+
+        return ret;
+    }
+
+    /**
+     * @cfg {String} inputType
+     * @private
+     */
+    /**
+     * @cfg {Boolean} disabled
+     * @private
+     */
+    /**
+     * @cfg {Boolean} readOnly
+     * @private
+     */
+    /**
+     * @cfg {Boolean} validateOnChange
+     * @private
+     */
+    /**
+     * @cfg {Number} checkChangeEvents
+     * @private
+     */
+    /**
+     * @cfg {Number} checkChangeBuffer
+     * @private
+     */
+});
+
+/**
+ * Layout class for {@link Ext.form.field.Text} fields. Handles sizing the input field.
+ * @private
+ */
+Ext.define('Ext.layout.component.field.Text', {
+    extend: 'Ext.layout.component.field.Field',
+    alias: 'layout.textfield',
+    requires: ['Ext.util.TextMetrics'],
+
+    type: 'textfield',
+    
+    canGrowWidth: true,
+
+    beginLayoutCycle: function(ownerContext) {
+        var me = this;
+        
+        me.callParent(arguments);
+        
+        // Clear height, in case a previous layout cycle stretched it.
+        if (ownerContext.shrinkWrap) {
+            ownerContext.inputContext.el.setStyle('height', '');
+        }
+    },
+
+    measureContentWidth: function (ownerContext) {
+        var me = this,
+            owner = me.owner,
+            width = me.callParent(arguments),
+            inputContext = ownerContext.inputContext,
+            inputEl, value, calcWidth, max, min;
+
+        if (owner.grow && me.canGrowWidth && !ownerContext.state.growHandled) {
+            inputEl = owner.inputEl;
+
+            // Find the width that contains the whole text value
+            value = Ext.util.Format.htmlEncode(inputEl.dom.value || (owner.hasFocus ? '' : owner.emptyText) || '');
+            value += owner.growAppend;
+            calcWidth = inputEl.getTextWidth(value) + inputContext.getFrameInfo().width;
+
+            max = owner.growMax;
+            min = Math.min(max, width);
+            max = Math.max(owner.growMin, max, min);
+
+            // Constrain
+            calcWidth = Ext.Number.constrain(calcWidth, owner.growMin, max);
+            inputContext.setWidth(calcWidth);
+            ownerContext.state.growHandled = true;
+            
+            // Now that we've set the inputContext, we need to recalculate the width
+            inputContext.domBlock(me, 'width');
+            width = NaN;
+        }
+        return width;
+    },
+    
+    publishInnerHeight: function(ownerContext, height) {
+        ownerContext.inputContext.setHeight(height - this.measureLabelErrorHeight(ownerContext));
+    },
+
+    beginLayoutFixed: function(ownerContext, width, suffix) {
+        var me = this,
+            ieInputWidthAdjustment = me.ieInputWidthAdjustment;
+
+        if (ieInputWidthAdjustment) {
+            // adjust for IE 6/7 strict content-box model
+            // RTL: This might have to be padding-left unless the senses of the padding styles switch when in RTL mode.
+            me.owner.bodyEl.setStyle('padding-right', ieInputWidthAdjustment + 'px');
+            if(suffix === 'px') {
+                width -= ieInputWidthAdjustment;
+            }
+        }
+
+        me.callParent(arguments);
+    }
+});
+
+/**
+ * @docauthor Jason Johnston <jason@sencha.com>
+ *
+ * A basic text field.  Can be used as a direct replacement for traditional text inputs,
+ * or as the base class for more sophisticated input controls (like {@link Ext.form.field.TextArea}
+ * and {@link Ext.form.field.ComboBox}). Has support for empty-field placeholder values (see {@link #emptyText}).
+ *
+ * # Validation
+ *
+ * The Text field has a useful set of validations built in:
+ *
+ * - {@link #allowBlank} for making the field required
+ * - {@link #minLength} for requiring a minimum value length
+ * - {@link #maxLength} for setting a maximum value length (with {@link #enforceMaxLength} to add it
+ *   as the `maxlength` attribute on the input element)
+ * - {@link #regex} to specify a custom regular expression for validation
+ *
+ * In addition, custom validations may be added:
+ *
+ * - {@link #vtype} specifies a virtual type implementation from {@link Ext.form.field.VTypes} which can contain
+ *   custom validation logic
+ * - {@link #validator} allows a custom arbitrary function to be called during validation
+ *
+ * The details around how and when each of these validation options get used are described in the
+ * documentation for {@link #getErrors}.
+ *
+ * By default, the field value is checked for validity immediately while the user is typing in the
+ * field. This can be controlled with the {@link #validateOnChange}, {@link #checkChangeEvents}, and
+ * {@link #checkChangeBuffer} configurations. Also see the details on Form Validation in the
+ * {@link Ext.form.Panel} class documentation.
+ *
+ * # Masking and Character Stripping
+ *
+ * Text fields can be configured with custom regular expressions to be applied to entered values before
+ * validation: see {@link #maskRe} and {@link #stripCharsRe} for details.
+ *
+ * # Example usage
+ *
+ *     @example
+ *     Ext.create('Ext.form.Panel', {
+ *         title: 'Contact Info',
+ *         width: 300,
+ *         bodyPadding: 10,
+ *         renderTo: Ext.getBody(),
+ *         items: [{
+ *             xtype: 'textfield',
+ *             name: 'name',
+ *             fieldLabel: 'Name',
+ *             allowBlank: false  // requires a non-empty value
+ *         }, {
+ *             xtype: 'textfield',
+ *             name: 'email',
+ *             fieldLabel: 'Email Address',
+ *             vtype: 'email'  // requires value to be a valid email address format
+ *         }]
+ *     });
+ */
+Ext.define('Ext.form.field.Text', {
+    extend:'Ext.form.field.Base',
+    alias: 'widget.textfield',
+    requires: ['Ext.form.field.VTypes', 'Ext.layout.component.field.Text'],
+    alternateClassName: ['Ext.form.TextField', 'Ext.form.Text'],
+
+    /**
+     * @cfg {String} vtypeText
+     * A custom error message to display in place of the default message provided for the **`{@link #vtype}`** currently
+     * set for this field. **Note**: only applies if **`{@link #vtype}`** is set, else ignored.
+     */
+
+    /**
+     * @cfg {RegExp} stripCharsRe
+     * A JavaScript RegExp object used to strip unwanted content from the value
+     * during input. If `stripCharsRe` is specified,
+     * every *character sequence* matching `stripCharsRe` will be removed.
+     */
+
+    /**
+     * @cfg {Number} size
+     * An initial value for the 'size' attribute on the text input element. This is only used if the field has no
+     * configured {@link #width} and is not given a width by its container's layout. Defaults to 20.
+     */
+    size: 20,
+
+    /**
+     * @cfg {Boolean} [grow=false]
+     * true if this field should automatically grow and shrink to its content
+     */
+
+    /**
+     * @cfg {Number} growMin
+     * The minimum width to allow when `{@link #grow} = true`
+     */
+    growMin : 30,
+
+    /**
+     * @cfg {Number} growMax
+     * The maximum width to allow when `{@link #grow} = true`
+     */
+    growMax : 800,
+
+    //<locale>
+    /**
+     * @cfg {String} growAppend
+     * A string that will be appended to the field's current value for the purposes of calculating the target field
+     * size. Only used when the {@link #grow} config is true. Defaults to a single capital "W" (the widest character in
+     * common fonts) to leave enough space for the next typed character and avoid the field value shifting before the
+     * width is adjusted.
+     */
+    growAppend: 'W',
+    //</locale>
+
+    /**
+     * @cfg {String} vtype
+     * A validation type name as defined in {@link Ext.form.field.VTypes}
+     */
+
+    /**
+     * @cfg {RegExp} maskRe An input mask regular expression that will be used to filter keystrokes (character being
+     * typed) that do not match.
+     * Note: It does not filter characters already in the input.
+     */
+
+    /**
+     * @cfg {Boolean} [disableKeyFilter=false]
+     * Specify true to disable input keystroke filtering
+     */
+
+    /**
+     * @cfg {Boolean} allowBlank
+     * Specify false to validate that the value's length is > 0
+     */
+    allowBlank : true,
+
+    /**
+     * @cfg {Number} minLength
+     * Minimum input field length required
+     */
+    minLength : 0,
+
+    /**
+     * @cfg {Number} maxLength
+     * Maximum input field length allowed by validation. This behavior is intended to
+     * provide instant feedback to the user by improving usability to allow pasting and editing or overtyping and back
+     * tracking. To restrict the maximum number of characters that can be entered into the field use the
+     * **{@link Ext.form.field.Text#enforceMaxLength enforceMaxLength}** option.
+     *
+     * Defaults to Number.MAX_VALUE.
+     */
+    maxLength : Number.MAX_VALUE,
+
+    /**
+     * @cfg {Boolean} enforceMaxLength
+     * True to set the maxLength property on the underlying input field. Defaults to false
+     */
+
+    /**
+     * @cfg {String} minLengthText
+     * Error text to display if the **{@link #minLength minimum length}** validation fails.
+     */
+    //<locale>
+    minLengthText : 'The minimum length for this field is {0}',
+    //</locale>
+
+    //<locale>
+    /**
+     * @cfg {String} maxLengthText
+     * Error text to display if the **{@link #maxLength maximum length}** validation fails
+     */
+    maxLengthText : 'The maximum length for this field is {0}',
+    //</locale>
+
+    /**
+     * @cfg {Boolean} [selectOnFocus=false]
+     * true to automatically select any existing field text when the field receives input focus
+     */
+
+    //<locale>
+    /**
+     * @cfg {String} blankText
+     * The error text to display if the **{@link #allowBlank}** validation fails
+     */
+    blankText : 'This field is required',
+    //</locale>
+
+    /**
+     * @cfg {Function} validator
+     * A custom validation function to be called during field validation ({@link #getErrors}).
+     * If specified, this function will be called first, allowing the developer to override the default validation
+     * process.
+     *
+     * This function will be passed the following parameters:
+     *
+     * @cfg {Object} validator.value The current field value
+     * @cfg {Boolean/String} validator.return
+     *
+     * - True if the value is valid
+     * - An error message if the value is invalid
+     */
+
+    /**
+     * @cfg {RegExp} regex
+     * A JavaScript RegExp object to be tested against the field value during validation.
+     * If the test fails, the field will be marked invalid using
+     * either **{@link #regexText}** or **{@link #invalidText}**.
+     */
+
+    /**
+     * @cfg {String} regexText
+     * The error text to display if **{@link #regex}** is used and the test fails during validation
+     */
+    regexText : '',
+
+    /**
+     * @cfg {String} emptyText
+     * The default text to place into an empty field.
+     *
+     * Note that normally this value will be submitted to the server if this field is enabled; to prevent this you can
+     * set the {@link Ext.form.action.Action#submitEmptyText submitEmptyText} option of {@link Ext.form.Basic#submit} to
+     * false.
+     *
+     * Also note that if you use {@link #inputType inputType}:'file', {@link #emptyText} is not supported and should be
+     * avoided.
+     *
+     * Note that for browsers that support it, setting this property will use the HTML 5 placeholder attribute, and for
+     * older browsers that don't support the HTML 5 placeholder attribute the value will be placed directly into the input
+     * element itself as the raw value. This means that older browsers will obfuscate the {@link #emptyText} value for
+     * password input fields.
+     */
+
+    /**
+     * @cfg {String} [emptyCls='x-form-empty-field']
+     * The CSS class to apply to an empty field to style the **{@link #emptyText}**.
+     * This class is automatically added and removed as needed depending on the current field value.
+     */
+    emptyCls : Ext.baseCSSPrefix + 'form-empty-field',
+
+    /**
+     * @cfg {String} [requiredCls='x-form-required-field']
+     * The CSS class to apply to a required field, i.e. a field where **{@link #allowBlank}** is false.
+     */
+    requiredCls : Ext.baseCSSPrefix + 'form-required-field',
+
+    /**
+     * @cfg {Boolean} [enableKeyEvents=false]
+     * true to enable the proxying of key events for the HTML input field
+     */
+
+    componentLayout: 'textfield',
+
+    // private
+    valueContainsPlaceholder : false,
+
+
+    initComponent: function () {
+        var me = this;
+
+        me.callParent();
+
+        me.addEvents(
+            /**
+             * @event autosize
+             * Fires when the **{@link #autoSize}** function is triggered and the field is resized according to the
+             * {@link #grow}/{@link #growMin}/{@link #growMax} configs as a result. This event provides a hook for the
+             * developer to apply additional logic at runtime to resize the field if needed.
+             * @param {Ext.form.field.Text} this This text field
+             * @param {Number} width The new field width
+             */
+            'autosize',
+
+            /**
+             * @event keydown
+             * Keydown input field event. This event only fires if **{@link #enableKeyEvents}** is set to true.
+             * @param {Ext.form.field.Text} this This text field
+             * @param {Ext.EventObject} e
+             */
+            'keydown',
+            /**
+             * @event keyup
+             * Keyup input field event. This event only fires if **{@link #enableKeyEvents}** is set to true.
+             * @param {Ext.form.field.Text} this This text field
+             * @param {Ext.EventObject} e
+             */
+            'keyup',
+            /**
+             * @event keypress
+             * Keypress input field event. This event only fires if **{@link #enableKeyEvents}** is set to true.
+             * @param {Ext.form.field.Text} this This text field
+             * @param {Ext.EventObject} e
+             */
+            'keypress'
+        );
+        me.addStateEvents('change');
+        me.setGrowSizePolicy();
+    },
+
+    // private
+    setGrowSizePolicy: function(){
+        if (this.grow) {
+            this.shrinkWrap |= 1; // width must shrinkWrap
+        }    
+    },
+
+    // private
+    initEvents : function(){
+        var me = this,
+            el = me.inputEl;
+
+        me.callParent();
+        if(me.selectOnFocus || me.emptyText){
+            me.mon(el, 'mousedown', me.onMouseDown, me);
+        }
+        if(me.maskRe || (me.vtype && me.disableKeyFilter !== true && (me.maskRe = Ext.form.field.VTypes[me.vtype+'Mask']))){
+            me.mon(el, 'keypress', me.filterKeys, me);
+        }
+
+        if (me.enableKeyEvents) {
+            me.mon(el, {
+                scope: me,
+                keyup: me.onKeyUp,
+                keydown: me.onKeyDown,
+                keypress: me.onKeyPress
+            });
+        }
+    },
+
+    /**
+     * @private
+     * Override. Treat undefined and null values as equal to an empty string value.
+     */
+    isEqual: function(value1, value2) {
+        return this.isEqualAsString(value1, value2);
+    },
+
+    /**
+     * @private
+     * If grow=true, invoke the autoSize method when the field's value is changed.
+     */
+    onChange: function() {
+        this.callParent();
+        this.autoSize();
+    },
+
+    getSubTplData: function() {
+        var me = this,
+            value = me.getRawValue(),
+            isEmpty = me.emptyText && value.length < 1,
+            maxLength = me.maxLength,
+            placeholder;
+            
+        // We can't just dump the value here, since MAX_VALUE ends up
+        // being something like 1.xxxxe+300, which gets interpreted as 1
+        // in the markup
+        if (me.enforceMaxLength) {
+            if (maxLength === Number.MAX_VALUE) {
+                maxLength = undefined;
+            }
+        } else {
+            maxLength = undefined;
+        }
+
+        if (isEmpty) {
+            if (Ext.supports.Placeholder) {
+                placeholder = me.emptyText;
+            } else {
+                value = me.emptyText;
+                me.valueContainsPlaceholder = true;
+            }
+        }
+
+        return Ext.apply(me.callParent(), {
+            maxLength   : maxLength,
+            readOnly    : me.readOnly,
+            placeholder : placeholder,
+            value       : value,
+            fieldCls    : me.fieldCls + ((isEmpty && (placeholder || value)) ? ' ' + me.emptyCls : '') + (me.allowBlank ? '' :  ' ' + me.requiredCls)
+        });
+    },
+
+    afterRender: function(){
+        this.autoSize();
+        this.callParent();
+    },
+
+    onMouseDown: function(e){
+        var me = this;
+        if(!me.hasFocus){
+            me.mon(me.inputEl, 'mouseup', Ext.emptyFn, me, { single: true, preventDefault: true });
+        }
+    },
+
+    /**
+     * Performs any necessary manipulation of a raw String value to prepare it for conversion and/or
+     * {@link #validate validation}. For text fields this applies the configured {@link #stripCharsRe}
+     * to the raw value.
+     * @param {String} value The unprocessed string value
+     * @return {String} The processed string value
+     */
+    processRawValue: function(value) {
+        var me = this,
+            stripRe = me.stripCharsRe,
+            newValue;
+
+        if (stripRe) {
+            newValue = value.replace(stripRe, '');
+            if (newValue !== value) {
+                me.setRawValue(newValue);
+                value = newValue;
+            }
+        }
+        return value;
+    },
+
+    //private
+    onDisable: function(){
+        this.callParent();
+        if (Ext.isIE) {
+            this.inputEl.dom.unselectable = 'on';
+        }
+    },
+
+    //private
+    onEnable: function(){
+        this.callParent();
+        if (Ext.isIE) {
+            this.inputEl.dom.unselectable = '';
+        }
+    },
+
+    onKeyDown: function(e) {
+        this.fireEvent('keydown', this, e);
+    },
+
+    onKeyUp: function(e) {
+        this.fireEvent('keyup', this, e);
+    },
+
+    onKeyPress: function(e) {
+        this.fireEvent('keypress', this, e);
+    },
+
+    /**
+     * Resets the current field value to the originally-loaded value and clears any validation messages.
+     * Also adds **{@link #emptyText}** and **{@link #emptyCls}** if the original value was blank.
+     */
+    reset : function(){
+        this.callParent();
+        this.applyEmptyText();
+    },
+
+    applyEmptyText : function(){
+        var me = this,
+            emptyText = me.emptyText,
+            isEmpty;
+
+        if (me.rendered && emptyText) {
+            isEmpty = me.getRawValue().length < 1 && !me.hasFocus;
+
+            if (Ext.supports.Placeholder) {
+                me.inputEl.dom.placeholder = emptyText;
+            } else if (isEmpty) {
+                me.setRawValue(emptyText);
+                me.valueContainsPlaceholder = true;
+            }
+
+            //all browsers need this because of a styling issue with chrome + placeholders.
+            //the text isnt vertically aligned when empty (and using the placeholder)
+            if (isEmpty) {
+                me.inputEl.addCls(me.emptyCls);
+            }
+
+            me.autoSize();
+        }
+    },
+    
+    afterFirstLayout: function() {
+        this.callParent();
+        if (Ext.isIE && this.disabled) {
+            var el = this.inputEl;
+            if (el) {
+                el.dom.unselectable = 'on';
+            }
+        }
+    },
+    
+    // private
+    preFocus : function(){
+        var me = this,
+            inputEl = me.inputEl,
+            emptyText = me.emptyText,
+            isEmpty;
+
+        me.callParent(arguments);
+        if ((emptyText && !Ext.supports.Placeholder) && (inputEl.dom.value === me.emptyText && me.valueContainsPlaceholder)) {
+            me.setRawValue('');
+            isEmpty = true;
+            inputEl.removeCls(me.emptyCls);
+            me.valueContainsPlaceholder = false;
+        } else if (Ext.supports.Placeholder) {
+            me.inputEl.removeCls(me.emptyCls);
+        }
+        if (me.selectOnFocus || isEmpty) {
+            inputEl.dom.select();
+        }
+    },
+
+    onFocus: function() {
+        var me = this;
+        me.callParent(arguments);
+        if (me.emptyText) {
+            me.autoSize();
+        }
+    },
+
+    // private
+    postBlur : function(){
+        this.callParent(arguments);
+        this.applyEmptyText();
+    },
+
+    // private
+    filterKeys : function(e){
+        /*
+         * On European keyboards, the right alt key, Alt Gr, is used to type certain special characters.
+         * JS detects a keypress of this as ctrlKey & altKey. As such, we check that alt isn't pressed
+         * so we can still process these special characters.
+         */
+        if (e.ctrlKey && !e.altKey) {
+            return;
+        }
+        var key = e.getKey(),
+            charCode = String.fromCharCode(e.getCharCode());
+
+        if((Ext.isGecko || Ext.isOpera) && (e.isNavKeyPress() || key === e.BACKSPACE || (key === e.DELETE && e.button === -1))){
+            return;
+        }
+
+        if((!Ext.isGecko && !Ext.isOpera) && e.isSpecialKey() && !charCode){
+            return;
+        }
+        if(!this.maskRe.test(charCode)){
+            e.stopEvent();
+        }
+    },
+
+    getState: function() {
+        return this.addPropertyToState(this.callParent(), 'value');
+    },
+
+    applyState: function(state) {
+        this.callParent(arguments);
+        if(state.hasOwnProperty('value')) {
+            this.setValue(state.value);
+        }
+    },
+
+    /**
+     * Returns the raw String value of the field, without performing any normalization, conversion, or validation. Gets
+     * the current value of the input element if the field has been rendered, ignoring the value if it is the
+     * {@link #emptyText}. To get a normalized and converted value see {@link #getValue}.
+     * @return {String} The raw String value of the field
+     */
+    getRawValue: function() {
+        var me = this,
+            v = me.callParent();
+        if (v === me.emptyText && me.valueContainsPlaceholder) {
+            v = '';
+        }
+        return v;
+    },
+
+    /**
+     * Sets a data value into the field and runs the change detection and validation. Also applies any configured
+     * {@link #emptyText} for text fields. To set the value directly without these inspections see {@link #setRawValue}.
+     * @param {Object} value The value to set
+     * @return {Ext.form.field.Text} this
+     */
+    setValue: function(value) {
+        var me = this,
+            inputEl = me.inputEl;
+
+        if (inputEl && me.emptyText && !Ext.isEmpty(value)) {
+            inputEl.removeCls(me.emptyCls);
+            me.valueContainsPlaceholder = false;
+        }
+
+        me.callParent(arguments);
+
+        me.applyEmptyText();
+        return me;
+    },
+
+    /**
+     * Validates a value according to the field's validation rules and returns an array of errors
+     * for any failing validations. Validation rules are processed in the following order:
+     *
+     * 1. **Field specific validator**
+     *
+     *     A validator offers a way to customize and reuse a validation specification.
+     *     If a field is configured with a `{@link #validator}`
+     *     function, it will be passed the current field value.  The `{@link #validator}`
+     *     function is expected to return either:
+     *
+     *     - Boolean `true`  if the value is valid (validation continues).
+     *     - a String to represent the invalid message if invalid (validation halts).
+     *
+     * 2. **Basic Validation**
+     *
+     *     If the `{@link #validator}` has not halted validation,
+     *     basic validation proceeds as follows:
+     *
+     *     - `{@link #allowBlank}` : (Invalid message = `{@link #blankText}`)
+     *
+     *         Depending on the configuration of `{@link #allowBlank}`, a
+     *         blank field will cause validation to halt at this step and return
+     *         Boolean true or false accordingly.
+     *
+     *     - `{@link #minLength}` : (Invalid message = `{@link #minLengthText}`)
+     *
+     *         If the passed value does not satisfy the `{@link #minLength}`
+     *         specified, validation halts.
+     *
+     *     -  `{@link #maxLength}` : (Invalid message = `{@link #maxLengthText}`)
+     *
+     *         If the passed value does not satisfy the `{@link #maxLength}`
+     *         specified, validation halts.
+     *
+     * 3. **Preconfigured Validation Types (VTypes)**
+     *
+     *     If none of the prior validation steps halts validation, a field
+     *     configured with a `{@link #vtype}` will utilize the
+     *     corresponding {@link Ext.form.field.VTypes VTypes} validation function.
+     *     If invalid, either the field's `{@link #vtypeText}` or
+     *     the VTypes vtype Text property will be used for the invalid message.
+     *     Keystrokes on the field will be filtered according to the VTypes
+     *     vtype Mask property.
+     *
+     * 4. **Field specific regex test**
+     *
+     *     If none of the prior validation steps halts validation, a field's
+     *     configured `{@link #regex}` test will be processed.
+     *     The invalid message for this test is configured with `{@link #regexText}`
+     *
+     * @param {Object} value The value to validate. The processed raw value will be used if nothing is passed.
+     * @return {String[]} Array of any validation errors
+     */
+    getErrors: function(value) {
+        var me = this,
+            errors = me.callParent(arguments),
+            validator = me.validator,
+            emptyText = me.emptyText,
+            allowBlank = me.allowBlank,
+            vtype = me.vtype,
+            vtypes = Ext.form.field.VTypes,
+            regex = me.regex,
+            format = Ext.String.format,
+            msg;
+
+        value = value || me.processRawValue(me.getRawValue());
+
+        if (Ext.isFunction(validator)) {
+            msg = validator.call(me, value);
+            if (msg !== true) {
+                errors.push(msg);
+            }
+        }
+
+        if (value.length < 1 || (value === me.emptyText && me.valueContainsPlaceholder)) {
+            if (!allowBlank) {
+                errors.push(me.blankText);
+            }
+            //if value is blank, there cannot be any additional errors
+            return errors;
+        }
+
+        if (value.length < me.minLength) {
+            errors.push(format(me.minLengthText, me.minLength));
+        }
+
+        if (value.length > me.maxLength) {
+            errors.push(format(me.maxLengthText, me.maxLength));
+        }
+
+        if (vtype) {
+            if(!vtypes[vtype](value, me)){
+                errors.push(me.vtypeText || vtypes[vtype +'Text']);
+            }
+        }
+
+        if (regex && !regex.test(value)) {
+            errors.push(me.regexText || me.invalidText);
+        }
+
+        return errors;
+    },
+
+    /**
+     * Selects text in this field
+     * @param {Number} [start=0] The index where the selection should start
+     * @param {Number} [end] The index where the selection should end (defaults to the text length)
+     */
+    selectText : function(start, end){
+        var me = this,
+            v = me.getRawValue(),
+            doFocus = true,
+            el = me.inputEl.dom,
+            undef,
+            range;
+
+        if (v.length > 0) {
+            start = start === undef ? 0 : start;
+            end = end === undef ? v.length : end;
+            if (el.setSelectionRange) {
+                el.setSelectionRange(start, end);
+            }
+            else if(el.createTextRange) {
+                range = el.createTextRange();
+                range.moveStart('character', start);
+                range.moveEnd('character', end - v.length);
+                range.select();
+            }
+            doFocus = Ext.isGecko || Ext.isOpera;
+        }
+        if (doFocus) {
+            me.focus();
+        }
+    },
+
+    /**
+     * Automatically grows the field to accomodate the width of the text up to the maximum field width allowed. This
+     * only takes effect if {@link #grow} = true, and fires the {@link #autosize} event if the width changes.
+     */
+    autoSize: function() {
+        var me = this;
+        if (me.grow && me.rendered) {
+            me.autoSizing = true;
+            me.updateLayout();
+        }
+    },
+
+    afterComponentLayout: function() {
+        var me = this,
+            width;
+
+        me.callParent(arguments);
+        if (me.autoSizing) {
+            width = me.inputEl.getWidth();
+            if (width !== me.lastInputWidth) {
+                me.fireEvent('autosize', me, width);
+                me.lastInputWidth = width;
+                delete me.autoSizing;
+            }
+        }
+    }
+});
+
+/**
+ * Layout class for {@link Ext.form.field.TextArea} fields. Handles sizing the textarea field.
+ * @private
+ */
+Ext.define('Ext.layout.component.field.TextArea', {
+    extend: 'Ext.layout.component.field.Text',
+    alias: 'layout.textareafield',
+
+    type: 'textareafield',
+    
+    canGrowWidth: false,
+    
+    naturalSizingProp: 'cols',
+    
+    beginLayout: function(ownerContext){
+        this.callParent(arguments);
+        ownerContext.target.inputEl.setStyle('height', '');
+    },
+
+    measureContentHeight: function (ownerContext) {
+        var me = this,
+            owner = me.owner,
+            height = me.callParent(arguments),
+            inputContext, inputEl, value, max, curWidth, calcHeight;
+
+        if (owner.grow && !ownerContext.state.growHandled) {
+            inputContext = ownerContext.inputContext;
+            inputEl = owner.inputEl;
+            curWidth = inputEl.getWidth(true); //subtract border/padding to get the available width for the text
+
+            // Get and normalize the field value for measurement
+            value = Ext.util.Format.htmlEncode(inputEl.dom.value) || '&#160;';
+            value += owner.growAppend;
+            
+            // Translate newlines to <br> tags
+            value = value.replace(/\n/g, '<br/>');
+
+            // Find the height that contains the whole text value
+            calcHeight = Ext.util.TextMetrics.measure(inputEl, value, curWidth).height +
+                         inputContext.getBorderInfo().height + inputContext.getPaddingInfo().height;
+
+            // Constrain
+            calcHeight = Ext.Number.constrain(calcHeight, owner.growMin, owner.growMax);
+            inputContext.setHeight(calcHeight);
+            ownerContext.state.growHandled = true;
+            
+            // Now that we've set the inputContext, we need to recalculate the width
+            inputContext.domBlock(me, 'height');
+            height = NaN;
+        }
+        return height;
+    }
+});
+
+/**
+ * @docauthor Robert Dougan <rob@sencha.com>
+ *
+ * This class creates a multiline text field, which can be used as a direct replacement for traditional
+ * textarea fields. In addition, it supports automatically {@link #grow growing} the height of the textarea to
+ * fit its content.
+ *
+ * All of the configuration options from {@link Ext.form.field.Text} can be used on TextArea.
+ *
+ * Example usage:
+ *
+ *     @example
+ *     Ext.create('Ext.form.FormPanel', {
+ *         title      : 'Sample TextArea',
+ *         width      : 400,
+ *         bodyPadding: 10,
+ *         renderTo   : Ext.getBody(),
+ *         items: [{
+ *             xtype     : 'textareafield',
+ *             grow      : true,
+ *             name      : 'message',
+ *             fieldLabel: 'Message',
+ *             anchor    : '100%'
+ *         }]
+ *     });
+ *
+ * Some other useful configuration options when using {@link #grow} are {@link #growMin} and {@link #growMax}.
+ * These allow you to set the minimum and maximum grow heights for the textarea.
+ * 
+ * **NOTE:** In some browsers, carriage returns ('\r', not to be confused with new lines)
+ * will be automatically stripped out the value is set to the textarea. Since we cannot
+ * use any reasonable method to attempt to re-insert these, they will automatically be
+ * stripped out to ensure the behaviour is consistent across browser.
+ */
+Ext.define('Ext.form.field.TextArea', {
+    extend:'Ext.form.field.Text',
+    alias: ['widget.textareafield', 'widget.textarea'],
+    alternateClassName: 'Ext.form.TextArea',
+    requires: [
+        'Ext.XTemplate', 
+        'Ext.layout.component.field.TextArea',
+        'Ext.util.DelayedTask'
+    ],
+
+    // This template includes a \n after <textarea> opening tag so that an initial value starting 
+    // with \n does not lose its first character when the markup is parsed.
+    // Both textareas below have the same value:
+    // <textarea>initial value</textarea>
+    // <textarea>
+    // initial value
+    // </textarea>
+    fieldSubTpl: [
+        '<textarea id="{id}" {inputAttrTpl}',
+            '<tpl if="name"> name="{name}"</tpl>',
+            '<tpl if="rows"> rows="{rows}" </tpl>',
+            '<tpl if="cols"> cols="{cols}" </tpl>',
+            '<tpl if="placeholder"> placeholder="{placeholder}"</tpl>',
+            '<tpl if="size"> size="{size}"</tpl>',
+            '<tpl if="maxLength !== undefined"> maxlength="{maxLength}"</tpl>',
+            '<tpl if="readOnly"> readonly="readonly"</tpl>',
+            '<tpl if="disabled"> disabled="disabled"</tpl>',
+            '<tpl if="tabIdx"> tabIndex="{tabIdx}"</tpl>',
+            ' class="{fieldCls} {typeCls}" ',
+            '<tpl if="fieldStyle"> style="{fieldStyle}"</tpl>',
+            ' autocomplete="off">\n',
+            '<tpl if="value">{[Ext.util.Format.htmlEncode(values.value)]}</tpl>',
+        '</textarea>',
+        {
+            disableFormats: true
+        }
+    ],
+
+    /**
+     * @cfg {Number} growMin
+     * The minimum height to allow when {@link #grow}=true
+     */
+    growMin: 60,
+
+    /**
+     * @cfg {Number} growMax
+     * The maximum height to allow when {@link #grow}=true
+     */
+    growMax: 1000,
+
+    /**
+     * @cfg {String} growAppend
+     * A string that will be appended to the field's current value for the purposes of calculating the target field
+     * size. Only used when the {@link #grow} config is true. Defaults to a newline for TextArea to ensure there is
+     * always a space below the current line.
+     */
+    growAppend: '\n-',
+
+    /**
+     * @cfg {Number} cols
+     * An initial value for the 'cols' attribute on the textarea element. This is only used if the component has no
+     * configured {@link #width} and is not given a width by its container's layout.
+     */
+    cols: 20,
+
+    /**
+     * @cfg {Number} rows
+     * An initial value for the 'rows' attribute on the textarea element. This is only used if the component has no
+     * configured {@link #height} and is not given a height by its container's layout. Defaults to 4.
+     */
+    rows: 4,
+
+    /**
+     * @cfg {Boolean} enterIsSpecial
+     * True if you want the ENTER key to be classed as a special key and the {@link #specialkey} event to be fired
+     * when ENTER is pressed.
+     */
+    enterIsSpecial: false,
+
+    /**
+     * @cfg {Boolean} preventScrollbars
+     * true to prevent scrollbars from appearing regardless of how much text is in the field. This option is only
+     * relevant when {@link #grow} is true. Equivalent to setting overflow: hidden.
+     */
+    preventScrollbars: false,
+
+    // private
+    componentLayout: 'textareafield',
+    
+    setGrowSizePolicy: Ext.emptyFn,
+    
+    returnRe: /\r/g,
+
+    // private
+    getSubTplData: function() {
+        var me = this,
+            fieldStyle = me.getFieldStyle(),
+            ret = me.callParent();
+
+        if (me.grow) {
+            if (me.preventScrollbars) {
+                ret.fieldStyle = (fieldStyle||'') + ';overflow:hidden;height:' + me.growMin + 'px';
+            }
+        }
+
+        Ext.applyIf(ret, {
+            cols: me.cols,
+            rows: me.rows
+        });
+
+        return ret;
+    },
+
+    afterRender: function () {
+        var me = this;
+
+        me.callParent(arguments);
+
+        me.needsMaxCheck = me.enforceMaxLength && me.maxLength !== Number.MAX_VALUE && !Ext.supports.TextAreaMaxLength;
+        if (me.needsMaxCheck) {
+            me.inputEl.on('paste', me.onPaste, me);
+        }
+    },
+    
+    // The following overrides deal with an issue whereby some browsers
+    // will strip carriage returns from the textarea input, while others
+    // will not. Since there's no way to be sure where to insert returns,
+    // the best solution is to strip them out in all cases to ensure that
+    // the behaviour is consistent in a cross browser fashion. As such,
+    // we override in all cases when setting the value to control this.
+    transformRawValue: function(value){
+        return this.stripReturns(value);
+    },
+    
+    transformOriginalValue: function(value){
+        return this.stripReturns(value); 
+    },
+    
+    valueToRaw: function(value){
+        value = this.stripReturns(value);
+        return this.callParent([value]);
+    },
+    
+    stripReturns: function(value){
+        if (value) {
+            value = value.replace(this.returnRe, '');
+        }
+        return value;
+    },
+
+    onPaste: function(e){
+        var me = this;
+        if (!me.pasteTask) {
+            me.pasteTask = new Ext.util.DelayedTask(me.pasteCheck, me);
+        }
+        // since we can't get the paste data, we'll give the area a chance to populate
+        me.pasteTask.delay(1);
+    },
+    
+    pasteCheck: function(){
+        var me = this,
+            value = me.getValue(),
+            max = me.maxLength;
+            
+        if (value.length > max) {
+            value = value.substr(0, max);
+            me.setValue(value);
+        }
+    },
+
+    // private
+    fireKey: function(e) {
+        var me = this,
+            key = e.getKey(),
+            value;
+            
+        if (e.isSpecialKey() && (me.enterIsSpecial || (key !== e.ENTER || e.hasModifier()))) {
+            me.fireEvent('specialkey', me, e);
+        }
+        
+        if (me.needsMaxCheck && key !== e.BACKSPACE && key !== e.DELETE && !e.isNavKeyPress() && !me.isCutCopyPasteSelectAll(e, key)) {
+            value = me.getValue();
+            if (value.length >= me.maxLength) {
+                e.stopEvent();
+            }
+        }
+    },
+    
+    isCutCopyPasteSelectAll: function(e, key) {
+        if (e.CTRL) {
+            return key === e.A || key === e.C || key === e.V || key === e.X;
+        }
+        return false;
+    },
+
+    /**
+     * Automatically grows the field to accomodate the height of the text up to the maximum field height allowed. This
+     * only takes effect if {@link #grow} = true, and fires the {@link #autosize} event if the height changes.
+     */
+    autoSize: function() {
+        var me = this,
+            height;
+
+        if (me.grow && me.rendered) {
+            me.updateLayout();
+            height = me.inputEl.getHeight();
+            if (height !== me.lastInputHeight) {
+                /**
+                 * @event autosize
+                 * Fires when the {@link #autoSize} function is triggered and the field is resized according to
+                 * the grow/growMin/growMax configs as a result. This event provides a hook for the developer
+                 * to apply additional logic at runtime to resize the field if needed.
+                 * @param {Ext.form.field.Text} this
+                 * @param {Number} height
+                 */
+                me.fireEvent('autosize', me, height);
+                me.lastInputHeight = height;
+            }
+        }
+    },
+
+    // private
+    initAria: function() {
+        this.callParent(arguments);
+        this.getActionEl().dom.setAttribute('aria-multiline', true);
+    },
+    
+    beforeDestroy: function(){
+        var task = this.pasteTask;
+        if (task) {
+            task.delay();
+        }    
+        this.callParent();
+    }
+});
+/**
+ * Utility class for generating different styles of message boxes.  The singleton instance, Ext.MessageBox
+ * alias `Ext.Msg` can also be used.
+ *
+ * Note that a MessageBox is asynchronous.  Unlike a regular JavaScript `alert` (which will halt
+ * browser execution), showing a MessageBox will not cause the code to stop.  For this reason, if you have code
+ * that should only run *after* some user feedback from the MessageBox, you must use a callback function
+ * (see the `function` parameter for {@link #method-show} for more details).
+ *
+ * Basic alert
+ *
+ *     @example
+ *     Ext.Msg.alert('Status', 'Changes saved successfully.');
+ *
+ * Prompt for user data and process the result using a callback
+ *
+ *     @example
+ *     Ext.Msg.prompt('Name', 'Please enter your name:', function(btn, text){
+ *         if (btn == 'ok'){
+ *             // process text value and close...
+ *         }
+ *     });
+ *
+ * Show a dialog using config options
+ *
+ *     @example
+ *     Ext.Msg.show({
+ *          title:'Save Changes?',
+ *          msg: 'You are closing a tab that has unsaved changes. Would you like to save your changes?',
+ *          buttons: Ext.Msg.YESNOCANCEL,
+ *          icon: Ext.Msg.QUESTION
+ *     });
+ */
+Ext.define('Ext.window.MessageBox', {
+    extend: 'Ext.window.Window',
+
+    requires: [
+        'Ext.toolbar.Toolbar',
+        'Ext.form.field.Text',
+        'Ext.form.field.TextArea',
+        'Ext.form.field.Display',
+        'Ext.button.Button',
+        'Ext.layout.container.Anchor',
+        'Ext.layout.container.HBox',
+        'Ext.ProgressBar'
+    ],
+
+    alias: 'widget.messagebox',
+
+    /**
+     * @property
+     * Button config that displays a single OK button
+     */
+    OK : 1,
+    /**
+     * @property
+     * Button config that displays a single Yes button
+     */
+    YES : 2,
+    /**
+     * @property
+     * Button config that displays a single No button
+     */
+    NO : 4,
+    /**
+     * @property
+     * Button config that displays a single Cancel button
+     */
+    CANCEL : 8,
+    /**
+     * @property
+     * Button config that displays OK and Cancel buttons
+     */
+    OKCANCEL : 9,
+    /**
+     * @property
+     * Button config that displays Yes and No buttons
+     */
+    YESNO : 6,
+    /**
+     * @property
+     * Button config that displays Yes, No and Cancel buttons
+     */
+    YESNOCANCEL : 14,
+    /**
+     * @property
+     * The CSS class that provides the INFO icon image
+     */
+    INFO : Ext.baseCSSPrefix + 'message-box-info',
+    /**
+     * @property
+     * The CSS class that provides the WARNING icon image
+     */
+    WARNING : Ext.baseCSSPrefix + 'message-box-warning',
+    /**
+     * @property
+     * The CSS class that provides the QUESTION icon image
+     */
+    QUESTION : Ext.baseCSSPrefix + 'message-box-question',
+    /**
+     * @property
+     * The CSS class that provides the ERROR icon image
+     */
+    ERROR : Ext.baseCSSPrefix + 'message-box-error',
+
+    // hide it by offsets. Windows are hidden on render by default.
+    hideMode: 'offsets',
+    closeAction: 'hide',
+    resizable: false,
+    title: '&#160;',
+
+    width: 600,
+    height: 500,
+    minWidth: 250,
+    maxWidth: 600,
+    minHeight: 110,
+    maxHeight: 500,
+    constrain: true,
+
+    cls: Ext.baseCSSPrefix + 'message-box',
+
+    layout: {
+        type: 'vbox',
+        align: 'stretch'
+    },
+
+    /**
+     * @property
+     * The default height in pixels of the message box's multiline textarea if displayed.
+     */
+    defaultTextHeight : 75,
+    /**
+     * @property
+     * The minimum width in pixels of the message box if it is a progress-style dialog.  This is useful
+     * for setting a different minimum width than text-only dialogs may need.
+     */
+    minProgressWidth : 250,
+    /**
+     * @property
+     * The minimum width in pixels of the message box if it is a prompt dialog.  This is useful
+     * for setting a different minimum width than text-only dialogs may need.
+     */
+    minPromptWidth: 250,
+    //<locale type="object">
+    /**
+     * @property
+     * An object containing the default button text strings that can be overriden for localized language support.
+     * Supported properties are: ok, cancel, yes and no.  Generally you should include a locale-specific
+     * resource file for handling language support across the framework.
+     * Customize the default text like so:
+     *
+     *     Ext.window.MessageBox.buttonText.yes = "oui"; //french
+     */
+    buttonText: {
+        ok: 'OK',
+        yes: 'Yes',
+        no: 'No',
+        cancel: 'Cancel'
+    },
+    //</locale>
+
+    buttonIds: [
+        'ok', 'yes', 'no', 'cancel'
+    ],
+
+    //<locale type="object">
+    titleText: {
+        confirm: 'Confirm',
+        prompt: 'Prompt',
+        wait: 'Loading...',
+        alert: 'Attention'
+    },
+    //</locale>
+
+    iconHeight: 35,
+
+    makeButton: function(btnIdx) {
+        var btnId = this.buttonIds[btnIdx];
+        return new Ext.button.Button({
+            handler: this.btnCallback,
+            itemId: btnId,
+            scope: this,
+            text: this.buttonText[btnId],
+            minWidth: 75
+        });
+    },
+
+    btnCallback: function(btn) {
+        var me = this,
+            value,
+            field;
+
+        if (me.cfg.prompt || me.cfg.multiline) {
+            if (me.cfg.multiline) {
+                field = me.textArea;
+            } else {
+                field = me.textField;
+            }
+            value = field.getValue();
+            field.reset();
+        }
+
+        // Important not to have focus remain in the hidden Window; Interferes with DnD.
+        btn.blur();
+        me.hide();
+        me.userCallback(btn.itemId, value, me.cfg);
+    },
+
+    hide: function() {
+        var me = this;
+        me.dd.endDrag();
+        me.progressBar.reset();
+        me.removeCls(me.cfg.cls);
+        me.callParent(arguments);
+    },
+
+    initComponent: function() {
+        var me = this,
+            baseId = me.id,
+            i, button,
+            tbLayout;
+
+        me.title = '&#160;';
+
+        me.topContainer = new Ext.container.Container({
+            layout: 'hbox',
+            style: {
+                padding: '10px',
+                overflow: 'hidden'
+            },
+            items: [
+                me.iconComponent = new Ext.Component({
+                    cls: me.baseCls + '-icon',
+                    width: 50,
+                    height: me.iconHeight
+                }),
+                me.promptContainer = new Ext.container.Container({
+                    flex: 1,
+                    layout: {
+                        type: 'anchor'
+                    },
+                    items: [
+                        me.msg = new Ext.form.field.Display({
+                            id: baseId + '-displayfield',
+                            cls: me.baseCls + '-text'
+                        }),
+                        me.textField = new Ext.form.field.Text({
+                            id: baseId + '-testfield',
+                            anchor: '100%',
+                            enableKeyEvents: true,
+                            listeners: {
+                                keydown: me.onPromptKey,
+                                scope: me
+                            }
+                        }),
+                        me.textArea = new Ext.form.field.TextArea({
+                            id: baseId + '-textarea',
+                            anchor: '100%',
+                            height: 75
+                        })
+                    ]
+                })
+            ]
+        });
+        me.progressBar = new Ext.ProgressBar({
+            id: baseId + '-progressbar',
+            margins: '0 10 0 10'
+        });
+
+        me.items = [me.topContainer, me.progressBar];
+
+        // Create the buttons based upon passed bitwise config
+        me.msgButtons = [];
+        for (i = 0; i < 4; i++) {
+            button = me.makeButton(i);
+            me.msgButtons[button.itemId] = button;
+            me.msgButtons.push(button);
+        }
+        me.bottomTb = new Ext.toolbar.Toolbar({
+            id: baseId + '-toolbar',
+            ui: 'footer',
+            dock: 'bottom',
+            layout: {
+                pack: 'center'
+            },
+            items: [
+                me.msgButtons[0],
+                me.msgButtons[1],
+                me.msgButtons[2],
+                me.msgButtons[3]
+            ]
+        });
+        me.dockedItems = [me.bottomTb];
+
+        // Get control at Toolbar's finishedLayout call and snag the contentWidth to contribute to our auto width calculation
+        tbLayout = me.bottomTb.getLayout();
+        tbLayout.finishedLayout = Ext.Function.createInterceptor(tbLayout.finishedLayout, function(ownerContext) {
+            me.tbWidth = ownerContext.getProp('contentWidth');
+        });
+        me.on('close', me.onClose, me);
+
+        me.callParent();
+    },
+    
+    onClose: function(){
+        var btn = this.header.child('[type=close]');
+        // Give a temporary itemId so it can act like the cancel button
+        btn.itemId = 'cancel';
+        this.btnCallback(btn);
+        delete btn.itemId;
+    },
+
+    onPromptKey: function(textField, e) {
+        var me = this,
+            blur;
+
+        if (e.keyCode === Ext.EventObject.RETURN || e.keyCode === 10) {
+            if (me.msgButtons.ok.isVisible()) {
+                blur = true;
+                me.msgButtons.ok.handler.call(me, me.msgButtons.ok);
+            } else if (me.msgButtons.yes.isVisible()) {
+                me.msgButtons.yes.handler.call(me, me.msgButtons.yes);
+                blur = true;
+            }
+
+            if (blur) {
+                me.textField.blur();
+            }
+        }
+    },
+
+    reconfigure: function(cfg) {
+        var me = this,
+            buttons = 0,
+            hideToolbar = true,
+            initialWidth = me.maxWidth,
+            oldButtonText = me.buttonText,
+            i;
+
+        // Restore default buttonText before reconfiguring.
+        me.updateButtonText();
+
+        cfg = cfg || {};
+        me.cfg = cfg;
+        if (cfg.width) {
+            initialWidth = cfg.width;
+        }
+
+        // Default to allowing the Window to take focus.
+        delete me.defaultFocus;
+
+        // clear any old animateTarget
+        me.animateTarget = cfg.animateTarget || undefined;
+
+        // Defaults to modal
+        me.modal = cfg.modal !== false;
+
+        // Show the title
+        if (cfg.title) {
+            me.setTitle(cfg.title||'&#160;');
+        }
+
+        // Extract button configs
+        if (Ext.isObject(cfg.buttons)) {
+            me.buttonText = cfg.buttons;
+            buttons = 0;
+        } else {
+            me.buttonText = cfg.buttonText || me.buttonText;
+            buttons = Ext.isNumber(cfg.buttons) ? cfg.buttons : 0;
+        }
+
+        // Apply custom-configured buttonText
+        // Infer additional buttons from the specified property names in the buttonText object
+        buttons = buttons | me.updateButtonText();
+
+        // Restore buttonText. Next run of reconfigure will restore to prototype's buttonText
+        me.buttonText = oldButtonText;
+
+        // During the on render, or size resetting layouts, and in subsequent hiding and showing, we need to
+        // suspend layouts, and flush at the end when the Window's children are at their final visibility.
+        Ext.suspendLayouts();
+        me.hidden = false;
+        if (!me.rendered) {
+            me.width = initialWidth;
+            me.render(Ext.getBody());
+        } else {
+            me.setSize(initialWidth, me.maxHeight);
+        }
+
+        // Hide or show the close tool
+        me.closable = cfg.closable && !cfg.wait;
+        me.header.child('[type=close]').setVisible(cfg.closable !== false);
+
+        // Hide or show the header
+        if (!cfg.title && !me.closable) {
+            me.header.hide();
+        } else {
+            me.header.show();
+        }
+
+        // Default to dynamic drag: drag the window, not a ghost
+        me.liveDrag = !cfg.proxyDrag;
+
+        // wrap the user callback
+        me.userCallback = Ext.Function.bind(cfg.callback ||cfg.fn || Ext.emptyFn, cfg.scope || Ext.global);
+
+        // Hide or show the icon Component
+        me.setIcon(cfg.icon);
+
+        // Hide or show the message area
+        if (cfg.msg) {
+            me.msg.setValue(cfg.msg);
+            me.msg.show();
+        } else {
+            me.msg.hide();
+        }
+
+        // flush the layout here to pick up
+        // height adjustments on the msg field
+        Ext.resumeLayouts(true);
+        Ext.suspendLayouts();
+
+        // Hide or show the input field
+        if (cfg.prompt || cfg.multiline) {
+            me.multiline = cfg.multiline;
+            if (cfg.multiline) {
+                me.textArea.setValue(cfg.value);
+                me.textArea.setHeight(cfg.defaultTextHeight || me.defaultTextHeight);
+                me.textArea.show();
+                me.textField.hide();
+                me.defaultFocus = me.textArea;
+            } else {
+                me.textField.setValue(cfg.value);
+                me.textArea.hide();
+                me.textField.show();
+                me.defaultFocus = me.textField;
+            }
+        } else {
+            me.textArea.hide();
+            me.textField.hide();
+        }
+
+        // Hide or show the progress bar
+        if (cfg.progress || cfg.wait) {
+            me.progressBar.show();
+            me.updateProgress(0, cfg.progressText);
+            if(cfg.wait === true){
+                me.progressBar.wait(cfg.waitConfig);
+            }
+        } else {
+            me.progressBar.hide();
+        }
+
+        // Hide or show buttons depending on flag value sent.
+        for (i = 0; i < 4; i++) {
+            if (buttons & Math.pow(2, i)) {
+
+                // Default to focus on the first visible button if focus not already set
+                if (!me.defaultFocus) {
+                    me.defaultFocus = me.msgButtons[i];
+                }
+                me.msgButtons[i].show();
+                hideToolbar = false;
+            } else {
+                me.msgButtons[i].hide();
+            }
+        }
+
+        // Hide toolbar if no buttons to show
+        if (hideToolbar) {
+            me.bottomTb.hide();
+        } else {
+            me.bottomTb.show();
+        }
+        Ext.resumeLayouts(true);
+    },
+
+    /**
+     * @private
+     * Set button text according to current buttonText property object
+     * @return {Number} The buttons bitwise flag based upon the button IDs specified in the buttonText property.
+     */
+    updateButtonText: function() {
+        var me = this,
+            buttonText = me.buttonText,
+            buttons = 0,
+            btnId,
+            btn;
+
+        for (btnId in buttonText) {
+            if (buttonText.hasOwnProperty(btnId)) {
+                btn = me.msgButtons[btnId];
+                if (btn) {
+                    if (me.cfg && me.cfg.buttonText) {
+                        buttons = buttons | Math.pow(2, Ext.Array.indexOf(me.buttonIds, btnId));
+                    }
+                    if (btn.text != buttonText[btnId]) {
+                        btn.setText(buttonText[btnId]);
+                    }
+                }
+            }
+        }
+        return buttons;
+    },
+
+    /**
+     * Displays a new message box, or reinitializes an existing message box, based on the config options passed in. All
+     * display functions (e.g. prompt, alert, etc.) on MessageBox call this function internally, although those calls
+     * are basic shortcuts and do not support all of the config options allowed here.
+     *
+     * Example usage:
+     *
+     *     Ext.Msg.show({
+     *         title: 'Address',
+     *         msg: 'Please enter your address:',
+     *         width: 300,
+     *         buttons: Ext.Msg.OKCANCEL,
+     *         multiline: true,
+     *         fn: saveAddress,
+     *         animateTarget: 'addAddressBtn',
+     *         icon: Ext.window.MessageBox.INFO
+     *     });
+     *
+     * @param {Object} config The following config options are supported:
+     *
+     * @param {String/Ext.dom.Element} config.animateTarget
+     * An id or Element from which the message box should animate as it opens and closes.
+     *
+     * @param {Number} [config.buttons=false]
+     * A bitwise button specifier consisting of the sum of any of the following constants:
+     *
+     *  - Ext.MessageBox.OK
+     *  - Ext.MessageBox.YES
+     *  - Ext.MessageBox.NO
+     *  - Ext.MessageBox.CANCEL
+     *
+     * Some common combinations have already been predefined:
+     *
+     *  - Ext.MessageBox.OKCANCEL
+     *  - Ext.MessageBox.YESNO
+     *  - Ext.MessageBox.YESNOCANCEL
+     *
+     * Or false to not show any buttons.
+     *
+     * This may also be specified as an object hash containing custom button text in the same format as the
+     * {@link #buttonText} config. Button IDs present as property names will be made visible.
+     *
+     * @param {Boolean} config.closable
+     * False to hide the top-right close button (defaults to true). Note that progress and wait dialogs will ignore this
+     * property and always hide the close button as they can only be closed programmatically.
+     *
+     * @param {String} config.cls
+     * A custom CSS class to apply to the message box's container element
+     *
+     * @param {Number} [config.defaultTextHeight=75]
+     * The default height in pixels of the message box's multiline textarea if displayed.
+     *
+     * @param {Function} config.fn
+     * A callback function which is called when the dialog is dismissed either by clicking on the configured buttons, or
+     * on the dialog close button, or by pressing the return button to enter input.
+     *
+     * Progress and wait dialogs will ignore this option since they do not respond to user actions and can only be
+     * closed programmatically, so any required function should be called by the same code after it closes the dialog.
+     * Parameters passed:
+     *
+     *  @param {String} config.fn.buttonId The ID of the button pressed, one of:
+     *
+     * - ok
+     * - yes
+     * - no
+     * - cancel
+     *
+     *  @param {String} config.fn.text Value of the input field if either `prompt` or `multiline` is true
+     *  @param {Object} config.fn.opt The config object passed to show.
+     *
+     * @param {Object} config.buttonText
+     * An object containing string properties which override the system-supplied button text values just for this
+     * invocation. The property names are:
+     *
+     * - ok
+     * - yes
+     * - no
+     * - cancel
+     *
+     * @param {Object} config.scope
+     * The scope (`this` reference) in which the function will be executed.
+     *
+     * @param {String} config.icon
+     * A CSS class that provides a background image to be used as the body icon for the dialog.
+     * One can use a predefined icon class:
+     *
+     *  - Ext.MessageBox.INFO
+     *  - Ext.MessageBox.WARNING
+     *  - Ext.MessageBox.QUESTION
+     *  - Ext.MessageBox.ERROR
+     *
+     * or use just any `'custom-class'`. Defaults to empty string.
+     *
+     * @param {String} config.iconCls
+     * The standard {@link Ext.window.Window#iconCls} to add an optional header icon (defaults to '')
+     *
+     * @param {Number} config.maxWidth
+     * The maximum width in pixels of the message box (defaults to 600)
+     *
+     * @param {Number} config.minWidth
+     * The minimum width in pixels of the message box (defaults to 100)
+     *
+     * @param {Boolean} config.modal
+     * False to allow user interaction with the page while the message box is displayed (defaults to true)
+     *
+     * @param {String} config.msg
+     * A string that will replace the existing message box body text (defaults to the XHTML-compliant non-breaking space
+     * character '&#160;')
+     *
+     * @param {Boolean} config.multiline
+     * True to prompt the user to enter multi-line text (defaults to false)
+     *
+     * @param {Boolean} config.progress
+     * True to display a progress bar (defaults to false)
+     *
+     * @param {String} config.progressText
+     * The text to display inside the progress bar if progress = true (defaults to '')
+     *
+     * @param {Boolean} config.prompt
+     * True to prompt the user to enter single-line text (defaults to false)
+     *
+     * @param {Boolean} config.proxyDrag
+     * True to display a lightweight proxy while dragging (defaults to false)
+     *
+     * @param {String} config.title
+     * The title text
+     *
+     * @param {String} config.value
+     * The string value to set into the active textbox element if displayed
+     *
+     * @param {Boolean} config.wait
+     * True to display a progress bar (defaults to false)
+     *
+     * @param {Object} config.waitConfig
+     * A {@link Ext.ProgressBar#wait} config object (applies only if wait = true)
+     *
+     * @param {Number} config.width
+     * The width of the dialog in pixels
+     *
+     * @return {Ext.window.MessageBox} this
+     */
+    show: function(cfg) {
+        var me = this;
+
+        me.reconfigure(cfg);
+        me.addCls(cfg.cls);
+        me.doAutoSize();
+
+        // Set the flag, so that the parent show method performs the show procedure that we need.
+        // ie: animation from animTarget, onShow processing and focusing.
+        me.hidden = true;
+        me.callParent();
+        return me;
+    },
+
+    onShow: function() {
+        this.callParent(arguments);
+        this.center();
+    },
+
+    doAutoSize: function() {
+        var me = this,
+            headerVisible = me.header.rendered && me.header.isVisible(),
+            footerVisible = me.bottomTb.rendered && me.bottomTb.isVisible(),
+            width,
+            height;
+
+        if (!Ext.isDefined(me.frameWidth)) {
+            me.frameWidth = me.el.getWidth() - me.body.getWidth();
+        }
+
+        // Allow per-invocation override of minWidth
+        me.minWidth = me.cfg.minWidth || Ext.getClass(this).prototype.minWidth;
+
+        // Width must be max of titleWidth, message+icon width, and total button width
+        width = Math.max(
+            headerVisible ? me.header.getMinWidth() : 0,                            // title width
+            me.cfg.width || me.msg.getWidth() + me.iconComponent.getWidth() + 25,   // msg + icon width + topContainer's layout padding */
+            (footerVisible ? me.tbWidth : 0)// total button width
+        );
+
+        height = (headerVisible ? me.header.getHeight() : 0) +
+            me.topContainer.getHeight() +
+            me.progressBar.getHeight() +
+            (footerVisible ? me.bottomTb.getHeight() + me.bottomTb.el.getMargin('tb') : 0);
+
+        me.setSize(width + me.frameWidth, height + me.frameWidth);
+        return me;
+    },
+
+    updateText: function(text) {
+        this.msg.setValue(text);
+        return this.doAutoSize(true);
+    },
+
+    /**
+     * Adds the specified icon to the dialog.  By default, the class 'x-messagebox-icon' is applied for default
+     * styling, and the class passed in is expected to supply the background image url. Pass in empty string ('')
+     * to clear any existing icon. This method must be called before the MessageBox is shown.
+     * The following built-in icon classes are supported, but you can also pass in a custom class name:
+     *
+     *     Ext.window.MessageBox.INFO
+     *     Ext.window.MessageBox.WARNING
+     *     Ext.window.MessageBox.QUESTION
+     *     Ext.window.MessageBox.ERROR
+     *
+     * @param {String} icon A CSS classname specifying the icon's background image url, or empty string to clear the icon
+     * @return {Ext.window.MessageBox} this
+     */
+    setIcon : function(icon) {
+        var me = this;
+        me.iconComponent.removeCls(me.messageIconCls);
+        if (icon) {
+            me.iconComponent.show();
+            me.iconComponent.addCls(Ext.baseCSSPrefix + 'dlg-icon');
+            me.iconComponent.addCls(me.messageIconCls = icon);
+        } else {
+            me.iconComponent.removeCls(Ext.baseCSSPrefix + 'dlg-icon');
+            me.iconComponent.hide();
+        }
+        return me;
+    },
+
+    /**
+     * Updates a progress-style message box's text and progress bar. Only relevant on message boxes
+     * initiated via {@link Ext.window.MessageBox#progress} or {@link Ext.window.MessageBox#wait},
+     * or by calling {@link Ext.window.MessageBox#method-show} with progress: true.
+     *
+     * @param {Number} [value=0] Any number between 0 and 1 (e.g., .5)
+     * @param {String} [progressText=''] The progress text to display inside the progress bar.
+     * @param {String} [msg] The message box's body text is replaced with the specified string (defaults to undefined
+     * so that any existing body text will not get overwritten by default unless a new value is passed in)
+     * @return {Ext.window.MessageBox} this
+     */
+    updateProgress : function(value, progressText, msg){
+        this.progressBar.updateProgress(value, progressText);
+        if (msg){
+            this.updateText(msg);
+        }
+        return this;
+    },
+
+    onEsc: function() {
+        if (this.closable !== false) {
+            this.callParent(arguments);
+        }
+    },
+
+    /**
+     * Displays a confirmation message box with Yes and No buttons (comparable to JavaScript's confirm).
+     * If a callback function is passed it will be called after the user clicks either button,
+     * and the id of the button that was clicked will be passed as the only parameter to the callback
+     * (could also be the top-right close button, which will always report as "cancel").
+     *
+     * @param {String} title The title bar text
+     * @param {String} msg The message box body text
+     * @param {Function} [fn] The callback function invoked after the message box is closed.
+     * See {@link #method-show} method for details.
+     * @param {Object} [scope=window] The scope (`this` reference) in which the callback is executed.
+     * @return {Ext.window.MessageBox} this
+     */
+    confirm: function(cfg, msg, fn, scope) {
+        if (Ext.isString(cfg)) {
+            cfg = {
+                title: cfg,
+                icon: this.QUESTION,
+                msg: msg,
+                buttons: this.YESNO,
+                callback: fn,
+                scope: scope
+            };
+        }
+        return this.show(cfg);
+    },
+
+    /**
+     * Displays a message box with OK and Cancel buttons prompting the user to enter some text (comparable to JavaScript's prompt).
+     * The prompt can be a single-line or multi-line textbox.  If a callback function is passed it will be called after the user
+     * clicks either button, and the id of the button that was clicked (could also be the top-right
+     * close button, which will always report as "cancel") and the text that was entered will be passed as the two parameters to the callback.
+     *
+     * @param {String} title The title bar text
+     * @param {String} msg The message box body text
+     * @param {Function} [fn] The callback function invoked after the message box is closed.
+     * See {@link #method-show} method for details.
+     * @param {Object} [scope=window] The scope (`this` reference) in which the callback is executed.
+     * @param {Boolean/Number} [multiline=false] True to create a multiline textbox using the defaultTextHeight
+     * property, or the height in pixels to create the textbox/
+     * @param {String} [value=''] Default value of the text input element
+     * @return {Ext.window.MessageBox} this
+     */
+    prompt : function(cfg, msg, fn, scope, multiline, value){
+        if (Ext.isString(cfg)) {
+            cfg = {
+                prompt: true,
+                title: cfg,
+                minWidth: this.minPromptWidth,
+                msg: msg,
+                buttons: this.OKCANCEL,
+                callback: fn,
+                scope: scope,
+                multiline: multiline,
+                value: value
+            };
+        }
+        return this.show(cfg);
+    },
+
+    /**
+     * Displays a message box with an infinitely auto-updating progress bar.  This can be used to block user
+     * interaction while waiting for a long-running process to complete that does not have defined intervals.
+     * You are responsible for closing the message box when the process is complete.
+     *
+     * @param {String} msg The message box body text
+     * @param {String} [title] The title bar text
+     * @param {Object} [config] A {@link Ext.ProgressBar#wait} config object
+     * @return {Ext.window.MessageBox} this
+     */
+    wait : function(cfg, title, config){
+        if (Ext.isString(cfg)) {
+            cfg = {
+                title : title,
+                msg : cfg,
+                closable: false,
+                wait: true,
+                modal: true,
+                minWidth: this.minProgressWidth,
+                waitConfig: config
+            };
+        }
+        return this.show(cfg);
+    },
+
+    /**
+     * Displays a standard read-only message box with an OK button (comparable to the basic JavaScript alert prompt).
+     * If a callback function is passed it will be called after the user clicks the button, and the
+     * id of the button that was clicked will be passed as the only parameter to the callback
+     * (could also be the top-right close button, which will always report as "cancel").
+     *
+     * @param {String} title The title bar text
+     * @param {String} msg The message box body text
+     * @param {Function} [fn] The callback function invoked after the message box is closed.
+     * See {@link #method-show} method for details.
+     * @param {Object} [scope=window] The scope (<code>this</code> reference) in which the callback is executed.
+     * @return {Ext.window.MessageBox} this
+     */
+    alert: function(cfg, msg, fn, scope) {
+        if (Ext.isString(cfg)) {
+            cfg = {
+                title : cfg,
+                msg : msg,
+                buttons: this.OK,
+                fn: fn,
+                scope : scope,
+                minWidth: this.minWidth
+            };
+        }
+        return this.show(cfg);
+    },
+
+    /**
+     * Displays a message box with a progress bar.
+     *
+     * You are responsible for updating the progress bar as needed via {@link Ext.window.MessageBox#updateProgress}
+     * and closing the message box when the process is complete.
+     *
+     * @param {String} title The title bar text
+     * @param {String} msg The message box body text
+     * @param {String} [progressText=''] The text to display inside the progress bar
+     * @return {Ext.window.MessageBox} this
+     */
+    progress : function(cfg, msg, progressText){
+        if (Ext.isString(cfg)) {
+            cfg = {
+                title: cfg,
+                msg: msg,
+                progress: true,
+                progressText: progressText
+            };
+        }
+        return this.show(cfg);
+    }
+}, function() {
+    /**
+     * @class Ext.MessageBox
+     * @alternateClassName Ext.Msg
+     * @extends Ext.window.MessageBox
+     * @singleton
+     * Singleton instance of {@link Ext.window.MessageBox}.
+     */
+    Ext.MessageBox = Ext.Msg = new this();
+});
+/**
+ * This Controller catch all ErrorEvents and displays it.
+ */
+Ext.define('DNSAdmin.controller.ErrorController', {
+			extend : 'Ext.app.Controller',
+			views : [],
+			requires : ['DNSAdmin.Config', 'Ext.window.MessageBox'],
+			init : function() {
+				this.application.on({
+							errorEvent : this.onErrorEvent, /* Maybe more Events here? */
+							scope : this
+						});
+			},
+
+			onErrorEvent : function(message) {
+				console.log('ErrorController > errorEvent');
+				console.log(Ext);
+				Ext.MessageBox.show({
+							title : 'Error',
+							msg : message,
+							buttons : Ext.MessageBox.OK,
+							icon : Ext.MessageBox.ERROR
+						});
+			}
+		});
+/**
  * This Controller check if the current User is logged in. It also has methods
  * to login a user. It hasn't an own Model/Store, cause we only have one user
  * logged in at the same time. (In one Browser)
  */
 Ext.define('DNSAdmin.controller.LoginController', {
-			extend : 'Ext.app.Controller',
-			views : ['LoginDialog', 'LoggedInText', 'Viewport'],
-			requires : ['DNSAdmin.Config'],
-			refs : [{
-						ref : 'loggedInText',
-						selector : 'loggedin'
-					}],
-			init : function() {
-				this.control({
-							'loginview button[action=login]' : {
-								click : this.loginBtnClicked
-							},
-							'loginview textfield' : {
-								specialkey : function(field, e) {
-									if (e.getKey() == e.ENTER) {
-										this.loginBtnClicked(field);
-									}
-								}
+	extend : 'Ext.app.Controller',
+	views : ['LoginDialog', 'LoggedInText', 'Viewport'],
+	requires : ['DNSAdmin.Config'],
+	refs : [{
+				ref : 'loggedInText',
+				selector : 'loggedin'
+			}],
+	init : function() {
+		this.control({
+					'loginview button[action=login]' : {
+						click : this.loginBtnClicked
+					},
+					'loginview textfield' : {
+						specialkey : function(field, e) {
+							if (e.getKey() == e.ENTER) {
+								this.loginBtnClicked(field);
 							}
-						});
+						}
+					}
+				});
 
-				this.application.on({
-							loggedInEvent : this.onLoggedInEvent,
-							notLoggedInEvent : this.onNotLoggedInEvent,
-							scope : this
-						});
+		this.application.on({
+					loggedInEvent : this.onLoggedInEvent,
+					notLoggedInEvent : this.onNotLoggedInEvent,
+					scope : this
+				});
 
-				this.checkIfLoggedIn();
-			},
+		this.checkIfLoggedIn();
+	},
 
-			checkIfLoggedIn : function() {
-				var app = this.application;
-				Ext.Ajax.request({
-							url : DNSAdmin.Config.apiBaseUrl + '/status',
+	checkIfLoggedIn : function() {
+		var app = this.application;
+		Ext.Ajax.request({
+			url : DNSAdmin.Config.apiBaseUrl + '/status',
 
-							success : function(response) {
-								var text = response.responseText;
-								var jsonResponse = Ext.JSON.decode(text);
-								if (jsonResponse.success) {
-									var loggedInView = Ext.widget('loggedin');
-									if (jsonResponse.loggedIn) {
-										// User is logged in, do something!
-										app.fireEvent('loggedInEvent',
-												jsonResponse.username);
-									} else {
-										// User is not logged in! Call
-										// notLoggedInEvent - Event
-										app.fireEvent('notLoggedInEvent');
-									}
-								} else {
-									// There was an Error on Server... need some
-									// Error handling here!
-									// TODO: Error Handling.
-								}
-							}
-						});
-			},
-
-			loginBtnClicked : function(srcElement) {
-				var win = srcElement.up('window'), form = win.down('form')
-						.getForm();
-				win.setLoading();
-				var app = this.application;
-				if (form.isValid()) {
-					Ext.getCmp('loginStatusLabel').hide();
-					form.submit({
-								success : function(form, action) {
-									if (action.result.loggedIn) {
-										app.fireEvent('loggedInEvent',
-												action.result.username);
-										// Login was successful
-										win.hide();
-									} else {
-										// Login failed
-										app.fireEvent('notLoggedInEvent');
-										Ext.getCmp('loginStatusLabel').show();
-									}
-									win.setLoading(false);
-								},
-								failure : function(form, action) {
-									win.setLoading(false);
-									Ext.Msg
-											.alert('Failed',
-													action.result.error);
-								}
-							});
+			success : function(response) {
+				var text = response.responseText;
+				var jsonResponse = Ext.JSON.decode(text);
+				if (jsonResponse.success) {
+					var loggedInView = Ext.widget('loggedin');
+					if (jsonResponse.loggedIn) {
+						// User is logged in, do something!
+						app.fireEvent('loggedInEvent', jsonResponse.username);
+					} else {
+						// User is not logged in! Call
+						// notLoggedInEvent - Event
+						app.fireEvent('notLoggedInEvent');
+					}
+				} else {
+					app.fireEvent('errorEvent', jsonResponse.error);
 				}
 			},
-
-			/*
-			 * Functions which will be called on Events.
-			 */
-			onLoggedInEvent : function(username, env) {
-				console.log('onLoggedInEvent');
-				var loggedInTextView = this.getLoggedInText();
-				loggedInTextView.setUsername(username);
-			},
-
-			onNotLoggedInEvent : function() {
-				var loginView = Ext.widget('loginview');
-				console.log(loginView);
-				loginView.show();
+			failure : function(response, opt) {
+				app.fireEvent('errorEvent',
+						'Server-Side error with status code' + response.status);
 			}
 		});
+	},
+
+	loginBtnClicked : function(srcElement) {
+		var win = srcElement.up('window'), form = win.down('form').getForm();
+		win.setLoading();
+		var app = this.application;
+		if (form.isValid()) {
+			Ext.getCmp('loginStatusLabel').hide();
+			form.submit({
+						success : function(form, action) {
+							if (action.result.loggedIn) {
+								app.fireEvent('loggedInEvent',
+										action.result.username);
+								// Login was successful
+								win.hide();
+							} else {
+								// Login failed
+								app.fireEvent('notLoggedInEvent');
+								Ext.getCmp('loginStatusLabel').show();
+							}
+							win.setLoading(false);
+						},
+						failure : function(form, action) {
+							win.setLoading(false);
+							Ext.Msg.alert('Failed', action.result.error);
+						}
+					});
+		}
+	},
+
+	/*
+	 * Functions which will be called on Events.
+	 */
+	onLoggedInEvent : function(username, env) {
+		console.log('LoginController > loggedInEvent');
+		var loggedInTextView = this.getLoggedInText();
+		loggedInTextView.setUsername(username);
+	},
+
+	onNotLoggedInEvent : function() {
+		console.log('LoginController > notLoggedInEvent');
+		var loginView = Ext.widget('loginview');
+		console.log(loginView);
+		loginView.show();
+	}
+});
 
 
