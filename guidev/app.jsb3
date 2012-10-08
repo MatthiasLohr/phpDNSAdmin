@@ -815,9 +815,34 @@
                     "path": "extjs/src/container/"
                 },
                 {
+                    "clsName": "DNSAdmin.Config",
+                    "name": "Config.js",
+                    "path": "app/"
+                },
+                {
+                    "clsName": "Ext.toolbar.TextItem",
+                    "name": "TextItem.js",
+                    "path": "extjs/src/toolbar/"
+                },
+                {
+                    "clsName": "DNSAdmin.view.LoggedInText",
+                    "name": "LoggedInText.js",
+                    "path": "app/view/"
+                },
+                {
+                    "clsName": "DNSAdmin.view.LoginDialog",
+                    "name": "LoginDialog.js",
+                    "path": "app/view/"
+                },
+                {
                     "clsName": "DNSAdmin.view.Viewport",
                     "name": "Viewport.js",
                     "path": "app/view/"
+                },
+                {
+                    "clsName": "DNSAdmin.controller.LoginController",
+                    "name": "LoginController.js",
+                    "path": "app/controller/"
                 }
             ]
         },

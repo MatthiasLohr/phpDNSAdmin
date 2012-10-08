@@ -6,6 +6,7 @@
 Ext.define('DNSAdmin.controller.LoginController', {
 			extend : 'Ext.app.Controller',
 			views : ['LoginDialog', 'LoggedInText', 'Viewport'],
+			requires : ['DNSAdmin.Config'],
 			refs : [{
 						ref : 'loggedInText',
 						selector : 'loggedin'
@@ -36,7 +37,7 @@ Ext.define('DNSAdmin.controller.LoginController', {
 			checkIfLoggedIn : function() {
 				var app = this.application;
 				Ext.Ajax.request({
-							url : Config.apiBaseUrl + '/status',
+							url : DNSAdmin.Config.apiBaseUrl + '/status',
 
 							success : function(response) {
 								var text = response.responseText;
