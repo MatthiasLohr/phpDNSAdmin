@@ -1,6 +1,6 @@
 Ext.application({
 			name : 'DNSAdmin',
-			controllers : ['LoginController'],
+			controllers : ['ErrorController', 'LoginController'],
 			models : ['Server'],
 
 			autoCreateViewport : true,
