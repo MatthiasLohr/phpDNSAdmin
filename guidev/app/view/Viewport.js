@@ -1,6 +1,6 @@
 Ext.define('DNSAdmin.view.Viewport', {
 			extend : 'Ext.container.Viewport',
-			requires : ['DNSAdmin.view.LoggedInView', 'DNSAdmin.view.LoginView'],
+			requires : ['DNSAdmin.view.LoggedInText', 'DNSAdmin.view.LoginDialog'],
 			layout : 'fit',
 			initComponent : function() {
 				this.setLoading();

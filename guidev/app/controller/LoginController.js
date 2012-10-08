@@ -5,8 +5,11 @@
  */
 Ext.define('DNSAdmin.controller.LoginController', {
 			extend : 'Ext.app.Controller',
-			views : ['LoginView', 'LoggedInView', 'Viewport'],
-
+			views : ['LoginDialog', 'LoggedInText', 'Viewport'],
+			refs : [{
+						ref : 'loggedInText',
+						selector : 'loggedin'
+					}],
 			init : function() {
 				this.control({
 							'loginview button[action=login]' : {
@@ -62,15 +65,19 @@ Ext.define('DNSAdmin.controller.LoginController', {
 				var win = srcElement.up('window'), form = win.down('form')
 						.getForm();
 				win.setLoading();
+				var app = this.application;
 				if (form.isValid()) {
 					Ext.getCmp('loginStatusLabel').hide();
 					form.submit({
 								success : function(form, action) {
 									if (action.result.loggedIn) {
+										app.fireEvent('loggedInEvent',
+												action.result.username);
 										// Login was successful
 										win.hide();
 									} else {
 										// Login failed
+										app.fireEvent('notLoggedInEvent');
 										Ext.getCmp('loginStatusLabel').show();
 									}
 									win.setLoading(false);
@@ -88,14 +95,15 @@ Ext.define('DNSAdmin.controller.LoginController', {
 			/*
 			 * Functions which will be called on Events.
 			 */
-			onLoggedInEvent : function(username) {				
-				var loggedInView = this.getLoggedInViewView();
-				loggedInView.setText(username);
-				console.log(loggedInView);
+			onLoggedInEvent : function(username, env) {
+				console.log('onLoggedInEvent');
+				var loggedInTextView = this.getLoggedInText();
+				loggedInTextView.setUsername(username);
 			},
 
 			onNotLoggedInEvent : function() {
 				var loginView = Ext.widget('loginview');
+				console.log(loginView);
 				loginView.show();
 			}
 		});

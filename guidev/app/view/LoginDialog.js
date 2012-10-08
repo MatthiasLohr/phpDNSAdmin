@@ -1,4 +1,4 @@
-Ext.define('DNSAdmin.view.LoginView', {
+Ext.define('DNSAdmin.view.LoginDialog', {
 	extend : 'Ext.Window',
 	alias : 'widget.loginview',
 	title : 'Login',
