@@ -181,8 +181,7 @@ class ZoneRouter extends RequestRouter {
 					}
 
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $views);
-					$this->zone->recordUpdate($recordid, $record);
-					$result->success = true;
+					$result->success = $this->zone->recordUpdate($recordid, $record);
 					//$result->records = $this->listRecordsByFilter();
 					$result->totalCount = $this->countRecordsByFilter();
 				}
