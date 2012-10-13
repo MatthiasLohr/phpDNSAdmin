@@ -133,6 +133,12 @@ class PdnsPdoZone extends ZoneModule {
 		}
 	}
 
+	public function incrementSerial(Zone $zone) {
+		$this->db->beginTransaction();
+		parent::incrementSerial($zone);
+		return $this->db->commit();
+	}
+
 	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
 		$this->zoneAssureExistence($zone);
 		$query = 'SELECT id,name,type,content,ttl,prio FROM records WHERE ' . $this->tablePrefix . 'domain_id = ' . $this->db->quote($this->zoneIds[$zone->getName()]);

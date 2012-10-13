@@ -33,7 +33,7 @@ abstract class ZoneModule {
 
 	/**
 	 * Return record count for the specified filter criteria
-	 * 
+	 *
 	 * @param Zone $zone zone object
 	 * @param array $filter filter criteria
 	 * @return amount of records matching the filter criterias
@@ -207,6 +207,7 @@ abstract class ZoneModule {
 		$success = true;
 		$records = $this->listRecordsByType($zone,'SOA');
 		foreach ($records as $recordId => $soa) {
+			if ($soa->getName() != $zone->getName()) continue;
 			$aSerial = intval(date('Ymd00'));
 			$newSerial = max((intval($soa->getField('serial'))+1),$aSerial);
 			$soa->setField('serial',$newSerial);
