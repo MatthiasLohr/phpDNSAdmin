@@ -135,8 +135,13 @@ class PdnsPdoZone extends ZoneModule {
 
 	public function incrementSerial(Zone $zone) {
 		$this->db->beginTransaction();
-		parent::incrementSerial($zone);
-		return $this->db->commit();
+		if (parent::incrementSerial($zone)) {
+			return $this->db->commit();
+		}
+		else {
+			$this->db->rollBack();
+			return false;
+		}
 	}
 
 	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
