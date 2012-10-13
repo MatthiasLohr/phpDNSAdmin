@@ -102,14 +102,8 @@ class ZoneRouter extends RequestRouter {
 
 	public function incserial() {
 		$result = new stdClass();
-		$tmp = $this->zone->getModule()->incrementSerial($this->zone);
-		if ($tmp === false) {
-			$result->success = false;
-		}
-		else {
-			$result->success = true;
-			$result->newserial = $tmp;
-		}
+		$result->success = $this->zone->getModule()->incrementSerial($this->zone);
+		$result->soas = $this->zone->getModule()->listRecordsByType($this->zone, 'SOA');
 		return $result;
 	}
 
