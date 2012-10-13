@@ -103,7 +103,11 @@ class ZoneRouter extends RequestRouter {
 	public function incserial() {
 		$result = new stdClass();
 		$result->success = $this->zone->getModule()->incrementSerial($this->zone);
-		$result->soas = $this->zone->getModule()->listRecordsByType($this->zone, 'SOA');
+		$records = $this->zone->getModule()->listRecordsByType($this->zone, 'SOA');
+		$result->soas = array();
+		foreach ($records as $recordId => $record) {
+			$result->soas[$recordId] = $this->record2Json($recordId, $record);
+		}
 		return $result;
 	}
 

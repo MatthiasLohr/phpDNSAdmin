@@ -204,14 +204,15 @@ abstract class ZoneModule {
 	}
 
 	public function incrementSerial(Zone $zone) {
-		$success = true;
 		$records = $this->listRecordsByType($zone,'SOA');
+		if ($records === false || count($records) == 0) return false;
+		$success = true;
 		foreach ($records as $recordId => $soa) {
-			if ($soa->getName() != $zone->getName()) continue;
+			if ($soa->getName() != '@') continue;
 			$aSerial = intval(date('Ymd00'));
-			$newSerial = max((intval($soa->getField('serial'))+1),$aSerial);
-			$soa->setField('serial',$newSerial);
-			$success = $this->recordUpdate($zone,$recordId,$soa) && $success;
+			$newSerial = max((intval($soa->getField('serial'))+1), $aSerial);
+			$soa->setField('serial', $newSerial);
+			$success = $this->recordUpdate($zone, $recordId, $soa) && $success;
 		}
 		return $success;
 	}

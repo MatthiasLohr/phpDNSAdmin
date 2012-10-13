@@ -271,7 +271,7 @@ class PdnsPdoZone extends ZoneModule {
 		$domainid = $this->zoneIds[$zone->getName()];
 		try {
 			$priority = $record->getField('priority');
-			$this->db->query(
+			$stm = $this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
 				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
 				. ' type = ' . $this->db->quote($record->getType()) . ','
@@ -282,7 +282,7 @@ class PdnsPdoZone extends ZoneModule {
 				. ' AND domain_id = ' . $domainid
 			);
 		} catch (NoSuchFieldException $e) {
-			$this->db->query(
+			$stm = $this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
 				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
 				. ' type = ' . $this->db->quote($record->getType()) . ','
@@ -292,6 +292,7 @@ class PdnsPdoZone extends ZoneModule {
 				. ' AND domain_id = ' . $domainid
 			);
 		}
+		return ($stm !== false && $stm->rowCount() > 0);
 	}
 
 	public function zoneCreate(Zone $zone) {
