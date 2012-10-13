@@ -31,10 +31,21 @@
  */
 class AutologinManager {
 
+	/**
+	 * @var AutologinManager current instance of AutologinManager
+	 */
 	private static $instance = null;
 
+	/**
+	 * @var array array of autologin modules
+	 */
 	private $modules = array();
 
+	/**
+	 * Current username
+	 *
+	 * @var string username or null, if anonymous
+	 */
 	private $user = null;
 
 	/**

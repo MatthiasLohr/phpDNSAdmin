@@ -88,6 +88,11 @@ abstract class ZoneModule {
 		}
 	}
 
+	/**
+	 * Check if this zone module supports views
+	 *
+	 * @return boolean true/false
+	 */
 	public final function hasViews() {
 		if ($this instanceof Views) {
 			$views = $this->listViews();
@@ -103,6 +108,13 @@ abstract class ZoneModule {
 		}
 	}
 
+	/**
+	 * Helper function for filtering records without backend filter support
+	 *
+	 * @param array $records array of records to be filtered
+	 * @param array $filter filter definition
+	 * @return array array of filtered records
+	 */
 	protected static function helpFilter(array $records, array $filter) {
 		// shortcut for id filtering (only 1 result record)
 		if (isset($filter['id'])) {
@@ -135,6 +147,14 @@ abstract class ZoneModule {
 		return $records;
 	}
 
+	/**
+	 * Helper function for paging without backend paging support
+	 *
+	 * @param array $records array of all records
+	 * @param type $offset index of first record in result array
+	 * @param type $limit amount of max. records in result array
+	 * @return array array of records
+	 */
 	protected static function helpPaging(array $records, $offset = 0, $limit = null) {
 		if ($limit === null) {
 			return array_slice($records,$offset);
@@ -144,6 +164,13 @@ abstract class ZoneModule {
 		}
 	}
 
+	/**
+	 * Helper function for sorting records without backend sorting support
+	 *
+	 * @param array $records unsorted records
+	 * @param type $sortoptions sort options
+	 * @return array sorted array of records
+	 */
 	protected static function helpSort(array $records, $sortoptions = '') {
 		$cycles = explode(',',$sortoptions);
 		foreach ($cycles as $cycle) {
@@ -183,26 +210,67 @@ abstract class ZoneModule {
 		return $records;
 	}
 
+	/**
+	 * Helper function for sorting: compare the content of two records
+	 *
+	 * @param ResourceRecord $a record $a
+	 * @param ResourceRecord $b record $b
+	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
+	 */
 	private static function helpSortCompareContent(ResourceRecord $a, ResourceRecord $b) {
 		return strcmp($a->getContentString(),$b->getContentString());
 	}
 
+	/**
+	 * Helper function for sorting: compare the name of two records
+	 *
+	 * @param ResourceRecord $a record $a
+	 * @param ResourceRecord $b record $b
+	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
+	 */
 	private static function helpSortCompareName(ResourceRecord $a, ResourceRecord $b) {
 		return strcmp($a->getName(),$b->getName());
 	}
 
+	/**
+	 * Helper function for sorting: compare the priority of two records
+	 *
+	 * @param ResourceRecord $a record $a
+	 * @param ResourceRecord $b record $b
+	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
+	 */
 	private static function helpSortComparePriority(ResourceRecord $a, ResourceRecord $b) {
 		return ($a->getField('priority') < $b->getField('priority'))?-1:(($a->getField('priority') > $b->getField('priority'))?1:0);
 	}
 
+	/**
+	 * Helper function for sorting: compare the TTL of two records
+	 *
+	 * @param ResourceRecord $a record $a
+	 * @param ResourceRecord $b record $b
+	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
+	 */
 	private static function helpSortCompareTTL(ResourceRecord $a, ResourceRecord $b) {
 		return ($a->getTTL() < $b->getTTL())?-1:(($a->getTTL() > $b->getTTL())?1:0);
 	}
 
+	/**
+	 * Helper function for sorting: compare the type of two records
+	 *
+	 * @param ResourceRecord $a record $a
+	 * @param ResourceRecord $b record $b
+	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
+	 */
 	private static function helpSortCompareType(ResourceRecord $a, ResourceRecord $b) {
 		return strcmp($a->getType(),$b->getType());
 	}
 
+	/**
+	 * Shortcut function for fast serial incrementation (to trigger a AXFR)
+	 *
+	 * @param Zone $zone zone
+	 * @return boolean true on success, false otherwise
+	 */
 	public function incrementSerial(Zone $zone) {
 		$records = $this->listRecordsByType($zone,'SOA');
 		if ($records === false || count($records) == 0) return false;

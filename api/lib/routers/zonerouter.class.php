@@ -34,6 +34,11 @@ class ZoneRouter extends RequestRouter {
 	/** @var Zone instance of zone object */
 	private $zone = null;
 
+	/**
+	 * Constructor
+	 *
+	 * @param Zone $zone zone context
+	 */
 	public function __construct(Zone $zone) {
 		$this->zone = $zone;
 	}

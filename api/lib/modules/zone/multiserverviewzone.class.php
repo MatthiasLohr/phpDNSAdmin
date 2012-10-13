@@ -40,6 +40,11 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	/** @var string */
 	private $tablePrefix = 'mv_';
 
+	/**
+	 * Constructor
+	 *
+	 * @param $config configuration values
+	 */
 	protected function __construct($config) {
 		// load modules
 		$moduleConfig = $config['views'];
@@ -209,7 +214,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	public function listViews() {
 		$result = array();
 		foreach ($this->modules as $module) {
-			$result[$module->sysname] = $module->sysname; 
+			$result[$module->sysname] = $module->sysname;
 		}
 		return $result;
 	}

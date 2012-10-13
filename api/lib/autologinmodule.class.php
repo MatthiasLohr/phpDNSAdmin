@@ -36,6 +36,12 @@ abstract class AutologinModule {
 	 */
 	protected $user = null;
 
+	/**
+	 * Instantiate module with given config
+	 *
+	 * @param $config configuration values
+	 * @return AutologinModule module instance
+	 */
 	abstract public static function getInstance($config);
 
 	/**

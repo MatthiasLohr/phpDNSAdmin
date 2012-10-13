@@ -85,6 +85,12 @@ class ZoneManager {
 		return self::$instance;
 	}
 
+	/**
+	 * Return module instance by sysname
+	 *
+	 * @param string $sysname
+	 * @return ZoneModule module instance
+	 */
 	public function getModuleBySysname($sysname) {
 		foreach ($this->modules as $moduleIndex => $module) {
 			if ($module->sysname == $sysname) {
@@ -105,6 +111,11 @@ class ZoneManager {
 		return self::$instance;
 	}
 
+	/**
+	 * Return a list of all loaded zone modules
+	 *
+	 * @return array array of stdClass objects with module information
+	 */
 	public function listModules() {
 		$result = array();
 		foreach ($this->modules as $moduleIndex => $module) {

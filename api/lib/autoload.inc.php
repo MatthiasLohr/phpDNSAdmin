@@ -43,6 +43,12 @@ function pdaAutoload($className) {
 	}
 }
 
+/**
+ * include file if exists
+ *
+ * @param string $filename
+ * @return boolean true if found, false otherwise
+ */
 function includeIfExists($filename) {
 		if (file_exists($filename)) {
 			return include($filename);
@@ -52,6 +58,7 @@ function includeIfExists($filename) {
 		}
 	}
 
+// register class autoloader
 spl_autoload_register('pdaAutoload',true);
 
 ?>

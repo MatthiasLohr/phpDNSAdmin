@@ -31,8 +31,21 @@
  */
 interface Views {
 
+	/**
+	 * list defined views
+	 *
+	 * @return array array of string with view names
+	 */
 	public function listViews();
 
+	/**
+	 * Set visibility of records in views
+	 *
+	 * @param Zone $zone
+	 * @param type $recordid
+	 * @param array $views Array with viewname => boolean for visible/non visible in view
+	 * @return boolean success true/false
+	 */
 	public function recordSetViews(Zone $zone, $recordid, array $views);
 
 }
