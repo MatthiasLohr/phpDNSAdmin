@@ -133,6 +133,17 @@ class PdnsPdoZone extends ZoneModule {
 		}
 	}
 
+	public function incrementSerial(Zone $zone) {
+		$this->db->beginTransaction();
+		if (parent::incrementSerial($zone)) {
+			return $this->db->commit();
+		}
+		else {
+			$this->db->rollBack();
+			return false;
+		}
+	}
+
 	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
 		$this->zoneAssureExistence($zone);
 		$query = 'SELECT id,name,type,content,ttl,prio FROM records WHERE ' . $this->tablePrefix . 'domain_id = ' . $this->db->quote($this->zoneIds[$zone->getName()]);
@@ -260,7 +271,7 @@ class PdnsPdoZone extends ZoneModule {
 		$domainid = $this->zoneIds[$zone->getName()];
 		try {
 			$priority = $record->getField('priority');
-			$this->db->query(
+			$stm = $this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
 				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
 				. ' type = ' . $this->db->quote($record->getType()) . ','
@@ -271,7 +282,7 @@ class PdnsPdoZone extends ZoneModule {
 				. ' AND domain_id = ' . $domainid
 			);
 		} catch (NoSuchFieldException $e) {
-			$this->db->query(
+			$stm = $this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
 				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
 				. ' type = ' . $this->db->quote($record->getType()) . ','
@@ -281,6 +292,7 @@ class PdnsPdoZone extends ZoneModule {
 				. ' AND domain_id = ' . $domainid
 			);
 		}
+		return ($stm !== false && $stm->rowCount() > 0);
 	}
 
 	public function zoneCreate(Zone $zone) {

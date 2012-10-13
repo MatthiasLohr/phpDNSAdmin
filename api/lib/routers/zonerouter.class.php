@@ -102,13 +102,11 @@ class ZoneRouter extends RequestRouter {
 
 	public function incserial() {
 		$result = new stdClass();
-		$tmp = $this->zone->getModule()->incrementSerial($this->zone);
-		if ($tmp === false) {
-			$result->success = false;
-		}
-		else {
-			$result->success = true;
-			$result->newserial = $tmp;
+		$result->success = $this->zone->getModule()->incrementSerial($this->zone);
+		$records = $this->zone->getModule()->listRecordsByType($this->zone, 'SOA');
+		$result->soas = array();
+		foreach ($records as $recordId => $record) {
+			$result->soas[$recordId] = $this->record2Json($recordId, $record);
 		}
 		return $result;
 	}
@@ -183,8 +181,7 @@ class ZoneRouter extends RequestRouter {
 					}
 
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $views);
-					$this->zone->recordUpdate($recordid, $record);
-					$result->success = true;
+					$result->success = $this->zone->recordUpdate($recordid, $record);
 					//$result->records = $this->listRecordsByFilter();
 					$result->totalCount = $this->countRecordsByFilter();
 				}

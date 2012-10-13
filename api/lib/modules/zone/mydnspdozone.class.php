@@ -63,9 +63,6 @@ class MydnsPdoZone extends ZoneModule {
 		return new MydnsPdoZone($config);
 	}
 
-	/**
-	 * @todo implement
-	 */
 	public function getRecordById(Zone $zone,$recordid) {
 		$this->zoneAssureExistence($zone);
 		if ($recordid == -1) { // recordid == -1: SOA record from soa table
@@ -101,9 +98,17 @@ class MydnsPdoZone extends ZoneModule {
 		}
 	}
 
-	/**
-	 * @todo implement
-	 */
+	public function incrementSerial(Zone $zone) {
+		$this->db->beginTransaction();
+		if (parent::incrementSerial($zone)) {
+			return $this->db->commit();
+		}
+		else {
+			$this->db->rollBack();
+			return false;
+		}
+	}
+
 	public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
 		$this->zoneAssureExistence($zone);
 		// initial query with join for including SOA record in filter/sort options
