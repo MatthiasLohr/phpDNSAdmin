@@ -229,7 +229,18 @@ abstract class ZoneModule {
 	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
 	 */
 	private static function helpSortCompareName(ResourceRecord $a, ResourceRecord $b) {
-		return strcmp($a->getName(),$b->getName());
+		$arg1 = $a->getName();
+		$arg2 = $b->getName();
+		if ($arg1 == $arg2) return 0;
+		$arg1a = explode('.', $arg1);
+		$arg2a = explode('.', $arg2);
+		while (count($arg1a) && count($arg2a)) {
+			$head1 = array_pop($arg1a);
+			$head2 = array_pop($arg2a);
+			$cmp = strcasecmp($head1, $head2);
+			if ($cmp != 0) return $cmp;
+		}
+		return (count($arg1a) - count($arg2a));
 	}
 
 	/**
