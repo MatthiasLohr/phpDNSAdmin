@@ -17,6 +17,8 @@ var ServerView = Backbone.View.extend({
 	},
 
 	loadServers: function() {
-		this.servers.fetch({update: true, remove: true});
+		this.servers.fetch({update: true, remove: true, success: function() {
+			$('#serverloadingbox').spin(false);
+		}});
 	}
 });

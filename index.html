@@ -6,17 +6,40 @@
 		<link href="resources/css/bootstrap.min.css" rel="stylesheet" media="screen">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link href="resources/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<style type="text/css">
+			html, body {
+    			height: 100%;
+			}
+			body {
+				margin-top: 5px;
+			}
+			.zones .icon-chevron-right {
+				opacity: .25;
+			}
+			.sidebar-outer-box {
+				position: relative;
+				height: 100%;
+			}
+			.sidebar-inner-box {
+				overflow: auto;
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				right: 0;
+				left: 0;
+			}
+		</style>
 	</head>
 	<body>
-		<div class="container">
+		<div class="container" style="height: 100%; min-height: 100%;">
 			<div class="row-fluid">
 				<div class="span12 well">
 					<h1 class="pull-right">phpDNSAdmin</h1>
 				</div>
 			</div>
-			<div class="row-fluid">
-				<div class="span3">
-					<div class="well sidebar-nav">
+			<div class="row-fluid" style="height: 76%">
+				<div class="span3 sidebar-outer-box">
+					<div class="well sidebar-nav sidebar-inner-box" id="serverloadingbox">
 						<h4>Servers</h4>
 						<div id="serverviewbox">
 						</div>
@@ -39,7 +62,7 @@
 	<!-- Templates-->
 	<!-- Template for Serverview -->
 	<script type="text/template" id="serverViewTemplate">
-		<ul class="nav nav-list" id="serverlist_<%= id %>">
+		<ul class="nav nav-list zones" id="serverlist_<%= id %>">
 		</ul>
 	</script>
 	<!-- Template for Serveritem in navbar -->
@@ -48,7 +71,7 @@
 	</script>
 	<!-- Template for zoneitem -->
 	<script type="text/template" id="zoneItemViewTemplate">
-		<a href="#"><%= name %></a>
+		<a href="#"><i class="icon-chevron-right"></i><%= name %></a>
 	</script>
 	<!-- Libs -->
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
@@ -56,6 +79,8 @@
 	<script src="resources/js/libs/underscore-min.js"></script>
 	<script src="http://documentcloud.github.com/backbone/backbone-min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
+	<script src="http://fgnass.github.com/spin.js/dist/spin.min.js"></script>
+	<script src="resources/js/libs/jquery-spinner.js"></script>
 	<!-- Config -->
 	<script src="resources/js/config.js"></script>
 	<!-- Include Models -->
@@ -70,6 +95,8 @@
 	<!-- Run -->
 	<script type="text/javascript">
 		$(document).ready(function() {
+			$('#serverloadingbox').spin('small');
+
 			serverView = new ServerView;
 			setTimeout(function() {
 				serverView.loadServers();
