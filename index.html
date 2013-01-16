@@ -17,16 +17,9 @@
 			<div class="row-fluid">
 				<div class="span3">
 					<div class="well sidebar-nav">
-						<ul class="nav nav-list">
-							<li class="nav-header">Server01</li>
-							<li class="active"><a href="#">Zone1</a></li>
-							<li><a href="#">Zone2</a></li>
-							<li><a href="#">Zone3</a></li>
-							<li class="nav-header">Server02</li>
-							<li><a href="#">Zone1</a></li>
-							<li><a href="#">Zone2</a></li>
-							<li><a href="#">Zone3</a></li>
-						</ul>
+						<h4>Servers</h4>
+						<div id="serverviewbox">
+						</div>
 					</div>
 				</div>
 				<div class="span9">
@@ -36,14 +29,52 @@
 				</div>
 			</div>
 			<div class="row-fluid">
-				<div class="span12 pull-right well">
+				<div class="span12 pull-right well well-small">
 					<a href="https://github.com/MatthiasLohr/phpDNSAdmin">
 						<h6 class="pull-right">&copy; phpDNSAdmin</h6>
 					</a>
 				</div>
 			</div>
 		</div>
+	<!-- Templates-->
+	<!-- Template for Serverview -->
+	<script type="text/template" id="serverViewTemplate">
+		<ul class="nav nav-list" id="serverlist_<%= id %>">
+		</ul>
+	</script>
+	<!-- Template for Serveritem in navbar -->
+	<script type="text/template" id="serverItemViewTemplate">
+		<%= name %>
+	</script>
+	<!-- Template for zoneitem -->
+	<script type="text/template" id="zoneItemViewTemplate">
+		<a href="#"><%= name %></a>
+	</script>
+	<!-- Libs -->
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
+	<!-- <script src="http://underscorejs.org/underscore-min.js"></script> -->
+	<script src="resources/js/libs/underscore-min.js"></script>
+	<script src="http://documentcloud.github.com/backbone/backbone-min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
+	<!-- Config -->
+	<script src="resources/js/config.js"></script>
+	<!-- Include Models -->
+	<script src="resources/js/models/server.js"></script>
+	<script src="resources/js/models/zone.js"></script>
+	<!-- Include Views -->
+	<script src="resources/js/views/serveritemview.js"></script>
+	<script src="resources/js/views/serverview.js"></script>
+	<script src="resources/js/views/zoneitemview.js"></script>
+	<script src="resources/js/views/zoneview.js"></script>
+	<script src="resources/js/views/appview.js"></script>
+	<!-- Run -->
+	<script type="text/javascript">
+		$(document).ready(function() {
+			serverView = new ServerView;
+			setTimeout(function() {
+				serverView.loadServers();
+			}, 2000);
+		});
+	</script>
 	</body>
 </html>
