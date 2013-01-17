@@ -32,32 +32,39 @@
 class MainRouter extends RequestRouter {
 
 	public function __default() {
+		header('HTTP/1.1 301 Moved Permanently');
 		header('Location: status');
-		exit;
+		return new stdClass();
 	}
 
 	public function rrtypes($type = null) {
+		$result = new stdClass();
 		if ($type === null) {
 			// list all ResourceRecord types
-			$result = new stdClass();
 			$result->rrtypes = ResourceRecord::listTypes();
-			return $result;
+			$result->success = is_array($result->rrtypes);
 		}
 		else {
-			$result = new stdClass();
 			$className = ResourceRecord::getClassByType($type);
 			if ($className !== null) {
 				$result->success = true;
 				$rrtype = new stdClass();
 				$rrtype->type = $type;
-				$rrtype->fields = call_user_func(array($className,'listFields'));
+				$rrtype->fields = array();
+				$fields = call_user_func(array($className,'listFields'));
+				foreach ($fields as $fieldName => $simpleType) {
+					$tmp = new stdClass();
+					$tmp->name = $fieldName;
+					$tmp->simpletype = $simpleType;
+					$rrtype->fields[] = $tmp;
+				}
 				$result->rrtype = $rrtype;
 			}
 			else {
 				$result->success = false;
 			}
-			return $result;
 		}
+		return $result;
 	}
 
 	public function servers($sysname = null) {
