@@ -45,6 +45,13 @@ function executeApiRequest() {
 		$mainRouter = new MainRouter();
 		return $mainRouter->trackByURL($context);
 	}
+	catch (MethodNotAllowedException $e) {
+		header('HTTP/1.0 405 Method Not Allowed');
+		$returnValue = new stdClass();
+		$returnValue->success = false;
+		$returnValue->errorMessage = $e->getMessage();
+		return $returnValue;
+	}
 	catch (NoSuchServerException $e) {
 		header('HTTP/1.0 404 Not Found');
 		$returnValue = new stdClass();

@@ -38,6 +38,8 @@ class MainRouter extends RequestRouter {
 	}
 
 	public function rrtypes($type = null) {
+		// check for valid HTTP method
+		if ($this->getRequestType() != 'GET') throw new MethodNotAllowedException('Only GET allowed on this location!');
 		$result = new stdClass();
 		if ($type === null) {
 			// list all ResourceRecord types
@@ -68,6 +70,8 @@ class MainRouter extends RequestRouter {
 	}
 
 	public function servers($sysname = null) {
+		// check for valid HTTP method
+		if ($this->getRequestType() != 'GET') throw new MethodNotAllowedException('Only GET allowed on this location!');
 		// check for login
 		$autologin = AutologinManager::getInstance();
 		if ($autologin->getUser() === null) throw new AuthenticationException('Please log in first!');
@@ -165,6 +169,8 @@ class MainRouter extends RequestRouter {
 					$result->success = true;
 				}
 				break;
+			default:
+				throw new MethodNotAllowedException('Use GET for status, POST for login!');
 		}
 		return $result;
 	}
