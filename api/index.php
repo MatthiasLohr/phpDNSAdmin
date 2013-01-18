@@ -45,6 +45,13 @@ function executeApiRequest() {
 		$mainRouter = new MainRouter();
 		return $mainRouter->trackByURL($context);
 	}
+	catch (NoSuchServerException $e) {
+		header('HTTP/1.0 404 Not Found');
+		$returnValue = new stdClass();
+		$returnValue->success = false;
+		$returnValue->errorMessage = $e->getMessage();
+		return $returnValue;
+	}
 	catch (Exception $e) {
 		header('HTTP/1.1 500 Internal Server Error');
 		$returnValue = new stdClass();

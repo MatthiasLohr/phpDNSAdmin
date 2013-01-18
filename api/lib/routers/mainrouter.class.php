@@ -69,32 +69,34 @@ class MainRouter extends RequestRouter {
 
 	public function servers($sysname = null) {
 		// check for login
-		$servers = new stdClass();
 		$autologin = AutologinManager::getInstance();
 		if ($autologin->getUser() === null) throw new AuthenticationException('Please log in first!');
 		// work request
 		$zonemanager = ZoneManager::getInstance();
+		$result = new stdClass();
+		$result->servers = array();
+		// check if we have a zone manager, if not: abort
+		if ($zonemanager === null) {
+			$result->success = false;
+			return $result;
+		}
+		$result->success = true;
+		$result->servers = array();
 		if ($sysname === null) {
 			// list all servers
 			foreach($zonemanager->listModules() as $module) {
-				$sysname = $module->sysname;
-				$server = new stdClass();
-				$server->name = $module->name;
-				$servers->$sysname = $server;
+				$tmp = new stdClass();
+				$tmp->sysname = $module->sysname;
+				$tmp->name = $module->name;
+				$result->servers[] = $tmp;
 			}
 		}
 		else {
 			$zoneModule = $zonemanager->getModuleBySysname($sysname);
-			if ($zoneModule === null) {
-				throw new NoSuchServerException('No server with this sysname found!');
-			}
-			else {
-				$serverRouter = new ServerRouter($zoneModule);
-				return $serverRouter->track($this->routingPath);
-			}
+			if ($zoneModule === null) throw new NoSuchServerException('No server with this sysname found!');
+			$serverRouter = new ServerRouter($zoneModule);
+			$result = $serverRouter->track($this->routingPath);
 		}
-		$result = new stdClass();
-		$result->servers = $servers;
 		return $result;
 	}
 
