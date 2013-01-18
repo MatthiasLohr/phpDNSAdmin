@@ -71,7 +71,8 @@ class MainRouter extends RequestRouter {
 
 	public function servers($sysname = null) {
 		// check for valid HTTP method
-		if ($this->getRequestType() != 'GET') throw new MethodNotAllowedException('Only GET allowed on this location!');
+		if ($this->endOfTracking()&&  $this->getRequestType() != 'GET')
+			throw new MethodNotAllowedException('Only GET allowed on this location!');
 		// check for login
 		$autologin = AutologinManager::getInstance();
 		if ($autologin->getUser() === null) throw new AuthenticationException('Please log in first!');
