@@ -31,9 +31,20 @@
  */
 class AuthenticationManager {
 
+	/**
+	 * @var AuthenticationManager current instance of AuthenticationManager
+	 */
 	private static $instance = null;
 
+	/**
+	 * @var array array of authentication modules
+	 */
 	private $modules = array();
+
+	/**
+	 *
+	 * @var array map of username => authentication module
+	 */
 	private $usermap = array();
 
 	/**
@@ -207,7 +218,7 @@ class AuthenticationManager {
 		$this->modules[$moduleIndex]->userSetPassword($user,$password);
 	}
 
-	
+
 }
 
 ?>

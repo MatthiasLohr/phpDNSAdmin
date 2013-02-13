@@ -2,7 +2,7 @@
 
 /*
  * This file is part of phpDNSAdmin.
- * (c) 2010 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
+ * (c) 2012 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
  *
  * phpDNSAdmin is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,34 +20,23 @@
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
- * @author Matthias Lohr <mail@matthias-lohr.net>
+ * @subpackage ResourceRecords
+ * @author Matthias Lohr <matthias@lohr.me>
  */
 
 /**
  * @package phpDNSAdmin
- * @subpackage Core
- * @author Matthias Lohr <mail@matthias-lohr.net>
+ * @subpackage ResourceRecords
+ * @author Matthias Lohr <matthias@lohr.me>
  */
-interface Views {
+class AfsdbRecord extends ResourceRecord {
 
-	/**
-	 * list defined views
-	 *
-	 * @return array array of string with view names
-	 */
-	public function listViews();
-
-	/**
-	 * Set visibility of records in views
-	 *
-	 * @param Zone $zone
-	 * @param type $recordid
-	 * @param array $views Array with viewname => boolean for visible/non visible in view
-	 * @return boolean success true/false
-	 */
-	public function recordSetViews(Zone $zone, $recordid, array $views);
-
+	public static function listFields() {
+		return array(
+			'subtype' => 'UInt16',
+			'hostname' => 'Hostname'
+		);
+	}
 }
 
 ?>

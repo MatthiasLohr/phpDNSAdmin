@@ -172,6 +172,7 @@ class PdnsPdoZone extends ZoneModule {
 		if (strlen($sortoptions) > 0) {
 			$firstcol = true;
 			$cols = explode(',',$sortoptions);
+			if (!in_array('id',$cols) && !in_array('-id',$cols)) $cols[] = 'id';
 			foreach ($cols as $col) {
 				if (substr($col,0,1) == '-') {
 					$colname = substr($col,1);

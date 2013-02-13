@@ -25,38 +25,72 @@
  */
 
 /**
+ * Configuration loader
+ *
  * @package phpDNSAdmin
  * @subpackage Core
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
 class Configuration {
 
+	/**
+	 * @var Configuration instance of last loaded configuration
+	 */
 	private static $instance = null;
 
+	/**
+	 * @var array configuration values
+	 */
 	private $config = array();
 
+	/**
+	 * Constructor
+	 *
+	 * @param array configuration values
+	 */
 	protected function __construct($configuration) {
 		$this->config = $configuration;
 	}
 
+	/**
+	 * Are we running in debug mode?
+	 *
+	 * @return boolean true/false
+	 */
 	public function debugMode() {
 		if (isset($this->config['internal']) && isset($this->config['internal']['debug'])) return $this->config['internal']['debug'];
 		return false;
 	}
 
+	/**
+	 * Return authentication module configuration
+	 *
+	 * @return array configuration values
+	 */
 	public function getAuthenticationConfig() {
 		return $this->config['authentication'];
 	}
 
+	/**
+	 * Return authorization module configuration
+	 *
+	 * @return array configuration values
+	 */
 	public function getAuthorizationConfig() {
 		return $this->config['authorization'];
 	}
 
+	/**
+	 * Return autologin module configuration
+	 *
+	 * @return array configuration values
+	 */
 	public function getAutologinConfig() {
 		return $this->config['autologin'];
 	}
 
 	/**
+	 * Return the last loaded configuration instance
 	 *
 	 * @return Configuration configuration class
 	 */
@@ -64,10 +98,20 @@ class Configuration {
 		return self::$instance;
 	}
 
+	/**
+	 * Return zone module configuration
+	 *
+	 * @return array configuration values
+	 */
 	public function getZoneConfig() {
 		return $this->config['zone'];
 	}
 
+	/**
+	 * Load configuration from file and create Configuration object instance
+	 *
+	 * @return Configuration configuration instance
+	 */
 	public static function load($filename) {
 		require($filename);
 		self::$instance = new Configuration($config);

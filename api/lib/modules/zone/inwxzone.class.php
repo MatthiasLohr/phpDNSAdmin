@@ -30,11 +30,27 @@
  */
 class InwxZone extends ZoneModule {
 
+	/**
+	 * @var string URL to INWX API
+	 */
 	private $apiServer = 'https://api.domrobot.com/xmlrpc/';
+
+	/**
+	 * @var string filename of cookie file
+	 */
 	private $cookieFile = null;
 
+	/**
+	 * @var array array of zones
+	 */
 	private $zones = null;
 
+	/**
+	 * Constructor
+	 *
+	 * @param array $config configuration values
+	 * @throws ModuleConfigException
+	 */
 	protected function __construct($config) {
 		// prepare module
 		$this->cookieFile = tempnam('/tmp','idr');
@@ -55,6 +71,13 @@ class InwxZone extends ZoneModule {
 		unlink($this->cookieFile);
 	}
 
+	/**
+	 * Do a remote call on API
+	 *
+	 * @param string $object remote API object
+	 * @param array $parameters API parameters
+	 * @return object call response
+	 */
 	private function callRemote($object, array $parameters = array()) {
 		$request = xmlrpc_encode_request($object, $parameters, array(
 			'encoding'  => 'UTF-8',
@@ -222,7 +245,7 @@ class InwxZone extends ZoneModule {
 		$result = $this->callRemote('nameserver.create',array(
 			'domain' => $zone->getName(),'type' => 'MASTER',
 			'ns' => array('ns1.'.$zone->getName(),'ns2.'.$zone->getName())
-			
+
 		));
 		if ($result['code'] == 1000) return true;
 		return false;

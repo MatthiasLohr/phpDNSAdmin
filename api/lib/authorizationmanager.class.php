@@ -31,8 +31,14 @@
  */
 class AuthorizationManager {
 
+	/**
+	 * @var AuthorizationManager current instance of AuthorizationManager
+	 */
 	private static $instance = null;
 
+	/**
+	 * @var array array of authorization modules
+	 */
 	private $modules = array();
 
 	/**
