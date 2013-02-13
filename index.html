@@ -28,6 +28,9 @@
 				right: 0;
 				left: 0;
 			}
+            .accordion-heading {
+                background-color: #f2f2f2;
+            }
 		</style>
 	</head>
 	<body>
@@ -78,19 +81,25 @@
 	<script type="text/template" id="serverItemViewTemplate">
         <div class="accordion-group">
             <div class="accordion-heading">
-                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accori" href="#collapse_<%= sysname %>">
+                <span class="accordion-toggle" data-toggle="collapse" data-parent="#accori" href="#collapse_<%= sysname %>">
                     <%= name %>
-                </a>
+                </span>
             </div>
             <div id="collapse_<%= sysname %>" class="accordion-body collapse">
                 <div class="accordion-inner">
-                    Zone 1
+                    Zone 1<br />
                 </div>
             </div>
         </div>
 	</script>
     <script type="text/template" id="noServerItemViewTemplate">
-		No Servers
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <span class="accordion-toggle">
+                    No Servers
+                </span>
+            </div>
+		</div>
 	</script>
 	<!-- Libs -->
 	<script src="resources/js/libs/jquery-1.9.1.min.js"></script>
@@ -125,6 +134,7 @@
                     collection: options.serverModel
                 });
                 DNSApp.serverRegion.show(serverView);
+                // Just for Debug
                 setTimeout(function() {
 				    serverView.loadServers();
                 }, 2000);
