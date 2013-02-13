@@ -1,14 +1,14 @@
 // Server Model
 var Server = Backbone.Model.extend({
 	defaults: {
-		id: null,
+		sysname: "",
 		name: "",
 		zones: null
-	},
-	fetch: function() {
+	}/*,
+	fetch: function () {
 		this.zones = new Zones();
 		this.zones.parentUrl = this.url();
-	}
+	}*/
 });
 
 // Collection for Servers
@@ -17,6 +17,9 @@ var Servers = Backbone.Collection.extend({
 	model: Server,
 
 	parse: function(resp) {
-		return resp.servers;
+        if(resp.success) {
+            return resp.servers;
+        }
+        Backbone.Events.trigger('error', Error.createError(resp.msg, resp.error, resp.location));
 	}
 });

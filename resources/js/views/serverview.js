@@ -1,3 +1,30 @@
+var ServerItemView = Backbone.Marionette.ItemView.extend({
+    template: "#serverItemViewTemplate"
+});
+
+var NoServerItemView = Backbone.Marionette.ItemView.extend({
+    template: "#noServerItemViewTemplate"
+});
+
+var ServerView = Backbone.Marionette.CollectionView.extend({
+    id: 'accori',
+    className: 'accordion',
+    itemView: ServerItemView,
+    
+    emptyView: NoServerItemView,
+    
+    loadServers: function() {
+		this.collection.fetch({
+            success: function(model, response, options) {
+                /*
+                 * Do maybe something
+                 */
+            }
+        });
+	}
+});
+
+/*
 var ServerView = Backbone.View.extend({
 
 	template: _.template($('#serverViewTemplate').html()),
@@ -22,3 +49,4 @@ var ServerView = Backbone.View.extend({
 		}});
 	}
 });
+*/

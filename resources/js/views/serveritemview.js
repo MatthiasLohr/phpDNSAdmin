@@ -1,6 +1,12 @@
+var ServerItemView = Backbone.Marionette.ItemView.extend({
+    tagName: "li",
+    template: "#serverItemViewTemplate"
+});
+
 /*
 	Item which represent a Server Model
 */
+/*
 var ServerItemView = Backbone.View.extend({
 
 	tagName: 'li',
@@ -16,3 +22,4 @@ var ServerItemView = Backbone.View.extend({
 		return this;
 	}
 });
+*/
