@@ -129,6 +129,22 @@ abstract class RequestRouter {
 		}
 	}
 
+	/**
+	 *
+	 * @param string $path
+	 */
+	public final function trackByURL($path) {
+		// shortcut for empty paths
+		if ($path == '') return $this->track (array());
+		// trim trailing slashes
+		if (substr($path, -1) == '/') {
+			$path = substr($path, 0, -1);
+		}
+		// run router
+		$explodedPath = explode('/', $path);
+		return $this->track($explodedPath);
+	}
+
 }
 
 ?>

@@ -2,7 +2,7 @@
 
 /*
  * This file is part of phpDNSAdmin.
- * (c) 2010 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
+ * (c) 2013 Matthias Lohr - http://phpdnsadmin.sourceforge.net/
  *
  * phpDNSAdmin is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,72 +22,55 @@ define('API_ROOT',dirname(__FILE__));
 require_once(API_ROOT.'/lib/autoload.inc.php');
 error_reporting(E_ALL | E_NOTICE);
 
-// load config
-if (file_exists(API_ROOT.'/config.inc.php')) {
-	Configuration::load(API_ROOT.'/config.inc.php');
-}
-else {
-	die('config.inc.php not found!');
-}
-
-$configuration = Configuration::getInstance();
-
-try {
-	// initialize module managers
-	AuthenticationManager::initialize($configuration->getAuthenticationConfig());
-	AuthorizationManager::initialize($configuration->getAuthorizationConfig());
-	AutologinManager::initialize($configuration->getAutologinConfig());
-	ZoneManager::initialize($configuration->getZoneConfig());
-	// prepare path and start script execution
-	$router = new MainRouter();
-	if (isset($_GET['pda_request_path']) && strlen($_GET['pda_request_path']) > 0) {
-		if (substr($_GET['pda_request_path'],-1) == '/') {
-			$_GET['pda_request_path'] = substr($_GET['pda_request_path'],0,-1);
+// basic operation function
+function executeApiRequest() {
+	try {
+		// load configuration
+		if (!file_exists(API_ROOT.'/config.inc.php')) throw new Exception('No configuration file found!');
+		Configuration::load(API_ROOT.'/config.inc.php');
+		$configuration = Configuration::getInstance();
+		// initialize module managers
+		AuthenticationManager::initialize($configuration->getAuthenticationConfig());
+		AuthorizationManager::initialize($configuration->getAuthorizationConfig());
+		AutologinManager::initialize($configuration->getAutologinConfig());
+		ZoneManager::initialize($configuration->getZoneConfig());
+		// determine context
+		if (isset($_GET['pda_request_path'])) {
+			$context = $_GET['pda_request_path'];
 		}
-		$pdaPath = explode('/',$_GET['pda_request_path']);
+		else {
+			$context = '';
+		}
+		// start command execution
+		$mainRouter = new MainRouter();
+		return $mainRouter->trackByURL($context);
 	}
-	else {
-		$pdaPath = array();
+	catch (MethodNotAllowedException $e) {
+		header('HTTP/1.0 405 Method Not Allowed');
+		$returnValue = new stdClass();
+		$returnValue->success = false;
+		$returnValue->errorMessage = $e->getMessage();
+		return $returnValue;
 	}
-	$result = $router->track($pdaPath);
-	header('Content-type: text/plain');
-	if (!isset($result->success)) {
-		$result->success = true;
+	catch (NoSuchServerException $e) {
+		header('HTTP/1.0 404 Not Found');
+		$returnValue = new stdClass();
+		$returnValue->success = false;
+		$returnValue->errorMessage = $e->getMessage();
+		return $returnValue;
 	}
-	echo(json_encode($result));
+	catch (Exception $e) {
+		header('HTTP/1.1 500 Internal Server Error');
+		$returnValue = new stdClass();
+		$returnValue->success = false;
+		$returnValue->errorMessage = $e->getMessage();
+		return $returnValue;
+	}
 }
-catch (ModuleConfigException $e) {
-	$result = new stdClass();
-	$result->success = false;
-	$result->error = get_class($e);
-	$result->location = $e->getFile().':'.$e->getLine();
-	if ($configuration->debugMode()) $result->stacktrace = $e->getTrace();
-	$result->message = $e->getMessage();
-	echo(json_encode($result));
-}
-catch (ModuleRuntimeException $e) {
-	$result = new stdClass();
-	$result->success = false;
-	$result->error = get_class($e);
-	$result->location = $e->getFile().':'.$e->getLine();
-	if ($configuration->debugMode()) $result->stacktrace = $e->getTrace();
-	$result->message = $e->getMessage();
-	echo(json_encode($result));
-}
-catch (RequestRoutingException $e) {
-	$result = new stdClass();
-	$result->success = false;
-	$result->error = 'Routing error! '.$e->getMessage();
-	echo(json_encode($result));
-}
-catch (Exception $e) {
-	$result = new stdClass();
-	$result->success = false;
-	$result->error = get_class($e);
-	$result->location = $e->getFile().':'.$e->getLine();
-	if ($configuration->debugMode()) $result->stacktrace = $e->getTrace();
-	$result->message = $e->getMessage();
-	echo(json_encode($result));
-}
+
+// call main function
+header('Content-type: text/plain');
+$output = executeApiRequest();
+echo(json_encode($output));
 
 ?>
