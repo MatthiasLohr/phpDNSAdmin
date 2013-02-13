@@ -6,3 +6,4 @@
 api/config.inc.php
 api/doc/*
 nbproject/
+.DS_Store
