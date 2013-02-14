@@ -37,19 +37,7 @@
 		<div class="container" style="height: 100%; min-height: 100%;">
 			<div class="row-fluid">
 				<div class="span12 well">
-                    <div class="controls controls-row">
-                        <div class="span4">
-                            <h1>phpDNSAdmin</h1>
-                        </div>
-                        <div class="span8">
-                            <form class="form-inline pull-right" style="margin: auto;">
-                                <input type="text" class="input-medium" placeholder="Username">
-                                <input type="password" class="input-medium" placeholder="Password">
-                                <button type="button" class="btn">Login</button>
-                            </form>
-                        </div>
-                    </div>
-					
+                    <h1 class="pull-right">phpDNSAdmin</h1>					
 				</div>
 			</div>
 			<div class="row-fluid" style="height: 76%;">
@@ -79,27 +67,23 @@
     <script type="text/template" id="serverViewTemplate">
 	</script>
 	<script type="text/template" id="serverItemViewTemplate">
-        <div class="accordion-group">
-            <div class="accordion-heading">
-                <span class="accordion-toggle" data-toggle="collapse" data-parent="#accori" href="#collapse_<%= sysname %>">
-                    <%= name %>
-                </span>
-            </div>
-            <div id="collapse_<%= sysname %>" class="accordion-body collapse">
-                <div class="accordion-inner">
-                    Zone 1<br />
-                </div>
+        <div class="accordion-heading">
+            <span class="accordion-toggle" data-toggle="collapse" data-parent="#accori" href="#collapse_<%= sysname %>">
+                <%= name %>
+            </span>
+        </div>
+        <div id="collapse_<%= sysname %>" class="accordion-body collapse">
+            <div class="accordion-inner">
+                Zone 1<br />
             </div>
         </div>
 	</script>
     <script type="text/template" id="noServerItemViewTemplate">
-        <div class="accordion-group">
-            <div class="accordion-heading">
-                <span class="accordion-toggle">
-                    No Servers
-                </span>
-            </div>
-		</div>
+        <div class="accordion-heading">
+            <span class="accordion-toggle" data-parent="#accori">
+                No Servers
+            </span>
+        </div>
 	</script>
 	<!-- Libs -->
 	<script src="resources/js/libs/jquery-1.9.1.min.js"></script>

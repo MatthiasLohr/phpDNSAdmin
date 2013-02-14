@@ -20,6 +20,6 @@ var Servers = Backbone.Collection.extend({
         if(resp.success) {
             return resp.servers;
         }
-        Backbone.Events.trigger('error', Error.createError(resp.msg, resp.error, resp.location));
+        DNSApp.vent.trigger('error', resp.errorMessage);
 	}
 });

@@ -1,24 +1,31 @@
 var ServerItemView = Backbone.Marionette.ItemView.extend({
-    template: "#serverItemViewTemplate"
+    template: "#serverItemViewTemplate",
+    className: 'accordion-group'
 });
 
 var NoServerItemView = Backbone.Marionette.ItemView.extend({
-    template: "#noServerItemViewTemplate"
+    template: "#noServerItemViewTemplate",
+    className: 'accordion-group'
 });
 
 var ServerView = Backbone.Marionette.CollectionView.extend({
-    id: 'accori',
+    id: 'accori', // needed for accordion function
     className: 'accordion',
     itemView: ServerItemView,
     
     emptyView: NoServerItemView,
     
     loadServers: function() {
+        // This should be done in controller, later
 		this.collection.fetch({
             success: function(model, response, options) {
                 /*
                  * Do maybe something
                  */
+            },
+            error: function(model, xhr, options) {
+                console.log('xhr', xhr);
+                console.log('options', options);
             }
         });
 	}
