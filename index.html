@@ -62,6 +62,33 @@
 				</div>
 			</div>
 		</div>
+    <!-- Modals -->
+        <div id="loginModal" class="modal fade" data-keyboard="false" data-backdrop="static" data-show="false" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true">
+            <div class="modal-header">
+                <h3 id="loginModalLabel">Login</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="control-group">
+                        <label class="control-label" for="inputUsername">Username</label>
+                        <div class="controls">
+                            <input type="text" id="inputUsername" placeholder="Username">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="inputPassword">Password</label>
+                        <div class="controls">
+                            <input type="password" id="inputPassword" placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls pull-right">
+                            <button class="btn btn-primary">Login</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 	<!-- Templates-->
 	<!-- Template for Serverview -->
     <script type="text/template" id="serverViewTemplate">
@@ -101,7 +128,6 @@
 	<script src="resources/js/models/server.js"></script>
 	<script src="resources/js/models/zone.js"></script>
 	<!-- Include Views -->
-	<script src="resources/js/views/serveritemview.js"></script>
 	<script src="resources/js/views/serverview.js"></script>
 	<script src="resources/js/views/zoneitemview.js"></script>
 	<script src="resources/js/views/zoneview.js"></script>
@@ -147,6 +173,8 @@
             };
             
             DNSApp.start(options);
+            
+            //$('#loginModal').modal('show');
             
             /*
 			$('#serverloadingbox').spin('small');
