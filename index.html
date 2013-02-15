@@ -62,33 +62,6 @@
 				</div>
 			</div>
 		</div>
-    <!-- Modals -->
-        <div id="loginModal" class="modal fade" data-keyboard="false" data-backdrop="static" data-show="false" tabindex="-1" role="dialog" aria-labelledby="loginModalLabel" aria-hidden="true">
-            <div class="modal-header">
-                <h3 id="loginModalLabel">Login</h3>
-            </div>
-            <div class="modal-body">
-                <form class="form-horizontal">
-                    <div class="control-group">
-                        <label class="control-label" for="inputUsername">Username</label>
-                        <div class="controls">
-                            <input type="text" id="inputUsername" placeholder="Username">
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label" for="inputPassword">Password</label>
-                        <div class="controls">
-                            <input type="password" id="inputPassword" placeholder="Password">
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <div class="controls pull-right">
-                            <button class="btn btn-primary">Login</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
 	<!-- Templates-->
 	<!-- Template for Serverview -->
     <script type="text/template" id="serverViewTemplate">
@@ -112,9 +85,26 @@
             </span>
         </div>
 	</script>
+    <script type="text/template" id="loginViewTemplate">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label" for="username">Username</label>
+                <div class="controls">
+                    <input type="text" name="username" id="username" placeholder="Username">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="password">Password</label>
+                <div class="controls">
+                    <input type="password" name="password" id="password" placeholder="Password">
+                </div>
+            </div>
+        </form>
+    </script>
 	<!-- Libs -->
 	<script src="resources/js/libs/jquery-1.9.1.min.js"></script>
 	<!-- <script src="http://underscorejs.org/underscore-min.js"></script> -->
+    <script src="resources/js/libs/jquery.validate.min.js"></script>
 	<script src="resources/js/libs/underscore-min.js"></script>
 	<script src="resources/js/libs/backbone-min.js"></script>
 	<script src="resources/js/libs/bootstrap.min.js"></script>
@@ -122,21 +112,32 @@
 	<script src="resources/js/libs/jquery-spinner.js"></script>
     <script src="resources/js/libs/json2.min.js"></script>
     <script src="resources/js/libs/backbone.marionette.min.js"></script>
+    <script src="resources/js/libs/backbone.bootstrap-modal.js"></script>
 	<!-- Config -->
 	<script src="resources/js/config.js"></script>
 	<!-- Include Models -->
+    <script src="resources/js/models/authentication.js"></script>
 	<script src="resources/js/models/server.js"></script>
 	<script src="resources/js/models/zone.js"></script>
 	<!-- Include Views -->
+    <script src="resources/js/views/loginview.js"></script>
 	<script src="resources/js/views/serverview.js"></script>
 	<script src="resources/js/views/zoneitemview.js"></script>
 	<script src="resources/js/views/zoneview.js"></script>
 	<script src="resources/js/views/appview.js"></script>
+    <!-- Include AppRouter -->
+    <script src="resources/js/router/mainrouter.js"></script>
 	<!-- Run -->
 	<script type="text/javascript">
 		$(document).ready(function() {
             // Create App
             DNSApp = new Backbone.Marionette.Application();
+            
+            // Add Regions
+            DNSApp.addRegions({
+                serverRegion: "#serverviewbox",
+                loginRegion: "#loginModal"
+            });
             
             // Initializer which creates all Views
             DNSApp.addInitializer(function(options){                
@@ -150,16 +151,11 @@
                 }, 2000);
                 console.log('init Views');
             });
-
-            // Add Regions
-            DNSApp.addRegions({
-                serverRegion: "#serverviewbox"
-            });
             
             // Initializer which create Router and start it
             DNSApp.addInitializer(function(options){
-                
-                
+                new MainRouter();
+                Backbone.history.start()
                 console.log('init Routers');
             });
             
@@ -173,23 +169,6 @@
             };
             
             DNSApp.start(options);
-            
-            //$('#loginModal').modal('show');
-            
-            /*
-			$('#serverloadingbox').spin('small');
-
-			serverView = new ServerView;
-			setTimeout(function() {
-				serverView.loadServers();
-			}, 2000);
-            
-            var obj = {};
-            _.extend(obj, Backbone.Events);
-            obj.on('error', function(error) {
-                console.log('error', error);
-            });
-            */
 		});
 	</script>
 	</body>
