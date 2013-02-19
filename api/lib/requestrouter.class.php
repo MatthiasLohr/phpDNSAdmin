@@ -29,7 +29,8 @@
  * @subpackage Core
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-abstract class RequestRouter {
+abstract class RequestRouter
+{
 
 	/** @var array remaining routing path */
 	protected $routingPath = array();
@@ -39,7 +40,8 @@ abstract class RequestRouter {
 	 *
 	 * @return null
 	 */
-	public function __default() {
+	public function __default()
+	{
 		return null;
 	}
 
@@ -48,7 +50,8 @@ abstract class RequestRouter {
 	 *
 	 * @return boolean true: end of tracking
 	 */
-	protected function endOfTracking() {
+	protected function endOfTracking()
+	{
 		return (count($this->routingPath) == 0);
 	}
 
@@ -58,8 +61,9 @@ abstract class RequestRouter {
 	 * @param string $type GET, POST, PUT or DELETE
 	 * @return boolean success true/false
 	 */
-	public static function forceRequestType($type) {
-		if (in_array($type,array('GET','POST','PUT','DELETE'))) {
+	public static function forceRequestType($type)
+	{
+		if (in_array($type, array('GET', 'POST', 'PUT', 'DELETE'))) {
 			$_SERVER['REQUEST_METHOD'] = $type;
 			return true;
 		}
@@ -71,13 +75,23 @@ abstract class RequestRouter {
 	 *
 	 * @return mixed
 	 */
-	public static function getRequestData() {
+	public static function getRequestData()
+	{
 		switch ($_SERVER['REQUEST_METHOD']) {
 			case 'POST':
 			case 'PUT':
 			case 'DELETE':
 				$str = file_get_contents('php://input');
-				parse_str($str,$data);
+				$data = null;
+				if (preg_match('/json$/i', $_SERVER['CONTENT_TYPE'])) {
+					/* Request was sent as JSON Object
+					 * Decode JSON Object to associative array
+					 */
+					$data = json_decode($str, true);
+				} else {
+					// Fallback with old behavior
+					parse_str($str, $data);
+				}
 				return $data;
 			default:
 				return null;
@@ -89,7 +103,8 @@ abstract class RequestRouter {
 	 * @return string
 	 * @see forceRequestType
 	 */
-	public static function getRequestType() {
+	public static function getRequestType()
+	{
 		return $_SERVER['REQUEST_METHOD'];
 	}
 
@@ -100,7 +115,8 @@ abstract class RequestRouter {
 	 * @return something
 	 * @throws RequestRoutingException if a method cannot be called
 	 */
-	public final function track(array $path) {
+	public final function track(array $path)
+	{
 		if (count($path) == 0) return $this->__default();
 		$className = get_class($this);
 		$routerReflector = new ReflectionClass($className);
@@ -109,23 +125,20 @@ abstract class RequestRouter {
 			if (!$method->isAbstract() && !$method->isConstructor() && !$method->isDestructor() && $method->isPublic() && !$method->isStatic()) {
 				$paramCount = $method->getNumberOfParameters();
 				if ($paramCount > 0) {
-					$params = array_slice($path,1,$paramCount);
+					$params = array_slice($path, 1, $paramCount);
 					if (count($params) < $method->getNumberOfRequiredParameters()) throw new RequestRoutingException(
-						'Not enough parameters for '.$className.'->'.$method->getName().'()!'
+						'Not enough parameters for ' . $className . '->' . $method->getName() . '()!'
 					);
-				}
-				else {
+				} else {
 					$params = array();
 				}
-				$this->routingPath = array_slice($path,1+$paramCount);
-				return $method->invokeArgs($this,$params);
+				$this->routingPath = array_slice($path, 1 + $paramCount);
+				return $method->invokeArgs($this, $params);
+			} else {
+				throw new RequestRoutingException('method ' . $path[0] . ' is not eligible for routing');
 			}
-			else {
-				throw new RequestRoutingException('method '.$path[0].' is not eligible for routing');
-			}
-		}
-		else {
-			throw new RequestRoutingException('class '.$className.' has no method "'.$path[0].'"');
+		} else {
+			throw new RequestRoutingException('class ' . $className . ' has no method "' . $path[0] . '"');
 		}
 	}
 
@@ -133,9 +146,10 @@ abstract class RequestRouter {
 	 *
 	 * @param string $path
 	 */
-	public final function trackByURL($path) {
+	public final function trackByURL($path)
+	{
 		// shortcut for empty paths
-		if ($path == '') return $this->track (array());
+		if ($path == '') return $this->track(array());
 		// trim trailing slashes
 		if (substr($path, -1) == '/') {
 			$path = substr($path, 0, -1);
