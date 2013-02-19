@@ -15,8 +15,7 @@ var MainController = {
     },
     
     showLoginAction: function() {
-        var auth = new Authentication();
-        var loginView = new LoginView({model: auth});
+        var loginView = new LoginView();
         var modal = new Backbone.BootstrapModal({
             content: loginView,
             title: 'Login',
@@ -32,6 +31,18 @@ var MainController = {
                 $btn.attr('disabled', true);
                 $btn.text('Loading...');
                 $btn.addClass('disabled');
+                
+                var auth = new Authentication({
+                    username: modal.$el.find('#username').val(),
+                    password: modal.$el.find('#password').val()
+                });
+                
+                // Login
+                auth.save({
+                    success: function(model, response, options) {
+                        console.log('r', response);
+                    }
+                });
             }
             modal.preventClose();
         });

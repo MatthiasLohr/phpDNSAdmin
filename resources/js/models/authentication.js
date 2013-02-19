@@ -8,5 +8,13 @@ var Authentication = Backbone.Model.extend({
     
     isLoggedIn: function() {
         return this.loggedIn;
-    }
+    },
+    
+    parse: function (response) {
+        return {
+            loggedIn: response.loggedIn,
+            username: response.username,
+            password: null
+        };
+    },
 });

@@ -69,7 +69,7 @@ function executeApiRequest() {
 }
 
 // call main function
-header('Content-type: text/plain');
+header('Content-type: application/json');
 $output = executeApiRequest();
 echo(json_encode($output));
 
