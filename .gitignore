@@ -3,7 +3,9 @@
 .htpasswd
 .project
 .settings
+.idea/*
 api/config.inc.php
 api/doc/*
 nbproject/
 .DS_Store
+*.iml
