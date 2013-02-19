@@ -76,8 +76,17 @@ abstract class RequestRouter {
 			case 'POST':
 			case 'PUT':
 			case 'DELETE':
-				$str = file_get_contents('php://input');
-				parse_str($str,$data);
+                $str = file_get_contents('php://input');
+                $data = null;
+                if(preg_match('/json$/i', $_SERVER['CONTENT_TYPE'])) {
+                    /* Request was sent as JSON Object
+                     * Decode JSON Object to associative array
+                     */
+                    $data = json_decode($str, true);
+                } else {
+                    // Fallback with old behavior
+				    parse_str($str,$data);
+                }
 				return $data;
 			default:
 				return null;
