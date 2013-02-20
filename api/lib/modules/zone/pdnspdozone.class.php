@@ -44,8 +44,7 @@ class PdnsPdoZone extends ZoneModule {
 	protected function __construct($config) {
 		try {
 			$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
-		}
-		catch (PDOException $e) {
+		} catch (PDOException $e) {
 			$config['pdo_password'] = 'xxxxxx';
 			throw new ModuleConfigException('Could not connect to database!');
 		}
@@ -58,7 +57,7 @@ class PdnsPdoZone extends ZoneModule {
 		}
 
 		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
-			$this->db->query('SET search_path TO '.$this->db->quote($config['search_path']));
+			$this->db->query('SET search_path TO ' . $this->db->quote($config['search_path']));
 		}
 
 		$this->listZones();
@@ -72,7 +71,7 @@ class PdnsPdoZone extends ZoneModule {
 			$query .= ' AND id = ' . $this->db->quote($filter['id']);
 		}
 		if (isset($filter['name'])) {
-			$query .= ' AND name = ' . $this->db->quote($filter['name'].'.'.$zone->getName());
+			$query .= ' AND name = ' . $this->db->quote($filter['name'] . '.' . $zone->getName());
 		}
 		if (isset($filter['type'])) {
 			$query .= ' AND type = ' . $this->db->quote($filter['type']);
@@ -94,7 +93,7 @@ class PdnsPdoZone extends ZoneModule {
 
 	public function getFeatures() {
 		return array(
-			'dnssec' => true,
+			'dnssec'  => true,
 			'rrtypes' => array(
 				'A', 'AAAA', 'AFSDB', 'CERT', 'CNAME', 'DNSKEY', 'DS', 'HINFO', 'KEY', 'LOC',
 				'MX', 'NAPTR', 'NS', 'NSEC', 'NSEC3', 'PTR', 'RP', 'RRSIG', 'SOA', 'SPF', 'SSHFP',
@@ -112,7 +111,8 @@ class PdnsPdoZone extends ZoneModule {
 		$tmp = $this->listRecordsByFilter($zone, array('id' => $recordid));
 		if (isset($tmp[$recordid])) {
 			return $tmp[$recordid];
-		} else {
+		}
+		else {
 			return null;
 		}
 	}
@@ -120,7 +120,8 @@ class PdnsPdoZone extends ZoneModule {
 	private function hostnameLong2Short(Zone $zone, $hostname) {
 		if ($hostname == $zone->getName()) {
 			return '@';
-		} else {
+		}
+		else {
 			return substr($hostname, 0, -(strlen($zone->getName()) + 1));
 		}
 	}
@@ -128,7 +129,8 @@ class PdnsPdoZone extends ZoneModule {
 	private function hostnameShort2Long(Zone $zone, $hostname) {
 		if ($hostname == '@') {
 			return $zone->getName();
-		} else {
+		}
+		else {
 			return $hostname . '.' . $zone->getName();
 		}
 	}
@@ -156,7 +158,7 @@ class PdnsPdoZone extends ZoneModule {
 				$query .= ' AND name = ' . $this->db->quote($zone->getName());
 			}
 			else {
-				$query .= ' AND name = ' . $this->db->quote($filter['name'].'.'.$zone->getName());
+				$query .= ' AND name = ' . $this->db->quote($filter['name'] . '.' . $zone->getName());
 			}
 		}
 		if (isset($filter['type'])) {
@@ -171,30 +173,30 @@ class PdnsPdoZone extends ZoneModule {
 		// sort options
 		if (strlen($sortoptions) > 0) {
 			$firstcol = true;
-			$cols = explode(',',$sortoptions);
-			if (!in_array('id',$cols) && !in_array('-id',$cols)) $cols[] = 'id';
+			$cols = explode(',', $sortoptions);
+			if (!in_array('id', $cols) && !in_array('-id', $cols)) $cols[] = 'id';
 			foreach ($cols as $col) {
-				if (substr($col,0,1) == '-') {
-					$colname = substr($col,1);
+				if (substr($col, 0, 1) == '-') {
+					$colname = substr($col, 1);
 					$order = 'DESC';
 				}
 				else {
 					$colname = $col;
 					$order = 'ASC';
 				}
-				if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
+				if (in_array($colname, array('id', 'name', 'type', 'content', 'ttl', 'priority'))) {
 					if ($firstcol) {
 						$firstcol = false;
-						$query .= ' ORDER BY '.$colname.' '.$order;
+						$query .= ' ORDER BY ' . $colname . ' ' . $order;
 					}
 					else {
-						$query .= ','.$colname.' '.$order;
+						$query .= ',' . $colname . ' ' . $order;
 					}
 				}
 			}
 		}
 		// limit/offset
-		if($limit > 0) {
+		if ($limit > 0) {
 			$query .= ' LIMIT ' . intval($limit) . ' OFFSET ' . intval($offset);
 		}
 		// execute query
@@ -231,21 +233,21 @@ class PdnsPdoZone extends ZoneModule {
 			$priority = $record->getField('priority');
 			$res = $this->db->query(
 				'INSERT INTO ' . $this->tablePrefix . 'records (domain_id,name,type,content,ttl,prio) VALUES ('
-				. $this->db->quote($domainid) . ','
-				. $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. $this->db->quote($record->getType()) . ','
-				. $this->db->quote(strval($record)) . ','
-				. $this->db->quote($record->getTTL()) . ','
-				. $this->db->quote($priority) . ')'
+					. $this->db->quote($domainid) . ','
+					. $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
+					. $this->db->quote($record->getType()) . ','
+					. $this->db->quote(strval($record)) . ','
+					. $this->db->quote($record->getTTL()) . ','
+					. $this->db->quote($priority) . ')'
 			);
 		} catch (NoSuchFieldException $e) {
 			$res = $this->db->query(
 				'INSERT INTO ' . $this->tablePrefix . 'records (domain_id,name,type,content,ttl) VALUES ('
-				. $this->db->quote($domainid) . ','
-				. $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. $this->db->quote($record->getType()) . ','
-				. $this->db->quote(strval($record)) . ','
-				. $this->db->quote($record->getTTL()) . ')'
+					. $this->db->quote($domainid) . ','
+					. $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
+					. $this->db->quote($record->getType()) . ','
+					. $this->db->quote(strval($record)) . ','
+					. $this->db->quote($record->getTTL()) . ')'
 			);
 		}
 		if ($res->rowCount() > 0) {
@@ -274,23 +276,23 @@ class PdnsPdoZone extends ZoneModule {
 			$priority = $record->getField('priority');
 			$stm = $this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
-				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. ' type = ' . $this->db->quote($record->getType()) . ','
-				. ' content = ' . $this->db->quote(strval($record)) . ','
-				. ' ttl = ' . $this->db->quote($record->getTTL()) . ','
-				. ' prio = ' . $this->db->quote($priority)
-				. ' WHERE id = ' . $this->db->quote($recordid)
-				. ' AND domain_id = ' . $domainid
+					. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
+					. ' type = ' . $this->db->quote($record->getType()) . ','
+					. ' content = ' . $this->db->quote(strval($record)) . ','
+					. ' ttl = ' . $this->db->quote($record->getTTL()) . ','
+					. ' prio = ' . $this->db->quote($priority)
+					. ' WHERE id = ' . $this->db->quote($recordid)
+					. ' AND domain_id = ' . $domainid
 			);
 		} catch (NoSuchFieldException $e) {
 			$stm = $this->db->query(
 				'UPDATE ' . $this->tablePrefix . 'records SET'
-				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. ' type = ' . $this->db->quote($record->getType()) . ','
-				. ' content = ' . $this->db->quote(strval($record)) . ','
-				. ' ttl = ' . $this->db->quote($record->getTTL())
-				. ' WHERE id = ' . $this->db->quote($recordid)
-				. ' AND domain_id = ' . $domainid
+					. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
+					. ' type = ' . $this->db->quote($record->getType()) . ','
+					. ' content = ' . $this->db->quote(strval($record)) . ','
+					. ' ttl = ' . $this->db->quote($record->getTTL())
+					. ' WHERE id = ' . $this->db->quote($recordid)
+					. ' AND domain_id = ' . $domainid
 			);
 		}
 		return ($stm !== false && $stm->rowCount() > 0);
@@ -298,7 +300,7 @@ class PdnsPdoZone extends ZoneModule {
 
 	public function zoneCreate(Zone $zone) {
 		if ($this->zoneExists($zone))
-			throw new ZoneExistsException('Zone \''.$zone->getName().'\' already exists.!');
+			throw new ZoneExistsException('Zone \'' . $zone->getName() . '\' already exists.!');
 		$stm = $this->db->query('INSERT INTO ' . $this->tablePrefix . 'domains (name,last_check,type,notified_serial) VALUES (' . $this->db->quote($zone->getName()) . ',0,\'MASTER\',0)');
 		return ($stm->rowCount() > 0);
 	}

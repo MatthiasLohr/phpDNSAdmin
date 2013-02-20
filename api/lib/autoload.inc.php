@@ -25,21 +25,21 @@
  */
 
 /**
- *	Function for load files containing classes
+ *    Function for load files containing classes
  *
  * @param string $className
  */
 function pdaAutoload($className) {
 	$className = strtolower($className);
-	if (substr($className,-9) == 'exception') {
-		includeIfExists(API_ROOT.'/lib/'.substr($className,0,-9).'.exception.php');
+	if (substr($className, -9) == 'exception') {
+		includeIfExists(API_ROOT . '/lib/' . substr($className, 0, -9) . '.exception.php');
 	}
 	else {
-		if (substr($className,-4) == 'zone') includeIfExists(API_ROOT.'/lib/modules/zone/'.$className.'.class.php');
-		includeIfExists(API_ROOT.'/lib/routers/'.$className.'.class.php');
-		includeIfExists(API_ROOT.'/lib/rrtypes/'.$className.'.class.php');
-		includeIfExists(API_ROOT.'/lib/simpletypes/'.$className.'.class.php');
-		includeIfExists(API_ROOT.'/lib/'.$className.'.class.php');
+		if (substr($className, -4) == 'zone') includeIfExists(API_ROOT . '/lib/modules/zone/' . $className . '.class.php');
+		includeIfExists(API_ROOT . '/lib/routers/' . $className . '.class.php');
+		includeIfExists(API_ROOT . '/lib/rrtypes/' . $className . '.class.php');
+		includeIfExists(API_ROOT . '/lib/simpletypes/' . $className . '.class.php');
+		includeIfExists(API_ROOT . '/lib/' . $className . '.class.php');
 	}
 }
 
@@ -50,15 +50,15 @@ function pdaAutoload($className) {
  * @return boolean true if found, false otherwise
  */
 function includeIfExists($filename) {
-		if (file_exists($filename)) {
-			return include($filename);
-		}
-		else {
-			return false;
-		}
+	if (file_exists($filename)) {
+		return include($filename);
 	}
+	else {
+		return false;
+	}
+}
 
 // register class autoloader
-spl_autoload_register('pdaAutoload',true);
+spl_autoload_register('pdaAutoload', true);
 
 ?>

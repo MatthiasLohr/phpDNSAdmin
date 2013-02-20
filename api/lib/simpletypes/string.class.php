@@ -29,13 +29,13 @@
  */
 class String extends SimpleType {
 
-  public function isValidValue($string) {
-    return true;
-  }
+	public function isValidValue($string) {
+		return true;
+	}
 
-  public function normalizeValue($string) {
-    return $string;
-  }
+	public function normalizeValue($string) {
+		return $string;
+	}
 
 }
 

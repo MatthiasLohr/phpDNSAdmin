@@ -29,30 +29,30 @@
  */
 class Hostname extends SimpleType {
 
-  public function isValidValue($string) {
-    if (strpos($string, '.') === false)
-      $tmp = array(0 => $string);
-    else
-      $tmp = explode('.', $string);
-    foreach ($tmp as $index => $label) {
-			if ($label == '' && $index == count($tmp)-1) return true;
-      if (strlen($label) < 1 || strlen($label) > 63) return false;
-      for ($i = 0; $i < strlen($label); $i++)
-        if (false === strpos('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_', $label[$i]))
-          return false;
-      if ($label[0] == '-' || $label[strlen($label) - 1] == '-')
-        return false;
-    }
+	public function isValidValue($string) {
+		if (strpos($string, '.') === false)
+			$tmp = array(0 => $string);
+		else
+			$tmp = explode('.', $string);
+		foreach ($tmp as $index => $label) {
+			if ($label == '' && $index == count($tmp) - 1) return true;
+			if (strlen($label) < 1 || strlen($label) > 63) return false;
+			for ($i = 0; $i < strlen($label); $i++)
+				if (false === strpos('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_', $label[$i]))
+					return false;
+			if ($label[0] == '-' || $label[strlen($label) - 1] == '-')
+				return false;
+		}
 		return true;
 	}
 
-  public function normalizeValue($string) {
-    if (!self::isValidValue($string))
-      throw new InvalidTypeException($string . ' is no valid Hostname');
-    if ($string[strlen($string) - 1] == '.')
-      return substr($string, 0, -1);
-    return $string;
-  }
+	public function normalizeValue($string) {
+		if (!self::isValidValue($string))
+			throw new InvalidTypeException($string . ' is no valid Hostname');
+		if ($string[strlen($string) - 1] == '.')
+			return substr($string, 0, -1);
+		return $string;
+	}
 }
 
 ?>

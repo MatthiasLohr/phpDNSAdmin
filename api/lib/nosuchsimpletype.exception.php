@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class NoSuchSimpletypeException extends Exception {}
+class NoSuchSimpletypeException extends Exception {
+}
 
 ?>

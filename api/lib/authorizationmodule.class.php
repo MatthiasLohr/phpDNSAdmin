@@ -45,7 +45,7 @@ abstract class AuthorizationModule {
 	 * @return boolean true if he has, false if not
 	 */
 	abstract public function userIsAdmin(User $user);
-	
+
 }
 
 ?>

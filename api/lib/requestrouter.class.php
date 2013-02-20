@@ -59,7 +59,7 @@ abstract class RequestRouter {
 	 * @return boolean success true/false
 	 */
 	public static function forceRequestType($type) {
-		if (in_array($type,array('GET','POST','PUT','DELETE'))) {
+		if (in_array($type, array('GET', 'POST', 'PUT', 'DELETE'))) {
 			$_SERVER['REQUEST_METHOD'] = $type;
 			return true;
 		}
@@ -77,7 +77,17 @@ abstract class RequestRouter {
 			case 'PUT':
 			case 'DELETE':
 				$str = file_get_contents('php://input');
-				parse_str($str,$data);
+				$data = null;
+				if (preg_match('/json$/i', $_SERVER['CONTENT_TYPE'])) {
+					/* Request was sent as JSON Object
+					 * Decode JSON Object to associative array
+					 */
+					$data = json_decode($str, true);
+				}
+				else {
+					// Fallback with old behavior
+					parse_str($str, $data);
+				}
 				return $data;
 			default:
 				return null;
@@ -109,23 +119,23 @@ abstract class RequestRouter {
 			if (!$method->isAbstract() && !$method->isConstructor() && !$method->isDestructor() && $method->isPublic() && !$method->isStatic()) {
 				$paramCount = $method->getNumberOfParameters();
 				if ($paramCount > 0) {
-					$params = array_slice($path,1,$paramCount);
+					$params = array_slice($path, 1, $paramCount);
 					if (count($params) < $method->getNumberOfRequiredParameters()) throw new RequestRoutingException(
-						'Not enough parameters for '.$className.'->'.$method->getName().'()!'
+						'Not enough parameters for ' . $className . '->' . $method->getName() . '()!'
 					);
 				}
 				else {
 					$params = array();
 				}
-				$this->routingPath = array_slice($path,1+$paramCount);
-				return $method->invokeArgs($this,$params);
+				$this->routingPath = array_slice($path, 1 + $paramCount);
+				return $method->invokeArgs($this, $params);
 			}
 			else {
-				throw new RequestRoutingException('method '.$path[0].' is not eligible for routing');
+				throw new RequestRoutingException('method ' . $path[0] . ' is not eligible for routing');
 			}
 		}
 		else {
-			throw new RequestRoutingException('class '.$className.' has no method "'.$path[0].'"');
+			throw new RequestRoutingException('class ' . $className . ' has no method "' . $path[0] . '"');
 		}
 	}
 
@@ -135,7 +145,7 @@ abstract class RequestRouter {
 	 */
 	public final function trackByURL($path) {
 		// shortcut for empty paths
-		if ($path == '') return $this->track (array());
+		if ($path == '') return $this->track(array());
 		// trim trailing slashes
 		if (substr($path, -1) == '/') {
 			$path = substr($path, 0, -1);

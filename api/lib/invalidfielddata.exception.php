@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class InvalidFieldDataException extends Exception {}
+class InvalidFieldDataException extends Exception {
+}
 
 ?>

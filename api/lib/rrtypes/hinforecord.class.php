@@ -32,7 +32,7 @@ class HinfoRecord extends ResourceRecord {
 	public static function listFields() {
 		return array(
 			'architecture' => 'StringNoSpaces',
-			'os' => 'StringNoSpaces'
+			'os'           => 'StringNoSpaces'
 		);
 	}
 }

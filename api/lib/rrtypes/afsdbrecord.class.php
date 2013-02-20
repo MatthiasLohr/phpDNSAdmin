@@ -33,7 +33,7 @@ class AfsdbRecord extends ResourceRecord {
 
 	public static function listFields() {
 		return array(
-			'subtype' => 'UInt16',
+			'subtype'  => 'UInt16',
 			'hostname' => 'Hostname'
 		);
 	}

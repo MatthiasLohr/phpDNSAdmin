@@ -63,10 +63,10 @@ class AuthenticationManager {
 			if (!isset($localConfig['_module'])) throw new ModuleConfigException('Found module config without _module definition!');
 			$moduleName = $localConfig['_module'];
 			unset($localConfig['_module']);
-			$moduleFile = API_ROOT.'/lib/modules/authentication/'.strtolower($moduleName).'.class.php';
-			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file '.$moduleFile.'!');
+			$moduleFile = API_ROOT . '/lib/modules/authentication/' . strtolower($moduleName) . '.class.php';
+			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file ' . $moduleFile . '!');
 			require_once($moduleFile);
-			$this->modules[$moduleIndex] = call_user_func(array($moduleName,'getInstance'),$localConfig);
+			$this->modules[$moduleIndex] = call_user_func(array($moduleName, 'getInstance'), $localConfig);
 			if ($this->modules[$moduleIndex] === null) unset($this->modules[$moduleIndex]);
 		}
 		$this->listUsers();
@@ -110,8 +110,8 @@ class AuthenticationManager {
 						$userList[] = $user;
 					}
 				}
+			} catch (NotSupportedException $e) {
 			}
-			catch (NotSupportedException $e) {}
 		}
 		return $userList;
 	}
@@ -129,15 +129,15 @@ class AuthenticationManager {
 		if ($moduleIndex !== null) return false;
 		foreach ($this->modules as $moduleIndex => $module) {
 			try {
-				if ($module->userAdd($user,$password)) {
+				if ($module->userAdd($user, $password)) {
 					$this->usermap[$user->getUsername()] = $moduleIndex;
 					return true;
 				}
 				else {
 					return false;
 				}
+			} catch (ReadOnlyException $e) {
 			}
-			catch (ReadOnlyException $e) {}
 		}
 		return false;
 	}
@@ -150,10 +150,10 @@ class AuthenticationManager {
 	 * @return bool true if the user can login with the given data, false otherwise
 	 * @throws NoSuchUserException if the user is not registered
 	 */
-	public function userCheckPassword(User $user,$password) {
+	public function userCheckPassword(User $user, $password) {
 		$moduleIndex = $this->userFind($user);
-		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
-		return $this->modules[$moduleIndex]->userCheckPassword($user,$password);
+		if ($moduleIndex === null) throw new NoSuchUserException('User ' . $user->getUsername() . ' is unknown!');
+		return $this->modules[$moduleIndex]->userCheckPassword($user, $password);
 	}
 
 	/**
@@ -165,7 +165,7 @@ class AuthenticationManager {
 	 */
 	public function userDelete(User $user) {
 		$moduleIndex = $this->userFind($user);
-		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
+		if ($moduleIndex === null) throw new NoSuchUserException('User ' . $user->getUsername() . ' is unknown!');
 		if ($this->modules[$moduleIndex]->userDelete($user)) {
 			unset($this->usermap[$user->getUsername()]);
 			return true;
@@ -214,8 +214,8 @@ class AuthenticationManager {
 	 */
 	public function userSetPassword(User $user, $password) {
 		$moduleIndex = $this->userFind($user);
-		if ($moduleIndex === null) throw new NoSuchUserException('User '.$user->getUsername().' is unknown!');
-		$this->modules[$moduleIndex]->userSetPassword($user,$password);
+		if ($moduleIndex === null) throw new NoSuchUserException('User ' . $user->getUsername() . ' is unknown!');
+		$this->modules[$moduleIndex]->userSetPassword($user, $password);
 	}
 
 

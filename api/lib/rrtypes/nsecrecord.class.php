@@ -32,7 +32,7 @@ class NsecRecord extends ResourceRecord {
 	public static function listFields() {
 		return array(
 			'nextdomain' => 'Hostname',
-			'types' => 'String'
+			'types'      => 'String'
 		);
 	}
 }

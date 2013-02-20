@@ -34,11 +34,11 @@ class Base64Content extends SimpleType {
 		return true;
 	}
 
-  public function normalizeValue($string) {
-    if (!self::isValidValue($string))
-      throw new InvalidTypeException($string . ' is no valid base64 string');
-    return $string;
-  }
+	public function normalizeValue($string) {
+		if (!self::isValidValue($string))
+			throw new InvalidTypeException($string . ' is no valid base64 string');
+		return $string;
+	}
 
 }
 

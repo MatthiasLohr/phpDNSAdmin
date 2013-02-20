@@ -18,16 +18,16 @@
  * along with phpDNSAdmin. If not, see <http://www.gnu.org/licenses/>.
  */
 
-define('API_ROOT',dirname(__FILE__));
-require_once(API_ROOT.'/lib/autoload.inc.php');
+define('API_ROOT', dirname(__FILE__));
+require_once(API_ROOT . '/lib/autoload.inc.php');
 error_reporting(E_ALL | E_NOTICE);
 
 // basic operation function
 function executeApiRequest() {
 	try {
 		// load configuration
-		if (!file_exists(API_ROOT.'/config.inc.php')) throw new Exception('No configuration file found!');
-		Configuration::load(API_ROOT.'/config.inc.php');
+		if (!file_exists(API_ROOT . '/config.inc.php')) throw new Exception('No configuration file found!');
+		Configuration::load(API_ROOT . '/config.inc.php');
 		$configuration = Configuration::getInstance();
 		// initialize module managers
 		AuthenticationManager::initialize($configuration->getAuthenticationConfig());
@@ -44,23 +44,22 @@ function executeApiRequest() {
 		// start command execution
 		$mainRouter = new MainRouter();
 		return $mainRouter->trackByURL($context);
-	}
-	catch (MethodNotAllowedException $e) {
-		header('HTTP/1.0 405 Method Not Allowed');
+	} catch (MethodNotAllowedException $e) {
+		header('HTTP/1.0 405 ' . $e->getMessage());
 		$returnValue = new stdClass();
 		$returnValue->success = false;
 		$returnValue->errorMessage = $e->getMessage();
 		return $returnValue;
 	}
 	catch (NoSuchServerException $e) {
-		header('HTTP/1.0 404 Not Found');
+		header('HTTP/1.0 404 ' . $e->getMessage());
 		$returnValue = new stdClass();
 		$returnValue->success = false;
 		$returnValue->errorMessage = $e->getMessage();
 		return $returnValue;
 	}
 	catch (Exception $e) {
-		header('HTTP/1.1 500 Internal Server Error');
+		header('HTTP/1.1 500 ' . $e->getMessage());
 		$returnValue = new stdClass();
 		$returnValue->success = false;
 		$returnValue->errorMessage = $e->getMessage();

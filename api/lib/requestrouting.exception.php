@@ -29,6 +29,9 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class RequestRoutingException extends Exception {};
+class RequestRoutingException extends Exception {
+}
+
+;
 
 ?>

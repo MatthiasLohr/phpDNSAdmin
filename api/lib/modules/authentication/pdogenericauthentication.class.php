@@ -40,7 +40,7 @@ class PdoGenericAuthentication extends AuthenticationModule {
 	/** @var string username column */
 	private $colUsername = 'username';
 
-	/** @var string password column*/
+	/** @var string password column */
 	private $colPassword = 'password';
 
 	/** @var string password encryption method */
@@ -48,14 +48,13 @@ class PdoGenericAuthentication extends AuthenticationModule {
 
 	public function __construct($config) {
 		try {
-			$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
-		}
-		catch (PDOException $e) {
+			$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
+		} catch (PDOException $e) {
 			throw new ModuleConfigException('Could not connect to database!');
 		}
 
 		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
-			$this->db->query('SET search_path TO '.$this->db->quote($config['search_path']));
+			$this->db->query('SET search_path TO ' . $this->db->quote($config['search_path']));
 		}
 
 		if (isset($config['tablename']) && strlen(trim($config['tablename'])) > 0) {
@@ -75,7 +74,7 @@ class PdoGenericAuthentication extends AuthenticationModule {
 
 	public function userCheckPassword(User $user, $password) {
 		// fetch password from DB
-		$stm = $this->db->query('SELECT '.$this->colPassword.' AS password FROM '.$this->table.' WHERE '.$this->colUsername.' = '.$user->getUsername());
+		$stm = $this->db->query('SELECT ' . $this->colPassword . ' AS password FROM ' . $this->table . ' WHERE ' . $this->colUsername . ' = ' . $user->getUsername());
 		if ($stm->rowCount() == 0) return false;
 		$tmpuser = $stm->fetch();
 		// check password
@@ -90,15 +89,15 @@ class PdoGenericAuthentication extends AuthenticationModule {
 				return (sha1($password) == $tmpuser['password']);
 				break;
 			case 'crypt':
-				return (crypt($password,$tmpuser['password']) == $tmpuser['password']);
+				return (crypt($password, $tmpuser['password']) == $tmpuser['password']);
 				break;
 			default:
-				throw new ModuleRuntimeException('password encryption method \''.$this->encryption.'\' not supported!');
+				throw new ModuleRuntimeException('password encryption method \'' . $this->encryption . '\' not supported!');
 		}
 	}
 
 	public function userExists(User $user) {
-		$stm = $this->db->query('SELECT * FROM '.$this->table.' WHERE '.$this->colUsername.' = '.$this->db->quote($user->getUsername()));
+		$stm = $this->db->query('SELECT * FROM ' . $this->table . ' WHERE ' . $this->colUsername . ' = ' . $this->db->quote($user->getUsername()));
 		return ($stm->rowCount() > 0);
 	}
 

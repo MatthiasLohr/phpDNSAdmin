@@ -33,9 +33,9 @@ class DnskeyProtocol extends SimpleType {
 		return ($string == 3);
 	}
 
-  public function normalizeValue($string) {
-    return 3;
-  }
+	public function normalizeValue($string) {
+		return 3;
+	}
 
 }
 

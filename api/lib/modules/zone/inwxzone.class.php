@@ -53,9 +53,9 @@ class InwxZone extends ZoneModule {
 	 */
 	protected function __construct($config) {
 		// prepare module
-		$this->cookieFile = tempnam('/tmp','idr');
+		$this->cookieFile = tempnam('/tmp', 'idr');
 		// login
-		$result = $this->login($config['username'],$config['password']);
+		$result = $this->login($config['username'], $config['password']);
 		if ($result['code'] != 1000) {
 			if ($result['code'] == 2200) {
 				throw new ModuleConfigException('Invalid username/password combination');
@@ -86,24 +86,24 @@ class InwxZone extends ZoneModule {
 		));
 
 		$ch = curl_init();
-		curl_setopt_array($ch,array(
-			CURLOPT_URL => $this->apiServer,
-			CURLOPT_POST => true,
-			CURLOPT_POSTFIELDS => $request,
+		curl_setopt_array($ch, array(
+			CURLOPT_URL            => $this->apiServer,
+			CURLOPT_POST           => true,
+			CURLOPT_POSTFIELDS     => $request,
 			CURLOPT_SSL_VERIFYPEER => false,
-			CURLOPT_TIMEOUT => 65,
+			CURLOPT_TIMEOUT        => 65,
 			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_USERAGENT => '',
-			CURLOPT_COOKIEFILE => $this->cookieFile,
-			CURLOPT_COOKIEJAR => $this->cookieFile,
-			CURLOPT_HTTPHEADER => array(
-				'Content-Type: text/xml','Connection: keep-alive','Keep-Alive: 300'
+			CURLOPT_USERAGENT      => '',
+			CURLOPT_COOKIEFILE     => $this->cookieFile,
+			CURLOPT_COOKIEJAR      => $this->cookieFile,
+			CURLOPT_HTTPHEADER     => array(
+				'Content-Type: text/xml', 'Connection: keep-alive', 'Keep-Alive: 300'
 			),
 		));
 		$response = curl_exec($ch);
 		curl_close($ch);
 
-		return xmlrpc_decode($response,'UTF-8');
+		return xmlrpc_decode($response, 'UTF-8');
 	}
 
 	public function countRecordsByFilter(Zone $zone, array $filter = array()) {
@@ -112,7 +112,7 @@ class InwxZone extends ZoneModule {
 
 	public function getFeatures() {
 		return array(
-			'dnssec' => false,
+			'dnssec'  => false,
 			'rrtypes' => array(
 				'A', 'AAAA', 'AFSDB', 'CERT', 'CNAME', 'DS', 'HINFO', 'KEY', 'LOC', 'MX',
 				'NAPTR', 'NS', 'PTR', 'RP', 'SOA', 'SPF', 'SRV', 'SSHFP', 'TXT', 'URL'
@@ -133,7 +133,8 @@ class InwxZone extends ZoneModule {
 	private function hostnameLong2Short(Zone $zone, $hostname) {
 		if ($hostname == $zone->getName()) {
 			return '@';
-		} else {
+		}
+		else {
 			return substr($hostname, 0, -(strlen($zone->getName()) + 1));
 		}
 	}
@@ -141,31 +142,32 @@ class InwxZone extends ZoneModule {
 	private function hostnameShort2Long(Zone $zone, $hostname) {
 		if ($hostname == '@') {
 			return $zone->getName();
-		} else {
+		}
+		else {
 			return $hostname . '.' . $zone->getName();
 		}
 	}
 
 	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
-		$result = $this->callRemote('nameserver.info',array('domain' => $zone->getName()));
+		$result = $this->callRemote('nameserver.info', array('domain' => $zone->getName()));
 		$records = array();
 		foreach ($result['resData']['record'] as $record) {
 			// patch some record data
 			switch ($record['type']) {
 				case 'SOA':
-					$content = explode(' ',$record['content']);
-					$content[1] = str_replace('@','.',$content[1]);
-					$content[3] = isset($content[3])?$content[3]:14400;
-					$content[4] = isset($content[4])?$content[4]:3600;
-					$content[5] = isset($content[5])?$content[5]:604800;
-					$content[6] = isset($content[6])?$content[6]:86400;
-					$record['content'] = implode(' ',$content);
+					$content = explode(' ', $record['content']);
+					$content[1] = str_replace('@', '.', $content[1]);
+					$content[3] = isset($content[3]) ? $content[3] : 14400;
+					$content[4] = isset($content[4]) ? $content[4] : 3600;
+					$content[5] = isset($content[5]) ? $content[5] : 604800;
+					$content[6] = isset($content[6]) ? $content[6] : 86400;
+					$record['content'] = implode(' ', $content);
 			}
 
 			$id = $record['id'];
 			$records[$id] = ResourceRecord::getInstance(
 				$record['type'],
-				$this->hostnameLong2Short($zone,$record['name']),
+				$this->hostnameLong2Short($zone, $record['name']),
 				$record['content'],
 				$record['ttl'],
 				$record['prio']
@@ -173,24 +175,24 @@ class InwxZone extends ZoneModule {
 		}
 
 		// call helper functions
-		$records = $this->helpFilter($records,$filter);
-		$records = $this->helpSort($records,$sortoptions);
-		$records = $this->helpPaging($records,$offset,$limit);
+		$records = $this->helpFilter($records, $filter);
+		$records = $this->helpSort($records, $sortoptions);
+		$records = $this->helpPaging($records, $offset, $limit);
 		return $records;
 	}
 
 	public function listZones() {
-		$result = $this->callRemote('nameserver.list',array('domain' => '*','pagelimit' => 9999));
+		$result = $this->callRemote('nameserver.list', array('domain' => '*', 'pagelimit' => 9999));
 		$this->zones = array();
 		foreach ($result['resData']['domains'] as $domain) {
-			$zone = new Zone($domain['domain'],$this);
+			$zone = new Zone($domain['domain'], $this);
 			$this->zones[$zone->getName()] = $zone;
 		}
 		return $this->zones;
 	}
 
 	private function login($username, $password) {
-		return $this->callRemote('account.login',array('user' => $username, 'pass' => $password));
+		return $this->callRemote('account.login', array('user' => $username, 'pass' => $password));
 	}
 
 	private function logout() {
@@ -198,13 +200,13 @@ class InwxZone extends ZoneModule {
 	}
 
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
-		$result = $this->callRemote('nameserver.createrecord',array(
-			'domain' => $zone->getName(),
-			'type' => $record->getType(),
+		$result = $this->callRemote('nameserver.createrecord', array(
+			'domain'  => $zone->getName(),
+			'type'    => $record->getType(),
 			'content' => $record->getContentString(),
-			'name' => $this->hostnameShort2Long($zone,$record->getName()),
-			'ttl' => $record->getTTL(),
-			'prio' => $record->fieldExists('priority')?$record->getField('priority'):0
+			'name'    => $this->hostnameShort2Long($zone, $record->getName()),
+			'ttl'     => $record->getTTL(),
+			'prio'    => $record->fieldExists('priority') ? $record->getField('priority') : 0
 		));
 		if ($result['code'] == 1000) {
 			return $result['resData']['id'];
@@ -215,7 +217,7 @@ class InwxZone extends ZoneModule {
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
-		$result = $this->callRemote('nameserver.deleterecord',array('id' => $recordid));
+		$result = $this->callRemote('nameserver.deleterecord', array('id' => $recordid));
 		if ($result['code'] == 1000) {
 			return true;
 		}
@@ -225,13 +227,13 @@ class InwxZone extends ZoneModule {
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
-		$result = $this->callRemote('nameserver.updaterecord',array(
-			'id' => $recordid,
-			'type' => $record->getType(),
+		$result = $this->callRemote('nameserver.updaterecord', array(
+			'id'      => $recordid,
+			'type'    => $record->getType(),
 			'content' => $record->getContentString(),
-			'name' => $this->hostnameShort2Long($zone,$record->getName()),
-			'ttl' => $record->getTTL(),
-			'prio' => $record->fieldExists('priority')?$record->getField('priority'):0
+			'name'    => $this->hostnameShort2Long($zone, $record->getName()),
+			'ttl'     => $record->getTTL(),
+			'prio'    => $record->fieldExists('priority') ? $record->getField('priority') : 0
 		));
 		if ($result['code'] == 1000) {
 			return true;
@@ -242,9 +244,9 @@ class InwxZone extends ZoneModule {
 	}
 
 	public function zoneCreate(Zone $zone) {
-		$result = $this->callRemote('nameserver.create',array(
-			'domain' => $zone->getName(),'type' => 'MASTER',
-			'ns' => array('ns1.'.$zone->getName(),'ns2.'.$zone->getName())
+		$result = $this->callRemote('nameserver.create', array(
+			'domain' => $zone->getName(), 'type' => 'MASTER',
+			'ns'     => array('ns1.' . $zone->getName(), 'ns2.' . $zone->getName())
 
 		));
 		if ($result['code'] == 1000) return true;
@@ -252,7 +254,7 @@ class InwxZone extends ZoneModule {
 	}
 
 	public function zoneDelete(Zone $zone) {
-		$result = $this->callRemote('nameserver.delete',array('domain' => $zone->getName()));
+		$result = $this->callRemote('nameserver.delete', array('domain' => $zone->getName()));
 		if ($result['code'] == 1000) {
 			return true;
 		}

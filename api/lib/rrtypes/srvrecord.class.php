@@ -32,9 +32,9 @@ class SrvRecord extends ResourceRecord {
 	public static function listFields() {
 		return array(
 			'importance' => 'UInt',
-			'port' => 'UInt',
-			'host' => 'Hostname',
-			'priority' => 'UInt'
+			'port'       => 'UInt',
+			'host'       => 'Hostname',
+			'priority'   => 'UInt'
 		);
 	}
 }

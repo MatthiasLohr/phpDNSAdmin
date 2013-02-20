@@ -53,7 +53,7 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	 * @return string random string
 	 */
 	private function generateRandomKey($length) {
-	  $result = '';
+		$result = '';
 		while ($length--)
 			$result .= chr(rand(32, 127));
 		return $result;
@@ -65,21 +65,21 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	 * @param string $password password to encrypt
 	 * @return string encrypted password
 	 */
-	private function encryptPassword($password)
-	{
+	private function encryptPassword($password) {
 		$salt = $this->generateRandomKey(2);
-		return crypt($password,$salt);
+		return crypt($password, $salt);
 	}
 
 	/**
 	 * Read userdata from .htpasswd file
+	 *
 	 * @throws ModuleRuntimeException if file is not readable
 	 */
 	private function fileRead() {
-		if (!file_exists($this->filename)) throw new ModuleRuntimeException('File '.$this->filename.' does not exist!');
+		if (!file_exists($this->filename)) throw new ModuleRuntimeException('File ' . $this->filename . ' does not exist!');
 		$lines = file($this->filename);
 		foreach ($lines as $line) {
-			list($username ,$password) = explode(':',$line,2);
+			list($username, $password) = explode(':', $line, 2);
 			$this->users[$username] = trim($password);
 		}
 	}
@@ -88,9 +88,9 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	 * Write all userdata to .htpasswd file
 	 */
 	private function fileWrite() {
-		$fp = fopen($this->filename,'w');
+		$fp = fopen($this->filename, 'w');
 		foreach ($this->users as $username => $ePassword) {
-			fputs($fp,$username.':'.(($ePassword===null)?'x':$ePassword)."\n");
+			fputs($fp, $username . ':' . (($ePassword === null) ? 'x' : $ePassword) . "\n");
 		}
 		fclose($fp);
 	}
@@ -119,14 +119,14 @@ class HtpasswdAuthentication extends AuthenticationModule {
 		return true;
 	}
 
-	public function userCheckPassword(User $user,$password) {
-		if (!$this->userExists($user)) throw new NoSuchUserException('No user named '.$user->getUsername().' here!');
+	public function userCheckPassword(User $user, $password) {
+		if (!$this->userExists($user)) throw new NoSuchUserException('No user named ' . $user->getUsername() . ' here!');
 		$ePassword = $this->users[$user->getUsername()];
-		return (crypt($password,$ePassword) == $ePassword);
+		return (crypt($password, $ePassword) == $ePassword);
 	}
 
 	public function userDelete(User $user) {
-		if (!$this->userExists($user)) throw new NoSuchUserException('No user named '.$user->getUsername().' here!');
+		if (!$this->userExists($user)) throw new NoSuchUserException('No user named ' . $user->getUsername() . ' here!');
 		unset($this->users[$user->getUsername()]);
 		$this->fileWrite();
 		return true;
@@ -144,7 +144,7 @@ class HtpasswdAuthentication extends AuthenticationModule {
 	 * @throws NoSuchUserException
 	 */
 	public function userSetPassword(User $user, $password) {
-		if (!$this->userExists($user)) throw new NoSuchUserException('No user named '.$user->getUsername().' here!');
+		if (!$this->userExists($user)) throw new NoSuchUserException('No user named ' . $user->getUsername() . ' here!');
 		$this->users[$user->getUsername()] = $this->encryptPassword($password);
 		$this->fileWrite();
 		return true;

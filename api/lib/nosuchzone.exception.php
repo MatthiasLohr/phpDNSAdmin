@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class NoSuchZoneException extends Exception {}
+class NoSuchZoneException extends Exception {
+}
 
 ?>

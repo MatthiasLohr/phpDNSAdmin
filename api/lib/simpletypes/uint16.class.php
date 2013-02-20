@@ -30,7 +30,7 @@
 class UInt16 extends SimpleType {
 
 	public function isValidValue($string) {
-		return (preg_match('!^[0-9]+$!',$string) && $string >= 0 && $string <= 65535);
+		return (preg_match('!^[0-9]+$!', $string) && $string >= 0 && $string <= 65535);
 	}
 
 	public function normalizeValue($string) {

@@ -66,7 +66,7 @@ abstract class AuthenticationModule {
 	 * @param string $pasword unencrypted password
 	 * @return bool true if the user can login with the given data, false otherwise
 	 */
-	abstract public function userCheckPassword(User $user,$password);
+	abstract public function userCheckPassword(User $user, $password);
 
 	/**
 	 * Remove a user from the module's database

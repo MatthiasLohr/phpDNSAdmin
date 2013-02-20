@@ -44,9 +44,9 @@ class Zone {
 	 * @param string $zoneName
 	 * @param ZoneModule $zoneModule
 	 */
-	public function  __construct($zoneName,ZoneModule $zoneModule) {
-		if(!Hostname::isValidValue($zoneName)) {
-		 throw new InvalidFieldDataException("\'$zoneName\' is no valid hostname.");
+	public function  __construct($zoneName, ZoneModule $zoneModule) {
+		if (!Hostname::isValidValue($zoneName)) {
+			throw new InvalidFieldDataException("\'$zoneName\' is no valid hostname.");
 		}
 		$this->name = $zoneName;
 		$this->module = $zoneModule;
@@ -54,12 +54,12 @@ class Zone {
 
 	/**
 	 * Return record count for the specified filter criteria
-	 * 
+	 *
 	 * @param array $filter filter criteria
 	 * @return amount of records matching the filter criterias
 	 */
 	public function countRecordsByFilter($filter) {
-		return $this->module->countRecordsByFilter($this,$filter);
+		return $this->module->countRecordsByFilter($this, $filter);
 	}
 
 	/**
@@ -114,7 +114,7 @@ class Zone {
 	 * @return ResourceRecord
 	 */
 	public function getRecordById($recordid) {
-		return $this->module->getRecordById($this,$recordid);
+		return $this->module->getRecordById($this, $recordid);
 	}
 
 	/**
@@ -133,7 +133,7 @@ class Zone {
 	 * @return ResourceRecord[] list of zone records
 	 */
 	public function listRecordsByFilter($filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
-		return $this->module->listRecordsByFilter($this,$filter,$offset,$limit, $sortoptions);
+		return $this->module->listRecordsByFilter($this, $filter, $offset, $limit, $sortoptions);
 	}
 
 	/**
@@ -143,7 +143,7 @@ class Zone {
 	 * @return boolean success true/false
 	 */
 	public function recordAdd(ResourceRecord $record) {
-		return $this->module->recordAdd($this,$record);
+		return $this->module->recordAdd($this, $record);
 	}
 
 	/**

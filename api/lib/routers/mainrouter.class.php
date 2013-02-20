@@ -53,7 +53,7 @@ class MainRouter extends RequestRouter {
 				$rrtype = new stdClass();
 				$rrtype->type = $type;
 				$rrtype->fields = array();
-				$fields = call_user_func(array($className,'listFields'));
+				$fields = call_user_func(array($className, 'listFields'));
 				foreach ($fields as $fieldName => $simpleType) {
 					$tmp = new stdClass();
 					$tmp->name = $fieldName;
@@ -71,7 +71,7 @@ class MainRouter extends RequestRouter {
 
 	public function servers($sysname = null) {
 		// check for valid HTTP method
-		if ($this->endOfTracking()&&  $this->getRequestType() != 'GET')
+		if ($this->endOfTracking() && $this->getRequestType() != 'GET')
 			throw new MethodNotAllowedException('Only GET allowed on this location!');
 		// check for login
 		$autologin = AutologinManager::getInstance();
@@ -89,7 +89,7 @@ class MainRouter extends RequestRouter {
 		$result->servers = array();
 		if ($sysname === null) {
 			// list all servers
-			foreach($zonemanager->listModules() as $module) {
+			foreach ($zonemanager->listModules() as $module) {
 				$tmp = new stdClass();
 				$tmp->sysname = $module->sysname;
 				$tmp->name = $module->name;
@@ -107,8 +107,8 @@ class MainRouter extends RequestRouter {
 
 	public function simpletypes($type) {
 		$result = new stdClass();
-		if (!class_exists($type) || !is_subclass_of($type,'Simpletype')) {
-			$result->error = $type.' is no Simpletype!';
+		if (!class_exists($type) || !is_subclass_of($type, 'Simpletype')) {
+			$result->error = $type . ' is no Simpletype!';
 			return $result;
 		}
 		if (RequestRouter::getRequestType() == 'POST') {
@@ -143,7 +143,7 @@ class MainRouter extends RequestRouter {
 				elseif (isset($data['username']) && isset($data['password'])) {
 					$user = new User($data['username']);
 					try {
-						if ($authentication->userCheckPassword($user,$data['password'])) {
+						if ($authentication->userCheckPassword($user, $data['password'])) {
 							$autologin->notifyLogin($user);
 							$result->loggedIn = true;
 							$result->success = true;
@@ -152,8 +152,7 @@ class MainRouter extends RequestRouter {
 							$result->loggedIn = false;
 							$result->success = false;
 						}
-					}
-					catch (NoSuchUserException $e) {
+					} catch (NoSuchUserException $e) {
 						$result->loggedIn = false;
 						$result->success = false;
 					}

@@ -55,22 +55,22 @@ class MultiServerViewZone extends ZoneModule implements Views {
 			if (!isset($localConfig['_module'])) throw new ModuleConfigException('Found module config without _module definition!');
 			$moduleName = $localConfig['_module'];
 			unset($localConfig['_module']);
-			$moduleFile = API_ROOT.'/lib/modules/zone/'.strtolower($moduleName).'.class.php';
-			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file '.$moduleFile.'!');
+			$moduleFile = API_ROOT . '/lib/modules/zone/' . strtolower($moduleName) . '.class.php';
+			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file ' . $moduleFile . '!');
 			require_once($moduleFile);
 			$this->modules[$moduleIndex] = new stdClass();
-			$this->modules[$moduleIndex]->module = call_user_func(array($moduleName,'getInstance'),$localConfig);
+			$this->modules[$moduleIndex]->module = call_user_func(array($moduleName, 'getInstance'), $localConfig);
 			if ($this->modules[$moduleIndex]->module === null) {
 				unset($this->modules[$moduleIndex]);
 			}
 			else {
-				if (preg_match('/^([a-zA-Z0-9]+)$/',$localConfig['_sysname'])) {
+				if (preg_match('/^([a-zA-Z0-9]+)$/', $localConfig['_sysname'])) {
 					$this->modules[$moduleIndex]->sysname = $localConfig['_sysname'];
 				}
 				else {
 					$this->modules[$moduleIndex]->sysname = $moduleIndex;
 				}
-				$this->modules[$moduleIndex]->name = (isset($localConfig['_name'])?$localConfig['_name']:'Server '.$moduleIndex);
+				$this->modules[$moduleIndex]->name = (isset($localConfig['_name']) ? $localConfig['_name'] : 'Server ' . $moduleIndex);
 			}
 		}
 
@@ -80,20 +80,19 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 		// connect to cache db
 		try {
-			$this->db = new PDO($config['pdo_dsn'],$config['pdo_username'],$config['pdo_password']);
-		}
-		catch (PDOException $e) {
+			$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
+		} catch (PDOException $e) {
 			$config['pdo_password'] = 'xxxxxx';
 			throw new ModuleConfigException('Could not connect to database!');
 		}
 		if (isset($config['search_path']) && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) == 'pgsql') {
-			$this->db->query('SET search_path TO '.$this->db->quote($config['search_path']));
+			$this->db->query('SET search_path TO ' . $this->db->quote($config['search_path']));
 		}
 	}
 
 	public function countRecordsByFilter(Zone $zone, array $filter = array()) {
 		$this->zoneAssureExistence($zone);
-		$query = 'SELECT id FROM '.$this->tablePrefix.'records WHERE zone = ' . $this->db->quote($zone->getName());
+		$query = 'SELECT id FROM ' . $this->tablePrefix . 'records WHERE zone = ' . $this->db->quote($zone->getName());
 		// apply filters
 		if (isset($filter['id'])) {
 			$query .= ' AND id = ' . $this->db->quote($filter['id']);
@@ -117,7 +116,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	public function getFeatures() {
 		$features = array(
-			'dnssec' => false,
+			'dnssec'  => false,
 			'rrtypes' => null
 		);
 		foreach ($this->modules as $module) {
@@ -127,7 +126,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 				$features['rrtypes'] = $tmpFeatures['rrtypes'];
 			}
 			else {
-				$features['rrtypes'] = array_intersect($features['rrtypes'],$tmpFeatures['rrtypes']);
+				$features['rrtypes'] = array_intersect($features['rrtypes'], $tmpFeatures['rrtypes']);
 			}
 		}
 		return $features;
@@ -139,15 +138,15 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	public function getRecordById(Zone $zone, $recordid) {
 		// load record
-		$stm = $this->db->query('SELECT name,type,content,ttl,prio FROM '.$this->tablePrefix.'records WHERE id = '.$this->db->quote($recordid).' AND zone = '.$this->db->quote($zone->getName()));
+		$stm = $this->db->query('SELECT name,type,content,ttl,prio FROM ' . $this->tablePrefix . 'records WHERE id = ' . $this->db->quote($recordid) . ' AND zone = ' . $this->db->quote($zone->getName()));
 		$row = $stm->fetch();
 		if (!$row) return null;
-		$record = ResourceRecord::getInstance($row['type'],$row['name'],$row['content'],$row['ttl'],$row['prio']);
+		$record = ResourceRecord::getInstance($row['type'], $row['name'], $row['content'], $row['ttl'], $row['prio']);
 		// load views
 		$views = $this->listViews();
 		$myviews = array();
 		foreach ($views as $viewname) {
-			$stm = $this->db->query('SELECT viewid FROM '.$this->tablePrefix.'idmap WHERE myid = '.$this->db->quote($recordid).' AND viewname = '.$this->db->quote($viewname));
+			$stm = $this->db->query('SELECT viewid FROM ' . $this->tablePrefix . 'idmap WHERE myid = ' . $this->db->quote($recordid) . ' AND viewname = ' . $this->db->quote($viewname));
 			$myviews[$viewname] = $stm->rowCount();
 		}
 		$record->setViewinfo($myviews);
@@ -156,7 +155,7 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null, $sortoptions = '') {
 		$this->zoneAssureExistence($zone);
-		$query = 'SELECT id FROM '.$this->tablePrefix.'records WHERE zone = ' . $this->db->quote($zone->getName());
+		$query = 'SELECT id FROM ' . $this->tablePrefix . 'records WHERE zone = ' . $this->db->quote($zone->getName());
 		// where conditions (apply filters)
 		if (isset($filter['id'])) {
 			$query .= ' AND id = ' . $this->db->quote($filter['id']);
@@ -176,36 +175,36 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		// sort options
 		if (strlen($sortoptions) > 0) {
 			$firstcol = true;
-			$cols = explode(',',$sortoptions);
+			$cols = explode(',', $sortoptions);
 			foreach ($cols as $col) {
-				if (substr($col,0,1) == '-') {
-					$colname = substr($col,1);
+				if (substr($col, 0, 1) == '-') {
+					$colname = substr($col, 1);
 					$order = 'DESC';
 				}
 				else {
 					$colname = $col;
 					$order = 'ASC';
 				}
-				if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
+				if (in_array($colname, array('id', 'name', 'type', 'content', 'ttl', 'priority'))) {
 					if ($firstcol) {
 						$firstcol = false;
-						$query .= ' ORDER BY '.$colname.' '.$order;
+						$query .= ' ORDER BY ' . $colname . ' ' . $order;
 					}
 					else {
-						$query .= ','.$colname.' '.$order;
+						$query .= ',' . $colname . ' ' . $order;
 					}
 				}
 			}
 		}
 		// limit/offset
-		if($limit > 0) {
+		if ($limit > 0) {
 			$query .= ' LIMIT ' . intval($limit) . ' OFFSET ' . intval($offset);
 		}
 		// execute query
 		$result = array();
 		$stm = $this->db->query($query);
 		while ($tmprecord = $stm->fetch()) {
-			$record = $this->getRecordById($zone,$tmprecord['id']);
+			$record = $this->getRecordById($zone, $tmprecord['id']);
 			$result[$tmprecord['id']] = $record;
 		}
 		return $result;
@@ -231,13 +230,13 @@ class MultiServerViewZone extends ZoneModule implements Views {
 	}
 
 	public function recordAdd(Zone $zone, ResourceRecord $record) {
-		$this->db->query('INSERT INTO '.$this->tablePrefix.'records (zone,name,type,content,ttl,prio) VALUES ('
-			.$this->db->quote($zone->getName()).','
-			.$this->db->quote($record->getName()).','
-			.$this->db->quote($record->getType()).','
-			.$this->db->quote($record->getContentString()).','
-			.$this->db->quote($record->getTTL()).','
-			.($record->fieldExists('priority')?$this->db->quote($record->getField('priority')):'NULL').')');
+		$this->db->query('INSERT INTO ' . $this->tablePrefix . 'records (zone,name,type,content,ttl,prio) VALUES ('
+			. $this->db->quote($zone->getName()) . ','
+			. $this->db->quote($record->getName()) . ','
+			. $this->db->quote($record->getType()) . ','
+			. $this->db->quote($record->getContentString()) . ','
+			. $this->db->quote($record->getTTL()) . ','
+			. ($record->fieldExists('priority') ? $this->db->quote($record->getField('priority')) : 'NULL') . ')');
 		switch ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME)) {
 			case 'pgsql':
 				$recordid = $this->db->lastInsertId($this->recordsSequence);
@@ -249,9 +248,9 @@ class MultiServerViewZone extends ZoneModule implements Views {
 		$myviews = $record->getViewinfo();
 		foreach ($this->modules as $module) {
 			if ($myviews === null || (isset($myviews[$module->sysname]) && $myviews[$module->sysname])) {
-				$viewrecordid = $module->module->recordAdd($zone,$record);
+				$viewrecordid = $module->module->recordAdd($zone, $record);
 				if ($viewrecordid) {
-					$this->db->query('INSERT INTO '.$this->tablePrefix.'idmap (myid,viewname,viewid) VALUES ('.$this->db->quote($recordid).','.$this->db->quote($module->sysname).','.$this->db->quote($viewrecordid).')');
+					$this->db->query('INSERT INTO ' . $this->tablePrefix . 'idmap (myid,viewname,viewid) VALUES (' . $this->db->quote($recordid) . ',' . $this->db->quote($module->sysname) . ',' . $this->db->quote($viewrecordid) . ')');
 				}
 			}
 		}
@@ -260,54 +259,54 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	public function recordDelete(Zone $zone, $recordid) {
 		foreach ($this->modules as $module) {
-			$stm = $this->db->query('SELECT viewid FROM '.$this->tablePrefix.'idmap WHERE myid = '.$this->db->quote($recordid).' AND viewname = '.$this->db->quote($module->sysname));
+			$stm = $this->db->query('SELECT viewid FROM ' . $this->tablePrefix . 'idmap WHERE myid = ' . $this->db->quote($recordid) . ' AND viewname = ' . $this->db->quote($module->sysname));
 			$tmprecord = $stm->fetch();
 			if ($tmprecord) {
-				$module->module->recordDelete($zone,$tmprecord['viewid']);
+				$module->module->recordDelete($zone, $tmprecord['viewid']);
 			}
 		}
 		$this->db->beginTransaction();
-		$this->db->query('DELETE FROM '.$this->tablePrefix.'idmap WHERE myid = '.$this->db->quote($recordid));
-		$this->db->query('DELETE FROM '.$this->tablePrefix.'records WHERE id = '.$this->db->quote($recordid));
+		$this->db->query('DELETE FROM ' . $this->tablePrefix . 'idmap WHERE myid = ' . $this->db->quote($recordid));
+		$this->db->query('DELETE FROM ' . $this->tablePrefix . 'records WHERE id = ' . $this->db->quote($recordid));
 		$this->db->commit();
 		return true;
 	}
 
 	private function recordGetViewid(Zone $zone, $recordid, $viewname) {
-		$stm = $this->db->query('SELECT viewid FROM '.$this->tablePrefix.'idmap WHERE myid = '.$this->db->quote($recordid).' AND viewname = '.$this->db->quote($viewname));
+		$stm = $this->db->query('SELECT viewid FROM ' . $this->tablePrefix . 'idmap WHERE myid = ' . $this->db->quote($recordid) . ' AND viewname = ' . $this->db->quote($viewname));
 		$tmp = $stm->fetch();
 		if (!$tmp) return null;
 		return $tmp['viewid'];
 	}
 
 	public function recordSetViews(Zone $zone, $recordid, array $views) {
-		$record = $this->getRecordById($zone,$recordid);
+		$record = $this->getRecordById($zone, $recordid);
 		foreach ($this->modules as $module) {
-			$viewid = $this->recordGetViewid($zone,$recordid,$module->sysname);
+			$viewid = $this->recordGetViewid($zone, $recordid, $module->sysname);
 			if ($viewid === null && isset($views[$module->sysname]) && $views[$module->sysname]) {
-				$newid = $module->module->recordAdd($zone,$record);
-				$this->db->query('INSERT INTO '.$this->tablePrefix.'idmap (myid,viewname,viewid) VALUES ('.$this->db->quote($recordid).','.$this->db->quote($module->sysname).','.$this->db->quote($newid).')');
+				$newid = $module->module->recordAdd($zone, $record);
+				$this->db->query('INSERT INTO ' . $this->tablePrefix . 'idmap (myid,viewname,viewid) VALUES (' . $this->db->quote($recordid) . ',' . $this->db->quote($module->sysname) . ',' . $this->db->quote($newid) . ')');
 			}
 			elseif ($viewid !== null && (!isset($views[$module->sysname]) || !$views[$module->sysname])) {
-				$module->module->recordDelete($zone,$viewid);
-				$this->db->query('DELETE FROM '.$this->tablePrefix.'idmap WHERE myid = '.$this->db->quote($recordid).' AND viewname = '.$this->db->quote($module->sysname).' AND viewid = '.$this->db->quote($viewid));
+				$module->module->recordDelete($zone, $viewid);
+				$this->db->query('DELETE FROM ' . $this->tablePrefix . 'idmap WHERE myid = ' . $this->db->quote($recordid) . ' AND viewname = ' . $this->db->quote($module->sysname) . ' AND viewid = ' . $this->db->quote($viewid));
 			}
 		}
 		return true;
 	}
 
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
-		$this->db->query('UPDATE '.$this->tablePrefix.'records SET name = '.$this->db->quote($record->getName())
-			.', type = '.$this->db->quote($record->getType())
-			.', content = '.$this->db->quote($record->getContentString())
-			.', ttl = '.$this->db->quote($record->getTTL())
-			.', prio = '.($record->fieldExists('priority')?$this->db->quote($record->getField('priority')):'NULL')
-			.' WHERE id = '.$this->db->quote($recordid).' AND zone = '.$this->db->quote($zone->getName()));
+		$this->db->query('UPDATE ' . $this->tablePrefix . 'records SET name = ' . $this->db->quote($record->getName())
+			. ', type = ' . $this->db->quote($record->getType())
+			. ', content = ' . $this->db->quote($record->getContentString())
+			. ', ttl = ' . $this->db->quote($record->getTTL())
+			. ', prio = ' . ($record->fieldExists('priority') ? $this->db->quote($record->getField('priority')) : 'NULL')
+			. ' WHERE id = ' . $this->db->quote($recordid) . ' AND zone = ' . $this->db->quote($zone->getName()));
 		foreach ($this->modules as $module) {
-			$id = $this->recordGetViewid($zone,$recordid,$module->sysname);
-			if ($id !== null) $module->module->recordUpdate($zone,$id,$record);
+			$id = $this->recordGetViewid($zone, $recordid, $module->sysname);
+			if ($id !== null) $module->module->recordUpdate($zone, $id, $record);
 		}
-		$this->recordSetViews($zone,$recordid,$record->getViewinfo());
+		$this->recordSetViews($zone, $recordid, $record->getViewinfo());
 		return true;
 	}
 
@@ -321,10 +320,10 @@ class MultiServerViewZone extends ZoneModule implements Views {
 
 	public function zoneDelete(Zone $zone) {
 		$this->db->beginTransaction();
-		$stm = $this->db->query('SELECT id FROM '.$this->tablePrefix.'records WHERE zone = '.$this->db->quote($zone->getName()));
+		$stm = $this->db->query('SELECT id FROM ' . $this->tablePrefix . 'records WHERE zone = ' . $this->db->quote($zone->getName()));
 		while ($tmprecord = $stm->fetch()) {
-			$this->db->query('DELETE FROM '.$this->tablePrefix.'idmap WHERE myid = '.$this->db->quote($tmprecord['id']));
-			$this->db->query('DELETE FROM '.$this->tablePrefix.'records WHERE id = '.$this->db->quote($tmprecord['id']));
+			$this->db->query('DELETE FROM ' . $this->tablePrefix . 'idmap WHERE myid = ' . $this->db->quote($tmprecord['id']));
+			$this->db->query('DELETE FROM ' . $this->tablePrefix . 'records WHERE id = ' . $this->db->quote($tmprecord['id']));
 		}
 		$this->db->commit();
 		foreach ($this->modules as $module) {

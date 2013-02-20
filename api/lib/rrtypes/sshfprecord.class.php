@@ -33,9 +33,9 @@ class SshfpRecord extends ResourceRecord {
 
 	public static function listFields() {
 		return array(
-			'algorithm' => 'UInt8',
-			'type' => 'UInt8',
-			'fingerprint' => 'String' /** @todo change to HexString */
+			'algorithm'   => 'UInt8',
+			'type'        => 'UInt8',
+			'fingerprint' => 'String'/** @todo change to HexString */
 		);
 	}
 }
