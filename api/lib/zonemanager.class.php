@@ -56,22 +56,22 @@ class ZoneManager {
 			if (!isset($localConfig['_module'])) throw new ModuleConfigException('Found module config without _module definition!');
 			$moduleName = $localConfig['_module'];
 			unset($localConfig['_module']);
-			$moduleFile = API_ROOT.'/lib/modules/zone/'.strtolower($moduleName).'.class.php';
-			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file '.$moduleFile.'!');
+			$moduleFile = API_ROOT . '/lib/modules/zone/' . strtolower($moduleName) . '.class.php';
+			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file ' . $moduleFile . '!');
 			require_once($moduleFile);
 			$this->modules[$moduleIndex] = new stdClass();
-			$this->modules[$moduleIndex]->module = call_user_func(array($moduleName,'getInstance'),$localConfig);
+			$this->modules[$moduleIndex]->module = call_user_func(array($moduleName, 'getInstance'), $localConfig);
 			if ($this->modules[$moduleIndex]->module === null) {
 				unset($this->modules[$moduleIndex]);
 			}
 			else {
-				if (preg_match('/^([a-zA-Z0-9]+)$/',$localConfig['_sysname'])) {
+				if (preg_match('/^([a-zA-Z0-9]+)$/', $localConfig['_sysname'])) {
 					$this->modules[$moduleIndex]->sysname = $localConfig['_sysname'];
 				}
 				else {
 					$this->modules[$moduleIndex]->sysname = $moduleIndex;
 				}
-				$this->modules[$moduleIndex]->name = (isset($localConfig['_name'])?$localConfig['_name']:'Server '.$moduleIndex);
+				$this->modules[$moduleIndex]->name = (isset($localConfig['_name']) ? $localConfig['_name'] : 'Server ' . $moduleIndex);
 			}
 		}
 	}

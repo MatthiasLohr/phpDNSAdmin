@@ -31,12 +31,12 @@ class SpfRule extends SimpleType {
 
 	public function isValidValue($string) {
 		// remove qualifier if given
-		if (in_array(substr($string,0,1),array('+','-','~','?'))) {
-			$string = substr($string,1);
+		if (in_array(substr($string, 0, 1), array('+', '-', '~', '?'))) {
+			$string = substr($string, 1);
 		}
 		// check mechanisms/modifiers
 		// a, mx mechanism
-		if (preg_match('/^(a|mx)(\:([^\/]+))?(\/([0-9]+))?$/',$string,$matches)) {
+		if (preg_match('/^(a|mx)(\:([^\/]+))?(\/([0-9]+))?$/', $string, $matches)) {
 			$domain = $matches[3];
 			$subnet = $matches[5];
 			$domainok = false;
@@ -73,28 +73,28 @@ class SpfRule extends SimpleType {
 			return true;
 		}
 		// ip4 mechanism
-		elseif (preg_match('/^ip4\:([^\/]+)(\/([0-9]+))?$/',$string,$matches)) {
+		elseif (preg_match('/^ip4\:([^\/]+)(\/([0-9]+))?$/', $string, $matches)) {
 			$ip = $matches[1];
-			$subnet = isset($matches[3])?$matches[3]:'';
+			$subnet = isset($matches[3]) ? $matches[3] : '';
 			if (!IPv4::isValidValue($ip)) return false;
 			if ($subnet === '') return true;
 			return (UInt::isValidValue($subnet) && $subnet >= 0 && $subnet <= 32);
 		}
 		// ip6 mechanism
-		elseif (preg_match('/^ip6\:([^\/]+)(\/([0-9]+))?$/',$string,$matches)) {
+		elseif (preg_match('/^ip6\:([^\/]+)(\/([0-9]+))?$/', $string, $matches)) {
 			$ip = $matches[1];
-			$subnet = isset($matches[3])?$matches[3]:'';
+			$subnet = isset($matches[3]) ? $matches[3] : '';
 			if (!IPv6::isValidValue($ip)) return false;
 			if ($subnet === '') return true;
 			return (UInt::isValidValue($subnet) && $subnet >= 0 && $subnet <= 128);
 		}
 		// ptr,exists,include mechanism
-		elseif (preg_match('/^(ptr|exists|include)\:(.*)$/',$string,$matches)) {
+		elseif (preg_match('/^(ptr|exists|include)\:(.*)$/', $string, $matches)) {
 			$domain = $matches[2];
 			return Hostname::isValidValue($domain);
 		}
 		// redirect/exp modifier
-		elseif (preg_match('/^(redirect|exp)=(.*)$/',$string,$matches)) {
+		elseif (preg_match('/^(redirect|exp)=(.*)$/', $string, $matches)) {
 			$domain = $matches[2];
 			return Hostname::isValidValue($domain);
 		}

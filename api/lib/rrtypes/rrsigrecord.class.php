@@ -31,15 +31,15 @@ class RrsigRecord extends ResourceRecord {
 
 	public static function listFields() {
 		return array(
-			'typecovered' => 'StringNoSpaces',
-			'algorithm' => 'UInt8',
-			'labelcount' => 'UInt',
-			'originalttl' => 'UInt',
+			'typecovered'   => 'StringNoSpaces',
+			'algorithm'     => 'UInt8',
+			'labelcount'    => 'UInt',
+			'originalttl'   => 'UInt',
 			'sigexpiration' => 'UInt',
-			'siginception' => 'UInt',
-			'keytag' => 'UInt16',
-			'signer' => 'Hostname',
-			'signature' => 'Base64Content'
+			'siginception'  => 'UInt',
+			'keytag'        => 'UInt16',
+			'signer'        => 'Hostname',
+			'signature'     => 'Base64Content'
 		);
 	}
 }

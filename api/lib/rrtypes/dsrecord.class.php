@@ -31,10 +31,10 @@ class DsRecord extends ResourceRecord {
 
 	public static function listFields() {
 		return array(
-			'keytag' => 'UInt16',
-			'algorithm' => 'UInt8',
+			'keytag'     => 'UInt16',
+			'algorithm'  => 'UInt8',
 			'digesttype' => 'UInt8',
-			'digest' => 'Base64Content'
+			'digest'     => 'Base64Content'
 		);
 	}
 }

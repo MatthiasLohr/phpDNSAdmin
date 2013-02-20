@@ -22,8 +22,7 @@ $zoneModCount = 0;
 $config = array(
 
 	// authentication modules
-	'authentication' => array(
-		/* -- delete this line for enabling HtpasswdAuthentication --
+	'authentication' => array( /* -- delete this line for enabling HtpasswdAuthentication --
 		array(
 			'_module' => 'HtpasswdAuthentication',
 			'filename' => '/var/www/phpdnsadmin/.htpasswd'
@@ -66,7 +65,7 @@ $config = array(
 	),
 
 	// autologin modules
-	'autologin' => array(
+	'autologin'      => array(
 		array(
 			'_module' => 'SessionAutologin',
 
@@ -74,13 +73,10 @@ $config = array(
 	),
 
 	// authorization modules
-	'authorization' => array(
-
-	),
+	'authorization'  => array(),
 
 	// zone modules
-	'zone' => array(
-		/* -- delete this line for enabling BindDlzPdoZone --
+	'zone'           => array( /* -- delete this line for enabling BindDlzPdoZone --
 		array(
 			'_module' => 'BindDlzPdoZone',
 			'_sysname' => 'server'.(++$zoneModCount),
@@ -165,7 +161,7 @@ $config = array(
 	),
 
 	// internal phpDNSAdmin configuration
-	'internal' => array(
+	'internal'       => array(
 		'debug' => false, // shows strack traces on exepctions. DANGER! maybe shows passwords!!!
 	)
 );

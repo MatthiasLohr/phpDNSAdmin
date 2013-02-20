@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class ModuleConfigException extends Exception {}
+class ModuleConfigException extends Exception {
+}
 
 ?>

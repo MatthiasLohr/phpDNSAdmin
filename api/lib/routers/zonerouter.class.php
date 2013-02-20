@@ -77,10 +77,10 @@ class ZoneRouter extends RequestRouter {
 		// sort options
 		$sortoptions = '';
 		if (isset($_GET['sortby'])) {
-			if (in_array(strval($_GET['sortby']),array('id','name','type','content','ttl','priority'))) {
+			if (in_array(strval($_GET['sortby']), array('id', 'name', 'type', 'content', 'ttl', 'priority'))) {
 				$sortoptions = strval($_GET['sortby']);
 				if (isset($_GET['sortorder']) && $_GET['sortorder'] == 'DESC') {
-					$sortoptions = '-'.$sortoptions;
+					$sortoptions = '-' . $sortoptions;
 				}
 			}
 			else {
@@ -97,7 +97,7 @@ class ZoneRouter extends RequestRouter {
 			$limit = $_GET['limit'];
 		}
 
-		$records = $this->zone->listRecordsByFilter($filter,$offset,$limit,$sortoptions);
+		$records = $this->zone->listRecordsByFilter($filter, $offset, $limit, $sortoptions);
 		$result = array();
 		foreach ($records as $recordid => $record) {
 			$result[] = $this->record2Json($recordid, $record);
@@ -124,22 +124,27 @@ class ZoneRouter extends RequestRouter {
 				if (!isset($data['type'])) {
 					$result->success = false;
 					$result->error = 'No record type specified!';
-				} elseif (!isset($data['name'])) {
+				}
+				elseif (!isset($data['name'])) {
 					throw new InvalidFieldDataException('name is empty!');
-				} elseif (!isset($data['ttl'])) {
+				}
+				elseif (!isset($data['ttl'])) {
 					throw new InvalidFieldDataException('ttl is empty!');
-				} elseif (!isset($data['fields'])) {
+				}
+				elseif (!isset($data['fields'])) {
 					throw new InvalidFieldDataException('No field values given!');
-				} else {
+				}
+				else {
 					// workaround to avoid php warnings
 					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
 					// views
-					if(isset($data['views'])) {
+					if (isset($data['views'])) {
 						$views = array();
-						foreach($data['views'] as $view => $value ) {
+						foreach ($data['views'] as $view => $value) {
 							$views[$view] = $value;
 						}
-					} else {
+					}
+					else {
 						$views = null;
 					}
 					$record = ResourceRecord::getInstance($data['type'], $data['name'], $data['fields'], $data['ttl'], $prio, $views);
@@ -154,34 +159,41 @@ class ZoneRouter extends RequestRouter {
 					//$result->records = $this->listRecordsByFilter();
 					$result->totalCount = $this->countRecordsByFilter();
 				}
-			} else {
+			}
+			else {
 				$result->records = $this->listRecordsByFilter();
 				$result->totalCount = $this->countRecordsByFilter();
 				$result->success = true;
 			}
-		} elseif ($this->endOfTracking() && $recordid !== null) {
+		}
+		elseif ($this->endOfTracking() && $recordid !== null) {
 			$record = $this->zone->getRecordById($recordid);
 			if ($this->getRequestType() == 'PUT') {
 				$data = RequestRouter::getRequestData();
 				if (!isset($data['type'])) {
 					$result->success = false;
 					$result->error = 'No record type specified!';
-				} elseif (!isset($data['name'])) {
+				}
+				elseif (!isset($data['name'])) {
 					throw new InvalidFieldDataException('name is empty!');
-				} elseif (!isset($data['ttl'])) {
+				}
+				elseif (!isset($data['ttl'])) {
 					throw new InvalidFieldDataException('ttl is empty!');
-				} elseif (!isset($data['fields'])) {
+				}
+				elseif (!isset($data['fields'])) {
 					throw new InvalidFieldDataException('No field values given!');
-				} else {
+				}
+				else {
 					// workaround to avoid php warnings
 					$prio = isset($data['fields']['priority']) ? $data['fields']['priority'] : null;
 					// views
-					if(isset($data['views'])) {
+					if (isset($data['views'])) {
 						$views = array();
-						foreach($data['views'] as $view => $value ) {
+						foreach ($data['views'] as $view => $value) {
 							$views[$view] = $value;
 						}
-					} else {
+					}
+					else {
 						$views = null;
 					}
 
@@ -190,15 +202,18 @@ class ZoneRouter extends RequestRouter {
 					//$result->records = $this->listRecordsByFilter();
 					$result->totalCount = $this->countRecordsByFilter();
 				}
-			} elseif ($this->getRequestType() == 'DELETE') {
+			}
+			elseif ($this->getRequestType() == 'DELETE') {
 				$result->success = $this->zone->recordDelete($recordid);
 				//$result->records = $this->listRecordsByFilter();
 				$result->totalCount = $this->countRecordsByFilter();
-			} else {
+			}
+			else {
 				if ($record === null) {
 					$result->success = false;
 					$result->error = 'No such record!';
-				} else {
+				}
+				else {
 					$result->success = true;
 					$result->record = $this->record2Json($recordid, $record);
 				}
@@ -232,7 +247,8 @@ class ZoneRouter extends RequestRouter {
 		$result = new stdClass();
 		if ($this->zone->getModule()->hasViews()) {
 			$views = $this->zone->getModule()->listViews();
-		} else {
+		}
+		else {
 			$views = null;
 		}
 		//
@@ -240,10 +256,12 @@ class ZoneRouter extends RequestRouter {
 			if ($views !== null) {
 				$result->success = true;
 				$result->views = $views;
-			} else {
+			}
+			else {
 				$result->success = false;
 			}
-		} else { // list records from one view
+		}
+		else { // list records from one view
 			$result->records = $this->listRecordsByFilter(array('view' => $view));
 			$result->totalCount = $this->countRecordsByFilter(array('view' => $view));
 			$result->success = true;

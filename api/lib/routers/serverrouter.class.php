@@ -83,7 +83,7 @@ class ServerRouter extends RequestRouter {
 					$tmpzone->views = $this->zoneModule->listViews();
 				}
 				$result->zones[$zone->getName()] = $tmpzone;
-				ksort($result->zones,SORT_STRING);
+				ksort($result->zones, SORT_STRING);
 			}
 			return $result;
 		}

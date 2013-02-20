@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class NotSupportedException extends Exception {}
+class NotSupportedException extends Exception {
+}
 
 ?>

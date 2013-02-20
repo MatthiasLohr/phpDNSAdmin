@@ -31,21 +31,21 @@ class Email extends SimpleType {
 
 	public function isValidValue($string) {
 		$tmp = explode('@', $string);
-    if (count($tmp) != 2) return false;
-    $tmp[0] = strtolower(preg_replace('/\(.*\)/', '', $tmp[0]));
-    if ($tmp[0][0] == '.' || $tmp[0][strlen($tmp[0]) - 1] == '.') return false;
-    for ($i = 0; $i < strlen($tmp[0]); $i++)
-      if (false === strpos('abcdefghijklmnopqrstuvwxyz0-9.!#$%&\'*+-/=?^_`{|}~', $tmp[0][$i]))
-        return false;
-    return Hostname::isValidValue($tmp[1]);
+		if (count($tmp) != 2) return false;
+		$tmp[0] = strtolower(preg_replace('/\(.*\)/', '', $tmp[0]));
+		if ($tmp[0][0] == '.' || $tmp[0][strlen($tmp[0]) - 1] == '.') return false;
+		for ($i = 0; $i < strlen($tmp[0]); $i++)
+			if (false === strpos('abcdefghijklmnopqrstuvwxyz0-9.!#$%&\'*+-/=?^_`{|}~', $tmp[0][$i]))
+				return false;
+		return Hostname::isValidValue($tmp[1]);
 	}
 
-  public function normalizeValue($string) {
-    if (!self::isValidValue($string))
-      throw new InvalidTypeException($string . ' is no valid Email');
-    $tmp = explode('@', $string);
-    return $tmp[0] . '@' . Hostname::normalizeValue($tmp[1]);
-  }
+	public function normalizeValue($string) {
+		if (!self::isValidValue($string))
+			throw new InvalidTypeException($string . ' is no valid Email');
+		$tmp = explode('@', $string);
+		return $tmp[0] . '@' . Hostname::normalizeValue($tmp[1]);
+	}
 
 	public static function convertFromDNS($string) {
 		//<em>\.<ail>.<rest> => <em>.<ail>@<rest>
@@ -62,7 +62,7 @@ class Email extends SimpleType {
 
 		$first_replaced = preg_replace('/\./', '\\.', $first);
 
-		return $first_replaced.'.'.$second;
+		return $first_replaced . '.' . $second;
 	}
 }
 

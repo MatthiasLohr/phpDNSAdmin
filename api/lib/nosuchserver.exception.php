@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class NoSuchServerException extends Exception {}
+class NoSuchServerException extends Exception {
+}
 
 ?>

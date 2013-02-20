@@ -68,20 +68,20 @@ class LdapAuthentication extends AuthenticationModule {
 	}
 
 	public function  __destruct() {
-	 ldap_unbind($this->lc);
+		ldap_unbind($this->lc);
 	}
 
 	public static function getInstance($config) {
 		return new LdapAuthentication($config);
 	}
 
-	private function ldapBind($bindDN = '',$password = '') {
+	private function ldapBind($bindDN = '', $password = '') {
 		if ($bindDN == '') { // anonymous bind
 			$result = @ldap_bind($this->lc);
 		}
 		else {
 			if ($password == '') return false;
-			$result = @ldap_bind($this->lc,$bindDN,$password);
+			$result = @ldap_bind($this->lc, $bindDN, $password);
 		}
 		if ($result === true) {
 			return true;
@@ -92,49 +92,49 @@ class LdapAuthentication extends AuthenticationModule {
 	}
 
 	private function ldapCountEntries($searchResource) {
-		return ldap_count_entries($this->lc,$searchResource);
+		return ldap_count_entries($this->lc, $searchResource);
 	}
 
 	private function ldapEscape($string, $dn = false) {
 		$string = strval($string);
 		$dn = (bool)$dn;
 
-		if($dn) {
-			$metaChars = array(',','=', '+', '<','>',';', '\\', '"', '#');
+		if ($dn) {
+			$metaChars = array(',', '=', '+', '<', '>', ';', '\\', '"', '#');
 		}
 		else {
 			$metaChars = array('*', '(', ')', '\\', chr(0));
 		}
 		$quotedMetaChars = array();
-		foreach ($metaChars as $key=>$value) {
-			$quotedMetaChars[$key]='\\'.str_pad(dechex(ord($value)), 2, '0');
+		foreach ($metaChars as $key => $value) {
+			$quotedMetaChars[$key] = '\\' . str_pad(dechex(ord($value)), 2, '0');
 		}
-		$string = str_replace($metaChars,$quotedMetaChars,$string);
+		$string = str_replace($metaChars, $quotedMetaChars, $string);
 		return ($string);
 	}
 
 	private function ldapFirstEntry($searchResource) {
-		return ldap_first_entry($this->lc,$searchResource);
+		return ldap_first_entry($this->lc, $searchResource);
 	}
 
 	private function ldapGetDN($entryResource) {
-		return ldap_get_dn($this->lc,$entryResource);
+		return ldap_get_dn($this->lc, $entryResource);
 	}
 
-	private function ldapSearch($baseDN,$filter) {
-		return ldap_search($this->lc,$baseDN,$filter);
+	private function ldapSearch($baseDN, $filter) {
+		return ldap_search($this->lc, $baseDN, $filter);
 	}
 
-	public function userCheckPassword(User $user,$password) {
+	public function userCheckPassword(User $user, $password) {
 		if ($password == '') return false; // password must not be empty
-		if (is_array($this->whitelist) && !in_array($user->getUsername(),$this->whitelist)) return false;
-		if (in_array($user->getUsername(),$this->blacklist)) return false;
-		$this->ldapBind($this->binddn,$this->password);
-		$sr = $this->ldapSearch($this->basedn,sprintf($this->filter,$this->ldapEscape($user->getUsername())));
+		if (is_array($this->whitelist) && !in_array($user->getUsername(), $this->whitelist)) return false;
+		if (in_array($user->getUsername(), $this->blacklist)) return false;
+		$this->ldapBind($this->binddn, $this->password);
+		$sr = $this->ldapSearch($this->basedn, sprintf($this->filter, $this->ldapEscape($user->getUsername())));
 		if ($this->ldapCountEntries($sr) > 0) {
 			$ldapUser = $this->ldapFirstEntry($sr);
 			// try to rebind with new user
-			return $this->ldapBind($this->ldapGetDN($ldapUser),$password);
+			return $this->ldapBind($this->ldapGetDN($ldapUser), $password);
 		}
 		else {
 			return false;
@@ -142,8 +142,8 @@ class LdapAuthentication extends AuthenticationModule {
 	}
 
 	public function userExists(User $user) {
-		$this->ldapBind($this->binddn,$this->password);
-		$sr = $this->ldapSearch($this->basedn,sprintf($this->filter,$this->ldapEscapeFilter($user->getUsername())));
+		$this->ldapBind($this->binddn, $this->password);
+		$sr = $this->ldapSearch($this->basedn, sprintf($this->filter, $this->ldapEscapeFilter($user->getUsername())));
 		return ($this->ldapCountEntries($sr) > 0);
 	}
 

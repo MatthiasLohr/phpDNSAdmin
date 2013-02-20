@@ -31,10 +31,10 @@ class DnskeyRecord extends ResourceRecord {
 
 	public static function listFields() {
 		return array(
-			'flags' => 'UInt16',
-			'protocol' => 'DnskeyProtocol',
+			'flags'     => 'UInt16',
+			'protocol'  => 'DnskeyProtocol',
 			'algorithm' => 'UInt8',
-			'pubkey' => 'Base64Content'
+			'pubkey'    => 'Base64Content'
 		);
 	}
 }

@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class NoSuchUserException extends Exception {}
+class NoSuchUserException extends Exception {
+}
 
 ?>

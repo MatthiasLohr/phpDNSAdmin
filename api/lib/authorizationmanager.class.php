@@ -57,10 +57,10 @@ class AuthorizationManager {
 			if (!isset($localConfig['_module'])) throw new ModuleConfigException('Found module config without _module definition!');
 			$moduleName = $localConfig['_module'];
 			unset($localConfig['_module']);
-			$moduleFile = API_ROOT.'/lib/modules/authorization/'.strtolower($moduleName).'.class.php';
-			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file '.$moduleFile.'!');
+			$moduleFile = API_ROOT . '/lib/modules/authorization/' . strtolower($moduleName) . '.class.php';
+			if (!file_exists($moduleFile)) throw new ModuleConfigException('Missing module file ' . $moduleFile . '!');
 			require_once($moduleFile);
-			$this->modules[$moduleIndex] = call_user_func(array($moduleName,'getInstance'),$localConfig);
+			$this->modules[$moduleIndex] = call_user_func(array($moduleName, 'getInstance'), $localConfig);
 			if ($this->modules[$moduleIndex] === null) unset($this->modules[$moduleIndex]);
 		}
 	}

@@ -38,8 +38,8 @@ abstract class ZoneModule {
 	 * @param array $filter filter criteria
 	 * @return amount of records matching the filter criterias
 	 */
-	public function countRecordsByFilter(Zone $zone,array $filter = array()) {
-		$result = $this->listRecordsByFilter($zone,$filter);
+	public function countRecordsByFilter(Zone $zone, array $filter = array()) {
+		$result = $this->listRecordsByFilter($zone, $filter);
 		if (is_array($result)) {
 			return count($result);
 		}
@@ -70,7 +70,7 @@ abstract class ZoneModule {
 	 * @param integer $recordid ID of the record
 	 * @return ResourceRecord the record (or null if it doesn't exist?)
 	 */
-	abstract public function getRecordById(Zone $zone,$recordid);
+	abstract public function getRecordById(Zone $zone, $recordid);
 
 	/**
 	 * Get a zone by full name
@@ -79,7 +79,7 @@ abstract class ZoneModule {
 	 * @return Zone the zone (or null if it doesn't exist)
 	 */
 	public function getZoneByName($zonename) {
-		$tmpZone = new Zone($zonename,$this);
+		$tmpZone = new Zone($zonename, $this);
 		if ($this->zoneExists($zone)) {
 			return $tmpZone;
 		}
@@ -157,10 +157,10 @@ abstract class ZoneModule {
 	 */
 	protected static function helpPaging(array $records, $offset = 0, $limit = null) {
 		if ($limit === null) {
-			return array_slice($records,$offset);
+			return array_slice($records, $offset);
 		}
 		else {
-			return array_slice($records,$offset,$limit);
+			return array_slice($records, $offset, $limit);
 		}
 	}
 
@@ -172,38 +172,38 @@ abstract class ZoneModule {
 	 * @return array sorted array of records
 	 */
 	protected static function helpSort(array $records, $sortoptions = '') {
-		$cycles = explode(',',$sortoptions);
+		$cycles = explode(',', $sortoptions);
 		foreach ($cycles as $cycle) {
-			$inverse = (substr($cycle,0,1) == '-');
-			$subject = substr($cycle,$inverse?1:0);
+			$inverse = (substr($cycle, 0, 1) == '-');
+			$subject = substr($cycle, $inverse ? 1 : 0);
 			switch ($subject) {
 				case 'id':
 					if ($inverse) {
-						krsort($records,SORT_NUMERIC);
+						krsort($records, SORT_NUMERIC);
 					}
 					else {
-						ksort($records,SORT_NUMERIC);
+						ksort($records, SORT_NUMERIC);
 					}
 					break;
 				case 'name':
-					uasort($records,array('self','helpSortCompareName'));
-					if ($inverse) $records = array_reverse($records,true);
+					uasort($records, array('self', 'helpSortCompareName'));
+					if ($inverse) $records = array_reverse($records, true);
 					break;
 				case 'type':
-					uasort($records,array('self','helpSortCompareType'));
-					if ($inverse) $records = array_reverse($records,true);
+					uasort($records, array('self', 'helpSortCompareType'));
+					if ($inverse) $records = array_reverse($records, true);
 					break;
 				case 'content':
-					uasort($records,array('self','helpSortCompareContent'));
-					if ($inverse) $records = array_reverse($records,true);
+					uasort($records, array('self', 'helpSortCompareContent'));
+					if ($inverse) $records = array_reverse($records, true);
 					break;
 				case 'ttl':
-					uasort($records,array('self','helpSortCompareTTL'));
-					if ($inverse) $records = array_reverse($records,true);
+					uasort($records, array('self', 'helpSortCompareTTL'));
+					if ($inverse) $records = array_reverse($records, true);
 					break;
 				case 'priority':
-					uasort($records,array('self','helpSortComparePriority'));
-					if ($inverse) $records = array_reverse($records,true);
+					uasort($records, array('self', 'helpSortComparePriority'));
+					if ($inverse) $records = array_reverse($records, true);
 					break;
 			}
 		}
@@ -218,7 +218,7 @@ abstract class ZoneModule {
 	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
 	 */
 	private static function helpSortCompareContent(ResourceRecord $a, ResourceRecord $b) {
-		return strcmp($a->getContentString(),$b->getContentString());
+		return strcmp($a->getContentString(), $b->getContentString());
 	}
 
 	/**
@@ -251,7 +251,7 @@ abstract class ZoneModule {
 	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
 	 */
 	private static function helpSortComparePriority(ResourceRecord $a, ResourceRecord $b) {
-		return ($a->getField('priority') < $b->getField('priority'))?-1:(($a->getField('priority') > $b->getField('priority'))?1:0);
+		return ($a->getField('priority') < $b->getField('priority')) ? -1 : (($a->getField('priority') > $b->getField('priority')) ? 1 : 0);
 	}
 
 	/**
@@ -262,7 +262,7 @@ abstract class ZoneModule {
 	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
 	 */
 	private static function helpSortCompareTTL(ResourceRecord $a, ResourceRecord $b) {
-		return ($a->getTTL() < $b->getTTL())?-1:(($a->getTTL() > $b->getTTL())?1:0);
+		return ($a->getTTL() < $b->getTTL()) ? -1 : (($a->getTTL() > $b->getTTL()) ? 1 : 0);
 	}
 
 	/**
@@ -273,7 +273,7 @@ abstract class ZoneModule {
 	 * @return int 0: both records are equal, -1: $a is predecessor of $b, 1: $b is predecessor of $a
 	 */
 	private static function helpSortCompareType(ResourceRecord $a, ResourceRecord $b) {
-		return strcmp($a->getType(),$b->getType());
+		return strcmp($a->getType(), $b->getType());
 	}
 
 	/**
@@ -283,13 +283,13 @@ abstract class ZoneModule {
 	 * @return boolean true on success, false otherwise
 	 */
 	public function incrementSerial(Zone $zone) {
-		$records = $this->listRecordsByType($zone,'SOA');
+		$records = $this->listRecordsByType($zone, 'SOA');
 		if ($records === false || count($records) == 0) return false;
 		$success = true;
 		foreach ($records as $recordId => $soa) {
 			if ($soa->getName() != '@') continue;
 			$aSerial = intval(date('Ymd00'));
-			$newSerial = max((intval($soa->getField('serial'))+1), $aSerial);
+			$newSerial = max((intval($soa->getField('serial')) + 1), $aSerial);
 			$soa->setField('serial', $newSerial);
 			$success = $this->recordUpdate($zone, $recordId, $soa) && $success;
 		}
@@ -304,7 +304,7 @@ abstract class ZoneModule {
 	 * @return ResourceRecord[] the records
 	 */
 	public function listRecords(Zone $zone, $offset = 0, $limit = null, $sortoptions = '') {
-		return $this->listRecordsByFilter($zone,$offset,$limit,$sortoptions);
+		return $this->listRecordsByFilter($zone, $offset, $limit, $sortoptions);
 	}
 
 	/**
@@ -316,7 +316,7 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
-	abstract public function listRecordsByFilter(Zone $zone,array $filter = array(), $offset = 0, $limit = null, $sortoptions = '');
+	abstract public function listRecordsByFilter(Zone $zone, array $filter = array(), $offset = 0, $limit = null, $sortoptions = '');
 
 	/**
 	 * Give all records with a specified name
@@ -327,8 +327,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] array with resource records
 	 */
-	public function listRecordsByname(Zone $zone,$name, $offset = 0, $limit = null, $sortoptions = '') {
-		return $this->listRecordsByFilter($zone,array('name' => $name),$offset,$limit,$sortoptions);
+	public function listRecordsByname(Zone $zone, $name, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone, array('name' => $name), $offset, $limit, $sortoptions);
 	}
 
 	/**
@@ -339,8 +339,8 @@ abstract class ZoneModule {
 	 * @param int $limit max count of returned records
 	 * @return ResourceRecord[] matching records
 	 */
-	public function listRecordsByType(Zone $zone,$type, $offset = 0, $limit = null, $sortoptions = '') {
-		return $this->listRecordsByFilter($zone,array('type' => $type),$offset,$limit,$sortoptions);
+	public function listRecordsByType(Zone $zone, $type, $offset = 0, $limit = null, $sortoptions = '') {
+		return $this->listRecordsByFilter($zone, array('type' => $type), $offset, $limit, $sortoptions);
 	}
 
 	/**
@@ -357,7 +357,7 @@ abstract class ZoneModule {
 	 * @param ResourceRecord $record record to add
 	 * @return false or id of new record
 	 */
-	abstract public function recordAdd(Zone $zone,ResourceRecord $record);
+	abstract public function recordAdd(Zone $zone, ResourceRecord $record);
 
 	/**
 	 * Delete a record from a specific zone
@@ -393,7 +393,7 @@ abstract class ZoneModule {
 	 * @return boolean alway true - or a fat BOOOM
 	 */
 	protected function zoneAssureExistence(Zone $zone) {
-		if (!$this->zoneExists($zone)) throw new NoSuchZoneException('No zone '.$zone->getName().' here!');
+		if (!$this->zoneExists($zone)) throw new NoSuchZoneException('No zone ' . $zone->getName() . ' here!');
 		return true;
 	}
 

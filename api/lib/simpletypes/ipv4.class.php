@@ -29,25 +29,25 @@
  */
 class IPv4 extends SimpleType {
 
-  public function isValidValue($string) {
-    $tmp = explode('.',$string);
-    if (count($tmp) != 4) return false;
-    for ($i = 0; $i < 4; $i++) {
-      if (!is_numeric($tmp[$i])) return false;
-      if ($tmp[$i] < 0 || $tmp[$i] > 255) return false;
-    }
-    return true;
-  }
+	public function isValidValue($string) {
+		$tmp = explode('.', $string);
+		if (count($tmp) != 4) return false;
+		for ($i = 0; $i < 4; $i++) {
+			if (!is_numeric($tmp[$i])) return false;
+			if ($tmp[$i] < 0 || $tmp[$i] > 255) return false;
+		}
+		return true;
+	}
 
-  public function normalizeValue($string) {
-    if (!self::isValidValue($string))
-      throw new InvalidTypeException($string . ' is no valid IPv4');
-    $tmp = explode('.',$string);
-    $result = intval($tmp[0]);
-    for ($i = 1; $i < 4; $i++)
-      $result .= '.' . intval($tmp[$i]);
-    return $result;
-  }
+	public function normalizeValue($string) {
+		if (!self::isValidValue($string))
+			throw new InvalidTypeException($string . ' is no valid IPv4');
+		$tmp = explode('.', $string);
+		$result = intval($tmp[0]);
+		for ($i = 1; $i < 4; $i++)
+			$result .= '.' . intval($tmp[$i]);
+		return $result;
+	}
 }
 
 ?>

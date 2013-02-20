@@ -35,7 +35,7 @@ class MxRecord extends ResourceRecord {
 
 	public static function listFields() {
 		return array(
-			'target' => 'Hostname',
+			'target'   => 'Hostname',
 			'priority' => 'UInt'
 		);
 	}

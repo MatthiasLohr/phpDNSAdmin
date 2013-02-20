@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Andreas Litt <andreas.litt@googlemail.com>
  */
-class ZoneExistsException extends Exception {}
+class ZoneExistsException extends Exception {
+}
 
 ?>

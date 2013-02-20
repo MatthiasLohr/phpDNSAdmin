@@ -33,7 +33,7 @@ class RpRecord extends ResourceRecord {
 
 	public static function listFields() {
 		return array(
-			'mbox' => 'Email',
+			'mbox'     => 'Email',
 			'txtdname' => 'Hostname'
 		);
 	}

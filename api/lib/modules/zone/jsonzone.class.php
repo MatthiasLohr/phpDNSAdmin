@@ -52,16 +52,15 @@ class JsonZone extends ZoneModule implements Views {
 	public static function getInstance($config) {
 		try {
 			return new JsonZone($config);
-		}
-		catch (Exception $e) {
+		} catch (Exception $e) {
 			return null;
 		}
 	}
 
 	public function getRecordById(Zone $zone, $recordid) {
-		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid);
+		$result = $this->httpGet($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName() . '/records/' . $recordid);
 		if ($result->success) {
-			return ResourceRecord::getInstance($result->record->type,$result->record->name,$result->record->fields,$result->record->ttl,isset($result->record->fields->priority)?$result->record->priority:null);
+			return ResourceRecord::getInstance($result->record->type, $result->record->name, $result->record->fields, $result->record->ttl, isset($result->record->fields->priority) ? $result->record->priority : null);
 		}
 		else {
 			return null;
@@ -69,30 +68,30 @@ class JsonZone extends ZoneModule implements Views {
 	}
 
 	private function httpDelete($url, $args = array()) {
-		return $this->httpRequest('DELETE',$url,$args);
+		return $this->httpRequest('DELETE', $url, $args);
 	}
 
 	private function httpGet($url, $args = array()) {
-		return $this->httpRequest('GET',$url,$args);
+		return $this->httpRequest('GET', $url, $args);
 	}
 
 	private function httpPost($url, $args = array()) {
-		return $this->httpRequest('POST',$url,$args);
+		return $this->httpRequest('POST', $url, $args);
 	}
 
 	private function httpPut($url, $args = array()) {
-		return $this->httpRequest('PUT',$url,$args);
+		return $this->httpRequest('PUT', $url, $args);
 	}
 
 	private function httpRequest($method, $url, $args) {
 		$cr = curl_init();
 		// init request
-		curl_setopt_array($cr,array(
-			CURLOPT_URL => $url,
+		curl_setopt_array($cr, array(
+			CURLOPT_URL            => $url,
 			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_USERAGENT => 'phpDNSAdmin Json Client',
-			CURLOPT_CUSTOMREQUEST => $method,
-			CURLOPT_POSTFIELDS => http_build_query($args)
+			CURLOPT_USERAGENT      => 'phpDNSAdmin Json Client',
+			CURLOPT_CUSTOMREQUEST  => $method,
+			CURLOPT_POSTFIELDS     => http_build_query($args)
 		));
 		$result = curl_exec($cr);
 		return json_decode($result);
@@ -105,26 +104,26 @@ class JsonZone extends ZoneModule implements Views {
 		if (is_numeric($limit) && $limit > 0) $tmpFilter['limit'] = $limit;
 		// sort options
 		if (strlen($sortoptions) > 0) {
-			$cols = explode(',',$sortoptions);
-			if (substr($cols[0],0,1) == '-') {
-				$colname = substr($cols[0],1);
+			$cols = explode(',', $sortoptions);
+			if (substr($cols[0], 0, 1) == '-') {
+				$colname = substr($cols[0], 1);
 				$order = 'DESC';
 			}
 			else {
 				$colname = $cols[0];
 				$order = 'ASC';
 			}
-			if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
+			if (in_array($colname, array('id', 'name', 'type', 'content', 'ttl', 'priority'))) {
 				$tmpFilter['sortby'] = $colname;
 				$tmpFilter['sortorder'] = $order;
 			}
 		}
 		// limit/offset
-		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records?'.http_build_query($tmpFilter));
+		$result = $this->httpGet($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName() . '/records?' . http_build_query($tmpFilter));
 		if ($result->success) {
 			$records = array();
 			foreach ($result->records as $recordId => $tmpRecord) {
-				$records[$recordId] = ResourceRecord::getInstance($tmpRecord->type,$tmpRecord->name,$tmpRecord->fields,$tmpRecord->ttl,isset($tmpRecord->fields->priority)?$tmpRecord->priority:null);
+				$records[$recordId] = ResourceRecord::getInstance($tmpRecord->type, $tmpRecord->name, $tmpRecord->fields, $tmpRecord->ttl, isset($tmpRecord->fields->priority) ? $tmpRecord->priority : null);
 			}
 			return $records;
 		}
@@ -134,7 +133,7 @@ class JsonZone extends ZoneModule implements Views {
 	}
 
 	public function listViews() {
-		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/views');
+		$result = $this->httpGet($this->apiBase . '/servers/' . $this->server . '/views');
 		if ($result->success && is_array($result->views)) {
 			return $result->views;
 		}
@@ -144,11 +143,11 @@ class JsonZone extends ZoneModule implements Views {
 	}
 
 	public function listZones() {
-		$result = $this->httpGet($this->apiBase.'/servers/'.$this->server.'/zones');
+		$result = $this->httpGet($this->apiBase . '/servers/' . $this->server . '/zones');
 		if ($result->success) {
 			$zones = array();
 			foreach ($result->zones as $zoneName => $tmpZone) {
-				$zone = new Zone($zoneName,$this);
+				$zone = new Zone($zoneName, $this);
 				$zones[$zone->getName()] = $zone;
 			}
 			return $zones;
@@ -159,7 +158,7 @@ class JsonZone extends ZoneModule implements Views {
 	}
 
 	public function incrementSerial(Zone $zone) {
-		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/incserial');
+		$result = $this->httpPost($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName() . '/incserial');
 		return $result->success;
 	}
 
@@ -170,12 +169,12 @@ class JsonZone extends ZoneModule implements Views {
 		$data->content = $record->getContentString();
 		$data->fields = array();
 		$classname = ResourceRecord::getClassByType($record->getType());
-		foreach (call_user_func(array($classname,'listFields')) as $fieldname => $simpletype) {
+		foreach (call_user_func(array($classname, 'listFields')) as $fieldname => $simpletype) {
 			$data->fields[$fieldname] = $record->getField($fieldname);
 		}
 		$data->ttl = $record->getTTL();
 		$data->views = $record->getViewinfo();
-		$result = $this->httpPost($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records',$data);
+		$result = $this->httpPost($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName() . '/records', $data);
 		if ($result->success) {
 			return $result->newid;
 		}
@@ -185,12 +184,12 @@ class JsonZone extends ZoneModule implements Views {
 	}
 
 	public function recordDelete(Zone $zone, $recordid) {
-		$result = $this->httpDelete($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid);
+		$result = $this->httpDelete($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName() . '/records/' . $recordid);
 		return $result->success;
 	}
 
 	public function recordSetViews(Zone $zone, $recordid, array $views) {
-		$record = $this->getRecordById($zone,$recordid);
+		$record = $this->getRecordById($zone, $recordid);
 		$data = new stdClass();
 		$data->type = $record->getType();
 		$data->name = $record->getName();
@@ -200,7 +199,7 @@ class JsonZone extends ZoneModule implements Views {
 			$data->fields[$fieldname] = $record->getField($fieldname);
 		}
 		$data->views = $views;
-		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
+		$result = $this->httpPut($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName() . '/records/' . $recordid, $data);
 		return $result->success;
 	}
 
@@ -211,22 +210,22 @@ class JsonZone extends ZoneModule implements Views {
 		$data->content = $record->getContentString();
 		$data->fields = array();
 		$classname = ResourceRecord::getClassByType($record->getType());
-		foreach (call_user_func(array($classname,'listFields')) as $fieldname => $simpletype) {
+		foreach (call_user_func(array($classname, 'listFields')) as $fieldname => $simpletype) {
 			$data->fields[$fieldname] = $record->getField($fieldname);
 		}
 		$data->ttl = $record->getTTL();
-		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName().'/records/'.$recordid,$data);
+		$result = $this->httpPut($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName() . '/records/' . $recordid, $data);
 		return $result->success;
 	}
 
 	public function zoneCreate(Zone $zone) {
 		if ($this->zoneExists($zone)) return false;
-		$result = $this->httpPut($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName());
+		$result = $this->httpPut($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName());
 		return $result->success;
 	}
 
 	public function zoneDelete(Zone $zone) {
-		$result = $this->httpDelete($this->apiBase.'/servers/'.$this->server.'/zones/'.$zone->getName());
+		$result = $this->httpDelete($this->apiBase . '/servers/' . $this->server . '/zones/' . $zone->getName());
 		return $result->success;
 	}
 

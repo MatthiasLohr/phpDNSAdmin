@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <matthias@lohr.me>
  */
-class MethodNotAllowedException extends Exception {}
+class MethodNotAllowedException extends Exception {
+}
 
 ?>

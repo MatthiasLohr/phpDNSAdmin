@@ -46,11 +46,12 @@ class SoaRecord extends ResourceRecord {
 		foreach ($this->listFields() as $fieldname => $simpletype) {
 			if ($fieldname == "hostmaster") {
 				$tmp[] = Email::convertToDNS($this->getField($fieldname));
-			} else {
+			}
+			else {
 				$tmp[] = $this->getField($fieldname);
 			}
 		}
-		return implode(' ',$tmp);
+		return implode(' ', $tmp);
 	}
 
 	protected function parseContent($content) {

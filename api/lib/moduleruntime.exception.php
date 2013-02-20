@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class ModuleRuntimeException extends Exception {}
+class ModuleRuntimeException extends Exception {
+}
 
 ?>

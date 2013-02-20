@@ -25,7 +25,7 @@
  */
 
 /** path to rrtype classes */
-define('RRTYPE_PATH',API_ROOT.'/lib/rrtypes');
+define('RRTYPE_PATH', API_ROOT . '/lib/rrtypes');
 
 /**
  * @package phpDNSAdmin
@@ -45,7 +45,7 @@ abstract class ResourceRecord {
 
 	private $viewinfo;
 
-	protected final function __construct($name,$content,$ttl,$priority = null,array $viewinfo = null) {
+	protected final function __construct($name, $content, $ttl, $priority = null, array $viewinfo = null) {
 		if (!$this->setName($name)) {
 			throw new InvalidFieldDataException('No valid record name!');
 		}
@@ -55,13 +55,13 @@ abstract class ResourceRecord {
 		else {
 			$this->fieldValues = $this->parseContent($content);
 		}
-		if ($priority !== null && $this->fieldExists('priority')) $this->setField('priority',$priority);
+		if ($priority !== null && $this->fieldExists('priority')) $this->setField('priority', $priority);
 		// check fields
 		foreach ($this->listFields() as $fieldname => $simpletype) {
-			if (!isset($this->fieldValues[$fieldname])) throw new InvalidFieldDataException('Field '.$fieldname.' is empty!');
+			if (!isset($this->fieldValues[$fieldname])) throw new InvalidFieldDataException('Field ' . $fieldname . ' is empty!');
 			$value = new $simpletype($this->fieldValues[$fieldname]);
 			if (!$value->isValid()) {
-				throw new InvalidFieldDataException('No valid data for field '.$fieldname.' ('.$simpletype.')');
+				throw new InvalidFieldDataException('No valid data for field ' . $fieldname . ' (' . $simpletype . ')');
 			}
 			$this->fieldValues[$fieldname] = $value->normalize();
 		}
@@ -115,9 +115,9 @@ abstract class ResourceRecord {
 	 * @return string name of the class which implements the given RRType
 	 */
 	public static final function getClassByType($type) {
-		$assumedName = strtoupper(substr($type,0,1)).strtolower(substr($type,1)).'Record';
-		if (file_exists(RRTYPE_PATH.'/'.strtolower($assumedName).'.class.php')) {
-			require_once(RRTYPE_PATH.'/'.strtolower($assumedName).'.class.php');
+		$assumedName = strtoupper(substr($type, 0, 1)) . strtolower(substr($type, 1)) . 'Record';
+		if (file_exists(RRTYPE_PATH . '/' . strtolower($assumedName) . '.class.php')) {
+			require_once(RRTYPE_PATH . '/' . strtolower($assumedName) . '.class.php');
 			if (class_exists($assumedName)) return $assumedName;
 		}
 		else {
@@ -130,7 +130,7 @@ abstract class ResourceRecord {
 		foreach ($this->listFields() as $fieldname => $simpletype) {
 			$tmp[] = $this->getField($fieldname);
 		}
-		return implode(' ',$tmp);
+		return implode(' ', $tmp);
 	}
 
 	/**
@@ -144,10 +144,10 @@ abstract class ResourceRecord {
 		return $this->fieldValues[$fieldname];
 	}
 
-	final public static function getInstance($type,$name,$content,$ttl,$priority = null, array $viewinfo = null) {
+	final public static function getInstance($type, $name, $content, $ttl, $priority = null, array $viewinfo = null) {
 		$className = self::getClassByType($type);
-		if ($className === null) throw new NotSupportedException('RRType '.$type.' is not supported yet!');
-		$record = new $className($name,$content,$ttl,$priority,$viewinfo);
+		if ($className === null) throw new NotSupportedException('RRType ' . $type . ' is not supported yet!');
+		$record = new $className($name, $content, $ttl, $priority, $viewinfo);
 		return $record;
 	}
 
@@ -176,7 +176,7 @@ abstract class ResourceRecord {
 	 */
 	public function getType() {
 		if (get_class($this) == 'ResourceRecord') return null;
-		return strtoupper(substr(get_class($this),0,-6));
+		return strtoupper(substr(get_class($this), 0, -6));
 	}
 
 	public function getViewinfo() {
@@ -192,12 +192,12 @@ abstract class ResourceRecord {
 
 	public static final function listTypes() {
 		$result = array();
-		foreach (glob(RRTYPE_PATH.'/*record.class.php') as $filename) {
-			$type = strtoupper(basename($filename,'record.class.php'));
+		foreach (glob(RRTYPE_PATH . '/*record.class.php') as $filename) {
+			$type = strtoupper(basename($filename, 'record.class.php'));
 			/*$tmp = new stdClass();
 			$tmp->type = $type;*/
 			//$result[] = $tmp;
-      $result[] = $type;
+			$result[] = $type;
 		}
 		return $result;
 	}
@@ -205,18 +205,18 @@ abstract class ResourceRecord {
 	protected function parseContent($content) {
 		$fields = $this->listFields();
 		$fieldCount = count($fields);
-		$values = explode(' ',$content,$fieldCount);
+		$values = explode(' ', $content, $fieldCount);
 		$i = 0;
 		$result = array();
 		foreach ($fields as $key => $simpletype) {
 			if ($key == 'priority') continue;
-			$result[$key] = isset($values[$i])?$values[$i]:null;
+			$result[$key] = isset($values[$i]) ? $values[$i] : null;
 			$i++;
 		}
 		return $result;
 	}
 
-	final public function setField($fieldname,$value) {
+	final public function setField($fieldname, $value) {
 		if (!$this->fieldExists($fieldname)) throw new NoSuchFieldException();
 		$fields = $this->listFields();
 		$simpletype = $fields[$fieldname];
@@ -238,11 +238,12 @@ abstract class ResourceRecord {
 	 */
 	final public function setName($name) {
 		if (!(
-				$name == '@' ||
+			$name == '@' ||
 				$name == '*' ||
 				Hostname::isValidValue($name)
 				|| (substr($name, 0, 2) == '*.' && Hostname::isValidValue(substr($name, 2, strlen($name) - 2)))
-		)) return false;
+		)
+		) return false;
 		$this->name = $name;
 		return true;
 	}
@@ -268,6 +269,7 @@ abstract class ResourceRecord {
  * @package phpDNSAdmin
  * @subpackage Exceptions
  */
-class NoSuchFieldException extends Exception {}
+class NoSuchFieldException extends Exception {
+}
 
 ?>

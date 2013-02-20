@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class NoSuchRRTypeException extends Exception {}
+class NoSuchRRTypeException extends Exception {
+}
 
 ?>

@@ -27,7 +27,8 @@
  * @package phpDNSAdmin
  * @subpackage Core
  */
-class InvalidTypeException extends Exception { }
+class InvalidTypeException extends Exception {
+}
 
 /**
  * @package phpDNSAdmin
@@ -64,13 +65,13 @@ abstract class SimpleType {
 	public function isValid() {
 		return $this->isValidValue($this->content);
 	}
-	
-  /**
-   * Validate data against data type
+
+	/**
+	 * Validate data against data type
 	 *
-   * @param string $string data to check
-   * @return bool true if valid, otherwise false
-   */
+	 * @param string $string data to check
+	 * @return bool true if valid, otherwise false
+	 */
 	abstract public function isValidValue($string);
 
 	/**
@@ -82,13 +83,13 @@ abstract class SimpleType {
 		return $this->normalizeValue($this->content);
 	}
 
-  /**
-   * Normalize data, e.g. cut off leading zeros
+	/**
+	 * Normalize data, e.g. cut off leading zeros
 	 *
-   * @param string $string given data
-   * @return string normalized data
-   */
-  abstract public function normalizeValue($string);
+	 * @param string $string given data
+	 * @return string normalized data
+	 */
+	abstract public function normalizeValue($string);
 
 }
 

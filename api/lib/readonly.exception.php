@@ -29,6 +29,7 @@
  * @subpackage Exceptions
  * @author Matthias Lohr <mail@matthias-lohr.net>
  */
-class ReadOnlyException extends Exception {}
+class ReadOnlyException extends Exception {
+}
 
 ?>
