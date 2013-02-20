@@ -55,7 +55,7 @@ var MainController = {
         auth.fetch({
             callbacks: options,
             success: function(model, response, options) {
-                if(model.isLoggedIn()) {
+                if(model.attributes.loggedIn) {
                     options.callbacks.success();
                 } else {
                     options.callbacks.failure();
