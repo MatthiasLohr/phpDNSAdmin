@@ -7,12 +7,12 @@ var Zone = Backbone.Model.extend({
 });
 
 var Zones = Backbone.Collection.extend({
-	url: function() {
+	url: function () {
 		return this.parentUrl + '/zones/'
 	},
 	model: Zone,
 
-	parse: function(resp) {
+	parse: function (resp) {
 		return resp.zones;
 	}
 });

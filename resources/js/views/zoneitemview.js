@@ -8,20 +8,20 @@ var ZoneItemView = Backbone.View.extend({
 		'click a': 'openZone'
 	},
 
-	initialize: function() {
+	initialize: function () {
 		this.listenTo(this.model, 'change', this.render);
 	},
 
-	render: function() {
+	render: function () {
 		this.$el.html(this.template(this.model.toJSON()));
 		return this;
 	},
 
-	changeZoneName: function() {
+	changeZoneName: function () {
 		console.log('dblclicked');
 	},
 
-	openZone: function() {
+	openZone: function () {
 		console.log('clicked');
 	}
 });
