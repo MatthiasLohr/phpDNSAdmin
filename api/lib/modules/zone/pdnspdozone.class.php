@@ -270,29 +270,21 @@ class PdnsPdoZone extends ZoneModule {
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
 		$this->zoneAssureExistence($zone);
 		$domainid = $this->zoneIds[$zone->getName()];
-		try {
-			$priority = $record->getField('priority');
-			$stm = $this->db->query(
-				'UPDATE ' . $this->tablePrefix . 'records SET'
-				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. ' type = ' . $this->db->quote($record->getType()) . ','
-				. ' content = ' . $this->db->quote(strval($record)) . ','
-				. ' ttl = ' . $this->db->quote($record->getTTL()) . ','
-				. ' prio = ' . $this->db->quote($priority)
-				. ' WHERE id = ' . $this->db->quote($recordid)
-				. ' AND domain_id = ' . $domainid
-			);
-		} catch (NoSuchFieldException $e) {
-			$stm = $this->db->query(
-				'UPDATE ' . $this->tablePrefix . 'records SET'
-				. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-				. ' type = ' . $this->db->quote($record->getType()) . ','
-				. ' content = ' . $this->db->quote(strval($record)) . ','
-				. ' ttl = ' . $this->db->quote($record->getTTL())
-				. ' WHERE id = ' . $this->db->quote($recordid)
-				. ' AND domain_id = ' . $domainid
-			);
+		// build query. first part:
+		$query = 'UPDATE ' . $this->tablePrefix . 'records SET'
+			. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
+			. ' type = ' . $this->db->quote($record->getType()) . ','
+			. ' content = ' . $this->db->quote(strval($record)) . ','
+			. ' ttl = ' . $this->db->quote($record->getTTL());
+		// update priority column if exists
+		if ($record->fieldExists('priority')) {
+			$query .= ', prio = ' . $this->db->quote($record->getField('priority'));
 		}
+		// add where clauses
+		$query .= ' WHERE id = ' . $this->db->quote($recordid)
+			. ' AND domain_id = ' . $domainid;
+		// execute
+		$stm = $this->db->query($query);
 		return ($stm !== false && $stm->rowCount() > 0);
 	}
 
