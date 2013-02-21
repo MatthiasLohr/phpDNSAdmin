@@ -44,7 +44,8 @@ class PdnsPdoZone extends ZoneModule {
 	protected function __construct($config) {
 		try {
 			$this->db = new PDO($config['pdo_dsn'], $config['pdo_username'], $config['pdo_password']);
-		} catch (PDOException $e) {
+		}
+		catch (PDOException $e) {
 			$config['pdo_password'] = 'xxxxxx';
 			throw new ModuleConfigException('Could not connect to database!');
 		}
@@ -184,19 +185,19 @@ class PdnsPdoZone extends ZoneModule {
 					$colname = $col;
 					$order = 'ASC';
 				}
-				if (in_array($colname, array('id', 'name', 'type', 'content', 'ttl', 'priority'))) {
+				if (in_array($colname,array('id','name','type','content','ttl','priority'))) {
 					if ($firstcol) {
 						$firstcol = false;
-						$query .= ' ORDER BY ' . $colname . ' ' . $order;
+						$query .= ' ORDER BY '.$colname.' '.$order;
 					}
 					else {
-						$query .= ',' . $colname . ' ' . $order;
+						$query .= ','.$colname.' '.$order;
 					}
 				}
 			}
 		}
 		// limit/offset
-		if ($limit > 0) {
+		if($limit > 0) {
 			$query .= ' LIMIT ' . intval($limit) . ' OFFSET ' . intval($offset);
 		}
 		// execute query
@@ -272,29 +273,21 @@ class PdnsPdoZone extends ZoneModule {
 	public function recordUpdate(Zone $zone, $recordid, ResourceRecord $record) {
 		$this->zoneAssureExistence($zone);
 		$domainid = $this->zoneIds[$zone->getName()];
-		try {
-			$priority = $record->getField('priority');
-			$stm = $this->db->query(
-				'UPDATE ' . $this->tablePrefix . 'records SET'
-					. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-					. ' type = ' . $this->db->quote($record->getType()) . ','
-					. ' content = ' . $this->db->quote(strval($record)) . ','
-					. ' ttl = ' . $this->db->quote($record->getTTL()) . ','
-					. ' prio = ' . $this->db->quote($priority)
-					. ' WHERE id = ' . $this->db->quote($recordid)
-					. ' AND domain_id = ' . $domainid
-			);
-		} catch (NoSuchFieldException $e) {
-			$stm = $this->db->query(
-				'UPDATE ' . $this->tablePrefix . 'records SET'
-					. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
-					. ' type = ' . $this->db->quote($record->getType()) . ','
-					. ' content = ' . $this->db->quote(strval($record)) . ','
-					. ' ttl = ' . $this->db->quote($record->getTTL())
-					. ' WHERE id = ' . $this->db->quote($recordid)
-					. ' AND domain_id = ' . $domainid
-			);
+		// build query. first part:
+		$query = 'UPDATE ' . $this->tablePrefix . 'records SET'
+			. ' name = ' . $this->db->quote($this->hostnameShort2Long($zone, $record->getName())) . ','
+			. ' type = ' . $this->db->quote($record->getType()) . ','
+			. ' content = ' . $this->db->quote(strval($record)) . ','
+			. ' ttl = ' . $this->db->quote($record->getTTL());
+		// update priority column if exists
+		if ($record->fieldExists('priority')) {
+			$query .= ', prio = ' . $this->db->quote($record->getField('priority'));
 		}
+		// add where clauses
+		$query .= ' WHERE id = ' . $this->db->quote($recordid)
+			. ' AND domain_id = ' . $domainid;
+		// execute
+		$stm = $this->db->query($query);
 		return ($stm !== false && $stm->rowCount() > 0);
 	}
 
