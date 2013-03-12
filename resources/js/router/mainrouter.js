@@ -12,7 +12,7 @@ var MainController = {
 		console.log('MainRouter:startAction');
 		// Every Action starts with a Login check
 		this.checkLogin(function() {
-
+			window.serverView.loadServers();
 		});
 	},
 

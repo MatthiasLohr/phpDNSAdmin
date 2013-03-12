@@ -16,6 +16,8 @@ var ServerView = Backbone.Marionette.CollectionView.extend({
 	emptyView: NoServerItemView,
 
 	loadServers: function () {
+		this.collection.reset();
+		$("#noServerItemViewSpinner").spin("small", "black");
 		// This should be done in controller, later
 		this.collection.fetch({
 			success: function (model, response, options) {
