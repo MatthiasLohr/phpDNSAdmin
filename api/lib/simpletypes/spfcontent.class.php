@@ -30,7 +30,8 @@
 class SpfContent extends SimpleType {
 
 	public function isValidValue($string) {
-		$rules = explode(' ',$string);
+                preg_match('/^"(.*)"$/',$string,$result);
+                $rules = explode(' ',$result[1]);
 		if ($rules[0] !== 'v=spf1') return false;
 		$count = count($rules);
 		for ($i = 1; $i < $count; $i++) {
