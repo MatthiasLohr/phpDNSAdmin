@@ -36,7 +36,7 @@ class Hostname extends SimpleType {
     else
       $tmp = explode('.', $string);
     foreach ($tmp as $index => $label) {
-			if ($label == '' && $index == count($tmp)-1) return true;
+      if ($label == '' && $index == count($tmp)-1) return true;
       if (strlen($label) < 1 || strlen($label) > 63) return false;
       for ($i = 0; $i < strlen($label); $i++)
         if (false === strpos('abcdefghijklmnopqrstuvwxyz0123456789-_', $label[$i]))
@@ -44,8 +44,8 @@ class Hostname extends SimpleType {
       if ($label[0] == '-' || $label[strlen($label) - 1] == '-')
         return false;
     }
-		return true;
-	}
+    return true;
+  }
 
   public function normalizeValue($string) {
     if (!self::isValidValue($string))
