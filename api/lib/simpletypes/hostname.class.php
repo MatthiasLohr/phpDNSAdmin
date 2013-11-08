@@ -30,6 +30,7 @@
 class Hostname extends SimpleType {
 
   public function isValidValue($string) {
+    if ($string == '') return false;
     if (strpos($string, '.') === false)
       $tmp = array(0 => $string);
     else
