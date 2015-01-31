@@ -29,6 +29,14 @@
  */
 class SrvRecord extends ResourceRecord {
 
+	public function getContentString() {
+		return implode(' ', array(
+			$this->getField('importance'),
+			$this->getField('port'),
+			$this->getField('host')
+		));
+	}
+
 	public static function listFields() {
 		return array(
 			'importance' => 'UInt',
